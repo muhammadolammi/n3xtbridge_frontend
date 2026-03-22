@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 
 const Navbar: React.FC = () => {
     return (
@@ -11,20 +12,23 @@ const Navbar: React.FC = () => {
 
                 {/* Desktop Links */}
                 <div className="hidden md:flex items-center space-x-8">
-                    <Link to="/" className="text-blue-700 dark:text-blue-400 font-semibold border-b-2 border-blue-600 transition-all duration-200">
+                    <Link to="/" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
+                        Home
+                    </Link>
+                    <Link to="/services" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                         Services
                     </Link>
                     <Link to="/about-us" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                         About Us
                     </Link>
-                    <a href="#cases" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
+                    {/* <Link to="/cases" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                         Case Studies
-                    </a>
+                    </Link> */}
                 </div>
 
-                <button className="bg-primary hover:opacity-80 transition-all duration-200 active:scale-95 transform text-white px-5 py-2 rounded-lg font-medium text-sm">
+                <HashLink to="/#contact" className="bg-primary hover:opacity-80 transition-all duration-200 active:scale-95 transform text-white px-5 py-2 rounded-lg font-medium text-sm">
                     Contact Us
-                </button>
+                </HashLink>
             </div>
         </nav>
     );

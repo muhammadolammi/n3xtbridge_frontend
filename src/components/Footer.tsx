@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 
 const Footer: React.FC = () => {
     const currentYear = new Date().getFullYear();
@@ -14,16 +16,29 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* Repeating column for structure based on your HTML */}
-                {[1, 2, 3].map((i) => (
-                    <div key={i}>
-                        <h5 className="font-bold text-slate-900 dark:text-slate-100 mb-4 text-sm uppercase tracking-widest">N3xtbridge Holdings</h5>
-                        <ul className="space-y-2 text-sm font-normal text-slate-500 dark:text-slate-400">
-                            <li>Services</li>
-                            <li>About Us</li>
-                            <li>Case Studies</li>
-                        </ul>
+                <div >
+                    <div className=" h-5">
+
                     </div>
-                ))}
+
+                    <ul className="space-y-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                        <li>
+                            <Link to="/services" >
+                                Services
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/about-us" >
+                                About Us
+                            </Link>
+                        </li>
+                        <li>
+                            <HashLink to="/#contact" >
+                                Contact Us
+                            </HashLink>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
