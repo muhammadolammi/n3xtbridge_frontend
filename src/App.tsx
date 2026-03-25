@@ -4,6 +4,11 @@ import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import AboutUs from './pages/AboutUs';
 import F404Page from './pages/404';
+import InvoicePage from './pages/Invoice';
+import PromotionalPage from './pages/PromotionalPage';
+import { SignUp } from './pages/SignUp';
+import { SignIn } from './pages/SignIn';
+import InvoiceViewer from './pages/InvoiceViewer';
 
 const App: React.FC = () => {
   return (
@@ -15,6 +20,13 @@ const App: React.FC = () => {
 
           {/* About Us */}
           <Route path="about-us" element={<AboutUs />} />
+          <Route path="generate-invoice" element={<InvoicePage />} />
+          <Route path="invoice/:id" element={<InvoiceViewer />} />
+          <Route path="promotional" element={<PromotionalPage />} />
+          <Route path="signup" element={<SignUp />} />
+          <Route path="signin" element={<SignIn />} />
+
+
 
           {/* You can add more here later: /services, /contact, etc. */}
         </Route>
