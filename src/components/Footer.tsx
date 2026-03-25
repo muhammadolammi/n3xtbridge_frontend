@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 
+
 const Footer: React.FC = () => {
     const currentYear = new Date().getFullYear();
 
@@ -44,7 +45,9 @@ const Footer: React.FC = () => {
             <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="text-sm font-normal text-slate-500 dark:text-slate-400">© {currentYear} N3xtbridge Holdings. All rights reserved.</div>
                 <div className="flex gap-6">
-                    <span className="material-symbols-outlined text-slate-400 hover:text-primary transition-colors cursor-pointer">language</span>
+                    <span className="material-symbols-outlined text-slate-400 hover:text-primary transition-colors cursor-pointer">language
+
+                    </span>
                     <span className="material-symbols-outlined text-slate-400 hover:text-primary transition-colors cursor-pointer">shield</span>
                 </div>
             </div>
