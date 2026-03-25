@@ -76,3 +76,31 @@
     letter-spacing: -0.02em;
   }
 }
+
+@media print {
+
+  /* 1. Reset body and html to ensure no weird scrolling or background colors */
+  body,
+  html {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 2. Force background colors (like your blue primary bar) to show up */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 3. Remove default browser header/footer (date, URL, page title) */
+  @page {
+    margin: 1.5cm;
+    /* Adjust this for the padding you want on the physical paper */
+  }
+
+  /* 4. Ensure the table doesn't get cut in half mid-row */
+  tr {
+    page-break-inside: avoid;
+  }
+}

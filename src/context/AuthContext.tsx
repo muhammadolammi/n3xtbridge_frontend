@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import api from '../api/axios';
 
 // Exact match for your Go 'User' struct
@@ -29,39 +29,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState<boolean>(true);
 
     // Helper: Fetches user profile using the current session/token
-    const fetchUserProfile = async () => {
-        try {
-            const res = await api.get('/auth/user');
-            if (res.status === 200) {
-                setUser(res.data.user);
-            }
-        } catch (err) {
-            console.error("Could not fetch user profile", err);
-            setUser(null);
-        }
-    };
+    // const fetchUserProfile = async () => {
+    //     try {
+    //         const res = await api.get('/auth/user');
+    //         if (res.status === 200) {
+    //             setUser(res.data);
+
+    //         }
+    //     } catch (err) {
+    //         console.error("Could not fetch user profile", err);
+    //         setUser(null);
+    //     }
+    // };
 
     // 1. INITIAL REHYDRATION (Silent Login)
     useEffect(() => {
-        console.log("running")
         const initializeAuth = async () => {
             try {
-                // Try to refresh the session using cookies
+                // Use a clean axios instance here to avoid the interceptor loop
                 const res = await api.post('/auth/refresh');
+
                 if (res.status === 200) {
-                    setAccessToken(res.data.access_token);
-                    // Session restored! Now go get the user data
-                    await fetchUserProfile();
+                    const token = res.data.access_token;
+                    setAccessToken(token);
+
+                    // Fetch user directly using the token we just got
+                    const userRes = await api.get('/auth/user', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (userRes.status === 200) {
+                        setUser(userRes.data);
+                    }
                 }
             } catch (err) {
-                console.log("No existing session found.");
+                console.log("No valid session found on boot.");
+                setUser(null);
             } finally {
+                // CRITICAL: Only set loading to false AFTER user is fetched or failed
                 setLoading(false);
             }
         };
         initializeAuth();
     }, []);
-
     // 2. SIGN IN (The "Chain" Method)
     const login = async (email: string, password: string): Promise<boolean> => {
         setLoading(true);
@@ -72,7 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (res.status === 200) {
                 const token = res.data.access_token;
                 setAccessToken(token);
-
                 // Step B: Get User Details (Using the token we just got)
                 // We pass the token manually here if the interceptor isn't ready yet
                 const userRes = await api.get('/auth/user', {
@@ -80,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
 
                 if (userRes.status === 200) {
-                    setUser(userRes.data.user);
+                    setUser(userRes.data);
                     return true;
                 }
             }
