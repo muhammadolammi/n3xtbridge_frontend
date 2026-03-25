@@ -1,7 +1,5 @@
 
-import React from 'react';
 
-// --- Reusable Data Configurations ---
 
 const STEPS = [
     {
