@@ -13,6 +13,54 @@ export const SITE_CONFIG = {
     }
 };
 
+//  <div className="md:col-span-8 bg-surface-container-lowest rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center group transition-all hover:bg-white">
+//                             <div className="w-full md:w-1/2 aspect-video rounded-lg overflow-hidden order-2 md:order-1">
+//                                 <img alt="Security Camera Installation" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Modern high definition security camera installed on building corner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1ZfHBduaGd1dVYuorneslszbupj3c1C0XzY1tdGphsMSwVr0pBfms9CgLLV_xfzNvWNSnYNeAkHzlcXB0mJbZbyReXRaxb5BoSKlYhPVk1GNqljx1eAa6HApVLw2IxPe_8f9RmxAvx9JaKhBoHykWKu6GxPX9oICsomwYH5CBoDFeoQXu-_VlXlOgk7iNmgJaAh-IWP86ZZE2aW9IHO5SccnEQhNu8px71E9aEGyJQZF3tYTsi2qIQ87xinlMs8b3PRjj8VoSo5m6" />
+//                             </div>
+//                             <div className="w-full md:wy-1/2 order-1 md:order-2">
+//                                 <span className="material-symbols-outlined text-primary text-4xl mb-4">videocam</span>
+//                                 <h3 className="text-2xl font-bold mb-3">Security Camera Installation</h3>
+//                                 <p className="text-on-surface-variant mb-6 text-sm">Advanced surveillance systems integrated with AI-driven monitoring for 24/7 commercial security.</p>
+//                                 <div className="flex gap-2">
+//                                     <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">IP Cameras</span>
+//                                     <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Cloud Backup</span>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                         {/* <!-- Service 2 --> */}
+//                         <div className="md:col-span-4 bg-surface-container-lowest rounded-xl p-8 flex flex-col group transition-all hover:bg-white">
+//                             <span className="material-symbols-outlined text-primary text-4xl mb-4">code</span>
+//                             <h3 className="text-xl font-bold mb-3">Web Development Agency</h3>
+//                             <p className="text-on-surface-variant text-sm mb-6">Building high-performance digital experiences that convert browsers into loyal customers.</p>
+//                             <div className="mt-auto aspect-square rounded-lg overflow-hidden">
+//                                 <img alt="Web development code" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract code on a dark monitor screen with blue highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4S3I5ZTmlybq5161nEQzODu4yzE0YmXMCXjOevtqPuvSyZaMaUV766LDvKEXPzkmmctx_Q0CFy_aKmANJZHjxeyowk0V4n1W9kzJcFrq-1LEy-D0ksWQkQwIhQfdNZPWxSzn2latZyN4Kww1jhsjGeek8COefzoykF8ryy4Oyh0uOSPnUGRJH9v8bGgFt76roIsXhuP_tiOtp1cdaPoCzXvF2umL1DVk436-rq9JEB06x2nho3zZVqgBEV1EGWjdfS1GxiBzj_ibm" />
+//                             </div>
+//                         </div>
+//                         {/* <!-- Service 3 --> */}
+//                         <div className="md:col-span-4 bg-surface-container-lowest rounded-xl p-8 flex flex-col group transition-all hover:bg-white">
+//                             <span className="material-symbols-outlined text-primary text-4xl mb-4">support_agent</span>
+//                             <h3 className="text-xl font-bold mb-3">IT Support &amp; Managed Services</h3>
+//                             <p className="text-on-surface-variant text-sm mb-6">Reliable, 24/7 technical oversight ensuring your operations never miss a beat.</p>
+//                             <div className="mt-auto h-32 bg-surface-container-high rounded-lg flex items-center justify-center p-4">
+//                                 <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+//                                     <div className="bg-primary h-full w-[94%]"></div>
+//                                 </div>
+//                                 <span className="ml-4 font-mono text-xs font-bold text-primary">99.9% Uptime</span>
+//                             </div>
+//                         </div>
+//                         {/* <!-- Service 4 --> */}
+//                         <div className="md:col-span-8 bg-inverse-surface rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center text-white">
+//                             <div className="w-full md:w-1/2">
+//                                 <span className="material-symbols-outlined text-primary-fixed text-4xl mb-4">router</span>
+//                                 <h3 className="text-2xl font-bold mb-3">Network Solutions</h3>
+//                                 <p className="text-outline-variant mb-6 text-sm">Enterprise-grade network architecture designed for speed, redundancy, and future-proof expansion.</p>
+//                                 <ul className="space-y-2 text-sm text-outline-variant">
+//                                     <li className="flex items-center"><span className="material-symbols-outlined text-xs mr-2 text-primary-fixed">check_circle</span> Fiber Optic Installation</li>
+//                                     <li className="flex items-center"><span className="material-symbols-outlined text-xs mr-2 text-primary-fixed">check_circle</span> SD-WAN Implementation</li>
+//                                     <li className="flex items-center"><span className="material-symbols-outlined text-xs mr-2 text-primary-fixed">check_circle</span> Multi-Site Connectivity</li>
+//                                 </ul>
+//                             </div>
+
 export const SERVICES = [
     {
         id: 1,

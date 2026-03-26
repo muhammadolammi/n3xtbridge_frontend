@@ -12,6 +12,7 @@ import { SignIn } from './pages/SignIn';
 import InvoiceViewer from './pages/InvoiceViewer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
+import Services from './pages/Services';
 
 const App: React.FC = () => {
   return (
@@ -28,6 +29,8 @@ const App: React.FC = () => {
             {/* These components now have access to useAuth() */}
             <Route path="signup" element={<SignUp />} />
             <Route path="signin" element={<SignIn />} />
+            <Route path="services" element={<Services />} />
+
 
           </Route>
 
