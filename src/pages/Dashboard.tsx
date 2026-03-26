@@ -3,6 +3,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Invoice } from '../models/model';
 import { useNavigate } from 'react-router-dom';
+import { CreateInvoiceRequiredRoles } from '../constants/const';
 
 
 
@@ -12,6 +13,7 @@ const Dashboard = () => {
     const { user } = useAuth();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
+    const canCreate = CreateInvoiceRequiredRoles.includes(user?.role ?? "none");
 
     useEffect(() => {
         const fetchInvoices = async () => {
@@ -38,11 +40,25 @@ const Dashboard = () => {
                             Welcome back, <span className="text-primary font-bold">{user?.first_name}</span>
                         </p>
                     </div>
-                    <div className="text-right hidden md:block">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">System Status</p>
-                        <p className="text-xs text-green-500 font-mono flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Operational
-                        </p>
+
+                    <div className="flex items-center gap-6">
+                        {/* NEW: Conditional Create Button */}
+                        {canCreate && (
+                            <button
+                                onClick={() => navigate('/dashboard/create-invoice')}
+                                className="bg-primary text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm">add</span>
+                                Create Invoice
+                            </button>
+                        )}
+
+                        <div className="text-right hidden md:block border-l border-gray-200 pl-6">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">System Status</p>
+                            <p className="text-xs text-green-500 font-mono flex items-center gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Operational
+                            </p>
+                        </div>
                     </div>
                 </header>
 
