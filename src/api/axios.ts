@@ -23,7 +23,7 @@ api.interceptors.response.use(
 
             try {
                 // Use a standard axios instance for refresh to avoid interceptor loops
-                const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {}, {
+                const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`, {}, {
                     withCredentials: true,
                     headers: { "client-api-key": import.meta.env.VITE_CLIENT_API_KEY }
                 });
