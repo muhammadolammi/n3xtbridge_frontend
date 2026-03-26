@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState, } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export const SignIn = () => {
     const navigate = useNavigate();
 
     const { user, loading: authLoading } = useAuth();
+    const [searchParams] = useSearchParams();
+    const redirectTo = searchParams.get('redirect') || '/dashboard';
 
     useEffect(() => {
         if (user && !authLoading) {
-            navigate('/dashboard');
+            navigate(redirectTo);
         }
     }, [user, authLoading, navigate]);
     // 1. Grab what we need from AuthContext
@@ -31,7 +33,7 @@ export const SignIn = () => {
 
         // If result is a string (error message) or false
         if (result === true) {
-            navigate('/dashboard');
+            navigate(redirectTo);
         } else {
             // If login returns false, show a generic error
             setError('Invalid email or password. Please try again.');

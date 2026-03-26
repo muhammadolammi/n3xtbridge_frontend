@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SITE_CONFIG } from '../constants/content';
 import { Link } from 'react-router-dom';
+import type { Service } from '../models/model';
+import api from '../api/axios';
 
 const Home: React.FC = () => {
+    const [services, setServices] = useState<Service[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                // Fetch first 4-5 services for the home grid
+                const res = await api.get('/services?limit=5&offset=0');
+                setServices(res.data.services || []);
+
+            } catch (err) {
+                console.error("Failed to fetch landing services", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchServices();
+    }, []);
     return (
         <div className="bg-surface">
             {/* Hero Section */}
@@ -37,76 +57,74 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
+            {/* <!-- Bento Grid Layout --> */}
             <section className="py-24 bg-surface-container-low" id="services">
                 <div className="max-w-7xl mx-auto px-6 md:px-12">
                     <div className="mb-16 md:flex justify-between items-end">
                         <div className="max-w-2xl">
-                            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Core Infrastructure &amp; Digital Services</h2>
-                            <p className="text-on-surface-variant">We provide the technical backbone your business needs to scale securely and efficiently in an increasingly digital world.</p>
+                            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-on-background">Core Infrastructure & Digital Services</h2>
+                            <p className="text-on-surface-variant">Technical backbone for your business growth.</p>
                         </div>
                         <div className="mt-6 md:mt-0">
-
-                            <Link to="/services" className="text-primary font-bold inline-flex items-center group" >
+                            <Link to="/services" className="text-primary font-bold inline-flex items-center group">
                                 Browse all services
                                 <span className="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                             </Link>
                         </div>
-
                     </div>
-                    {/* <!-- Bento Grid Layout --> */}
+
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                        {/* <!-- Service 1 --> */}
-                        <div className="md:col-span-8 bg-surface-container-lowest rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center group transition-all hover:bg-white">
-                            <div className="w-full md:w-1/2 aspect-video rounded-lg overflow-hidden order-2 md:order-1">
-                                <img alt="Security Camera Installation" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Modern high definition security camera installed on building corner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1ZfHBduaGd1dVYuorneslszbupj3c1C0XzY1tdGphsMSwVr0pBfms9CgLLV_xfzNvWNSnYNeAkHzlcXB0mJbZbyReXRaxb5BoSKlYhPVk1GNqljx1eAa6HApVLw2IxPe_8f9RmxAvx9JaKhBoHykWKu6GxPX9oICsomwYH5CBoDFeoQXu-_VlXlOgk7iNmgJaAh-IWP86ZZE2aW9IHO5SccnEQhNu8px71E9aEGyJQZF3tYTsi2qIQ87xinlMs8b3PRjj8VoSo5m6" />
+                        {loading ? (
+                            <div className="col-span-12 py-20 text-center text-gray-400 font-mono text-xs uppercase tracking-widest animate-pulse">
+                                Initializing Infrastructure...
                             </div>
-                            <div className="w-full md:w-1/2 order-1 md:order-2">
-                                <span className="material-symbols-outlined text-primary text-4xl mb-4">videocam</span>
-                                <h3 className="text-2xl font-bold mb-3">Security Camera Installation</h3>
-                                <p className="text-on-surface-variant mb-6 text-sm">Advanced surveillance systems integrated with AI-driven monitoring for 24/7 commercial security.</p>
-                                <div className="flex gap-2">
-                                    <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">IP Cameras</span>
-                                    <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Cloud Backup</span>
-                                </div>
-                            </div>
-                        </div>
-                        {/* <!-- Service 2 --> */}
-                        <div className="md:col-span-4 bg-surface-container-lowest rounded-xl p-8 flex flex-col group transition-all hover:bg-white">
-                            <span className="material-symbols-outlined text-primary text-4xl mb-4">code</span>
-                            <h3 className="text-xl font-bold mb-3">Web Development Agency</h3>
-                            <p className="text-on-surface-variant text-sm mb-6">Building high-performance digital experiences that convert browsers into loyal customers.</p>
-                            <div className="mt-auto aspect-square rounded-lg overflow-hidden">
-                                <img alt="Web development code" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract code on a dark monitor screen with blue highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4S3I5ZTmlybq5161nEQzODu4yzE0YmXMCXjOevtqPuvSyZaMaUV766LDvKEXPzkmmctx_Q0CFy_aKmANJZHjxeyowk0V4n1W9kzJcFrq-1LEy-D0ksWQkQwIhQfdNZPWxSzn2latZyN4Kww1jhsjGeek8COefzoykF8ryy4Oyh0uOSPnUGRJH9v8bGgFt76roIsXhuP_tiOtp1cdaPoCzXvF2umL1DVk436-rq9JEB06x2nho3zZVqgBEV1EGWjdfS1GxiBzj_ibm" />
-                            </div>
-                        </div>
-                        {/* <!-- Service 3 --> */}
-                        <div className="md:col-span-4 bg-surface-container-lowest rounded-xl p-8 flex flex-col group transition-all hover:bg-white">
-                            <span className="material-symbols-outlined text-primary text-4xl mb-4">support_agent</span>
-                            <h3 className="text-xl font-bold mb-3">IT Support &amp; Managed Services</h3>
-                            <p className="text-on-surface-variant text-sm mb-6">Reliable, 24/7 technical oversight ensuring your operations never miss a beat.</p>
-                            <div className="mt-auto h-32 bg-surface-container-high rounded-lg flex items-center justify-center p-4">
-                                <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
-                                    <div className="bg-primary h-full w-[94%]"></div>
-                                </div>
-                                <span className="ml-4 font-mono text-xs font-bold text-primary">99.9% Uptime</span>
-                            </div>
-                        </div>
-                        {/* <!-- Service 4 --> */}
-                        <div className="md:col-span-8 bg-inverse-surface rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center text-white">
-                            <div className="w-full md:w-1/2">
-                                <span className="material-symbols-outlined text-primary-fixed text-4xl mb-4">router</span>
-                                <h3 className="text-2xl font-bold mb-3">Network Solutions</h3>
-                                <p className="text-outline-variant mb-6 text-sm">Enterprise-grade network architecture designed for speed, redundancy, and future-proof expansion.</p>
-                                <ul className="space-y-2 text-sm text-outline-variant">
-                                    <li className="flex items-center"><span className="material-symbols-outlined text-xs mr-2 text-primary-fixed">check_circle</span> Fiber Optic Installation</li>
-                                    <li className="flex items-center"><span className="material-symbols-outlined text-xs mr-2 text-primary-fixed">check_circle</span> SD-WAN Implementation</li>
-                                    <li className="flex items-center"><span className="material-symbols-outlined text-xs mr-2 text-primary-fixed">check_circle</span> Multi-Site Connectivity</li>
-                                </ul>
-                            </div>
-                            <div className="w-full md:w-1/2 h-full min-h-[200px] rounded-lg overflow-hidden opacity-80">
-                                <img alt="Networking Hardware" className="w-full h-full object-cover" data-alt="Close up of network cables connected to a blue lit switch" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxH1aXq6yLU2zfOLoQmTN8pGf7rT4OZGdmzxEepExIlZk1Iebrvl5ScQHX2TdrauidhiTeyoZUwhU9urPHKe3IQthXdQj9cKnO16eaItOJ0g-o6YRQM2gFtLtqMheF07GXc1GEL0Gm6qA9Lx2Ew3VT6x_ICDAPOfuOeQIm0vtzTBIrgZtCbXwyEvkh4fmowLZeEIBwLdwuEVeofNWPI27E0TR89I8e42RLT9Ja0ZVAf9fGJ9soHg6xfF-JhbgMetdiE4nFfyBh6zoD" />
-                            </div>
-                        </div>
+                        ) : (
+                            services.map((service, index) => {
+                                // Logic: 1st and 4th items are "Large" (8 cols), others are "Small" (4 cols)
+                                const isLarge = index === 0 || index === 3;
+                                return (
+                                    <div
+                                        key={service.id}
+                                        className={`${isLarge ? 'md:col-span-8' : 'md:col-span-4'} 
+                                        bg-surface-container-lowest rounded-xl p-8 flex flex-col ${isLarge ? 'md:flex-row' : ''} 
+                                        gap-8 items-center group transition-all hover:bg-white border border-transparent hover:border-primary/10`}
+                                    >
+                                        {/* Image Section */}
+                                        <div className={`w-full ${isLarge ? 'md:w-1/2' : 'h-48'} aspect-video rounded-lg overflow-hidden`}>
+                                            <img
+                                                alt={service.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                src={service.image || '/placeholder-tech.jpg'}
+                                            />
+                                        </div>
+
+                                        {/* Content Section */}
+                                        <div className={`w-full ${isLarge ? 'md:w-1/2' : ''}`}>
+                                            <span className="material-symbols-outlined text-primary text-4xl mb-4">
+                                                {service.icon || 'settings_input_component'}
+                                            </span>
+                                            <h3 className="text-2xl font-bold mb-3 text-on-background">{service.name}</h3>
+                                            <p className="text-on-surface-variant mb-6 text-sm leading-relaxed">
+                                                {service.description}
+                                            </p>
+
+                                            {/* Category/Tags */}
+                                            <div className="flex gap-2">
+                                                <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">
+                                                    {service.category}
+                                                </span>
+                                                {service.is_featured && (
+                                                    <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full uppercase flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[10px]">star</span>
+                                                        Featured
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             </section>

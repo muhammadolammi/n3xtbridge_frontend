@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ServiceProps {
-    title: string;
+    name: string;
     description: string;
     icon: string;
     image: string;
@@ -9,7 +9,7 @@ interface ServiceProps {
     isFeatured?: boolean;
 }
 
-const ServiceCard: React.FC<ServiceProps> = ({ title, description, icon, image, tags, isFeatured }) => {
+const ServiceCard: React.FC<ServiceProps> = ({ name: title, description, icon, image, tags, isFeatured }) => {
     return (
         <div className={`${isFeatured ? 'md:col-span-8 flex-col md:flex-row' : 'md:col-span-4 flex-col'} bg-surface-container-lowest rounded-xl p-8 flex gap-8 items-center group transition-all hover:bg-white shadow-sm`}>
             <div className={isFeatured ? 'w-full md:w-1/2 order-2 md:order-1' : 'w-full mt-auto'}>
