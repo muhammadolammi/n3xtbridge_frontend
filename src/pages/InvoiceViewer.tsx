@@ -190,7 +190,7 @@ export default function InvoiceViewer() {
                             <div className="max-w-xs mb-8">
                                 <h4 className="text-[10px] font-bold uppercase tracking-widest mb-2 text-gray-400">Note</h4>
                                 <p className="text-xs text-gray-500 leading-relaxed italic">
-                                    {invoice.notes || "No additional terms provided for this installation."}
+                                    {invoice.notes}
                                 </p>
                             </div>
                             <div className="md:w-64 space-y-3">
