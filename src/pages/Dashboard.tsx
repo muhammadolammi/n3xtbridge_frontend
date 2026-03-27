@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import type { Invoice, GetQuoteRequest, Service } from '../models/model';
-import { useNavigate } from 'react-router-dom';
+import type { Invoice, Service, Quote, QuoteRequest, User } from '../models/model';
+import { useNavigate, type NavigateFunction } from 'react-router-dom';
+import { QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
 
 // --- Shared Constants & Sub-Components ---
 
@@ -14,6 +15,14 @@ const STATUS_STYLES: Record<string, string> = {
     default: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
+
+const QUOTE_STATUS_STYLES: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-600 border-gray-200",
+    sent: "bg-blue-100 text-blue-700 border-blue-200",
+    accepted: "bg-green-100 text-green-700 border-green-200",
+    declined: "bg-red-100 text-red-700 border-red-200",
+    expired: "bg-orange-100 text-orange-700 border-orange-200",
+};
 const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
     const [formData, setFormData] = useState({
         name: '', description: '', category: 'Tech Support',
@@ -90,6 +99,231 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
                     <button disabled={loading || !isFormValid} className="col-span-2 bg-primary text-white py-4 rounded-xl font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/30 mt-4">
                         {loading ? "Registering Service..." : "Deploy Service"}
                     </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+const CreateQuoteModal = ({ requestId, onClose, onSuccess }: { requestId: string, onClose: () => void, onSuccess: () => void }) => {
+    const [loading, setLoading] = useState(false);
+    // Initializing with quantity 1 as a better default
+    const [items, setItems] = useState([{ name: '', cost: '', description: '', quantity: 1 }]);
+    const [notes, setNotes] = useState('');
+    const [expiryDate, setExpiryDate] = useState('');
+
+    const handleAddItem = () => setItems([...items, { name: '', cost: '', description: '', quantity: 1 }]);
+
+    const handleItemChange = (index: number, field: string, value: string | number) => {
+        const newItems = [...items];
+        (newItems[index] as any)[field] = value;
+        setItems(newItems);
+    };
+
+    const calculateTotal = () => {
+        return items.reduce((acc, item) => {
+            const price = parseFloat(item.cost) || 0;
+            const qty = item.quantity || 0;
+            return acc + (price * qty);
+        }, 0);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const payload = {
+                quote_request_id: requestId,
+                amount: calculateTotal().toString(),
+                breakdown: items,
+                notes: notes,
+                expires_at: new Date(expiryDate).toISOString(),
+                status: 'draft'
+            };
+            await api.post('/admin/quotes', payload);
+            alert("Official Quote dispatched to registry.");
+            onSuccess();
+            onClose();
+        } catch (err) {
+            alert("Failed to deploy quote. Please check connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+                    <div>
+                        <h3 className="font-black uppercase tracking-tighter text-lg text-gray-900">Generate Official Quote</h3>
+                        <p className="text-[10px] font-mono text-primary font-bold">MODE: ARCHITECTURAL SPECIFICATION</p>
+                    </div>
+                    <button onClick={onClose} className="material-symbols-outlined text-gray-400 hover:text-black transition-colors">close</button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto">
+                    {/* Line Items Section */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Line Items (Breakdown)</label>
+                        {items.map((item, index) => (
+                            <div key={index} className="grid grid-cols-12 gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 relative group">
+                                {/* Item Name */}
+                                <div className="col-span-12 md:col-span-6">
+                                    <input placeholder="Item Name (e.g. 4K IP Camera)" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary transition-colors"
+                                        value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required />
+                                </div>
+                                {/* Quantity */}
+                                <div className="col-span-4 md:col-span-2">
+                                    <input placeholder="Qty" type="number" min="1" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary transition-colors"
+                                        value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} required />
+                                </div>
+                                {/* Unit Cost */}
+                                <div className="col-span-6 md:col-span-3">
+                                    <input placeholder="Unit Cost (₦)" type="number" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary transition-colors"
+                                        value={item.cost} onChange={e => handleItemChange(index, 'cost', e.target.value)} required />
+                                </div>
+                                {/* Delete Button */}
+                                <div className="col-span-2 md:col-span-1 flex justify-end items-center">
+                                    <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-red-300 hover:text-red-500 transition-colors">
+                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                    </button>
+                                </div>
+                                {/* Item Description */}
+                                <div className="col-span-12">
+                                    <input placeholder="Technical specification or item details..." className="w-full bg-transparent border-b border-gray-100 py-1 text-[10px] outline-none text-gray-500 italic"
+                                        value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} />
+                                </div>
+                            </div>
+                        ))}
+
+                        <button type="button" onClick={handleAddItem} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:border-primary hover:text-primary transition-all active:scale-[0.98]">
+                            + Add Infrastructure Component
+                        </button>
+                    </div>
+
+                    {/* General Quote Notes */}
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Quote Notes / Terms</label>
+                        <textarea
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm outline-none focus:border-primary transition-all"
+                            rows={3}
+                            placeholder="Add payment terms, installation timelines, or warranty info..."
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Footer Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 items-end">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase text-gray-400">Validity Period</label>
+                            <input type="date" required className="w-full border-b-2 border-gray-100 py-2 text-sm outline-none focus:border-primary transition-all"
+                                value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
+                        </div>
+                        <div className="text-right">
+                            <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Estimated Total</label>
+                            <span className="text-3xl font-black text-primary tracking-tighter">₦{calculateTotal().toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    {/* Final Action */}
+                    <button disabled={loading} className="w-full bg-secondary-dark text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl hover:shadow-secondary-dark/20 disabled:opacity-50 flex items-center justify-center gap-3">
+                        {loading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            <>
+                                <span>Dispatch Final Quote</span>
+                                <span className="material-symbols-outlined text-sm">verified</span>
+                            </>
+                        )}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+const EditDescriptionModal = ({
+    requestId,
+    initialValue,
+    onClose,
+    onSuccess
+}: {
+    requestId: string,
+    initialValue: string,
+    onClose: () => void,
+    onSuccess: () => void
+}) => {
+    const [description, setDescription] = useState(initialValue);
+    const [loading, setLoading] = useState(false);
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (description.trim() === initialValue.trim()) return onClose();
+        if (!description.trim()) return alert("Description cannot be empty");
+
+        setLoading(true);
+        try {
+            await api.patch(`/customer/quotes/requests/${requestId}/description`, {
+                description: description.trim()
+            });
+            alert("Specification updated successfully.");
+            onSuccess();
+            onClose();
+        } catch (err) {
+            alert("Failed to sync updates to the terminal.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <div>
+                        <h3 className="font-black uppercase tracking-tighter text-lg text-gray-900">Edit Specification</h3>
+                        <p className="text-[10px] font-mono text-primary font-bold uppercase tracking-widest">Request Ref: {requestId.slice(0, 8)}</p>
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <form onSubmit={handleUpdate} className="p-8 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-[0.2em]">Updated Requirements</label>
+                        <textarea
+                            required
+                            rows={5}
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all leading-relaxed"
+                            placeholder="Describe your technical requirements in detail..."
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 px-6 py-4 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            disabled={loading}
+                            className="flex-[2] bg-primary text-white py-4 rounded-xl font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                        >
+                            {loading ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    <span>Update Terminal</span>
+                                    <span className="material-symbols-outlined text-sm">sync</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -178,120 +412,279 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
         </table>
     </div>
 );
-const QUOTE_REQUEST_STATUS_STYLES: Record<string, string> = {
-    pending: "bg-blue-100 text-blue-700 border-blue-200",
-    reviewing: "bg-purple-100 text-purple-700 border-purple-200",
-    quoted: "bg-green-100 text-green-700 border-green-200",
-    rejected: "bg-red-100 text-red-700 border-red-200",
-    default: "bg-gray-100 text-gray-600 border-gray-200",
-};
 
-const QuoteRequestTable = ({ qrs, loading }: { qrs: GetQuoteRequest[], loading: boolean }) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-left">
-            <thead>
-                <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                    <th className="px-6 py-4">Request ID</th>
-                    <th className="px-6 py-4">Client</th>
-                    <th className="px-6 py-4">Service</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Description</th>
 
-                    <th className="px-6 py-4 text-right">Submitted</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Syncing Request Ledger...</td></tr>
-                ) : qrs.length === 0 ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 font-mono text-xs">No pending requests found.</td></tr>
-                ) : (
-                    qrs.map((qr) => (
-                        <tr key={qr.id} className="hover:bg-gray-50/50 transition-colors group">
-                            <td className="px-6 py-4">
-                                <p className="font-mono text-[10px] font-bold text-gray-500 uppercase">
-                                    {qr.id.slice(0, 8)}...
-                                </p>
-                            </td>
-                            <td className="px-6 py-4">
-                                <p className="text-sm font-bold text-gray-900">{qr.user_name}</p>
-                                <p className="text-[10px] text-gray-400 uppercase font-mono">{qr.user_email}</p>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold text-gray-700">{qr.service_name}</span>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${QUOTE_REQUEST_STATUS_STYLES[qr.status.toLowerCase()] || QUOTE_REQUEST_STATUS_STYLES.default}`}>
-                                    <span className="w-1 h-1 rounded-full bg-current opacity-70"></span>
-                                    {qr.status}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 max-w-xs">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-gray-600 leading-relaxed">
-                                        {qr.description.split(" ").slice(0, 20).join(" ")}
-                                        {qr.description.split(" ").length > 20 ? "..." : ""}
-                                    </span>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                                <p className="text-xs font-bold text-gray-900">
-                                    {new Date(qr.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                </p>
-                                <p className="text-[9px] text-gray-400 font-mono">
-                                    {new Date(qr.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                </p>
+
+const QuoteRequestTable = ({
+    qrs,
+    loading,
+    onAddQuote,
+    onEditDescription,
+    role
+}: {
+    qrs: QuoteRequest[],
+    loading: boolean,
+    onAddQuote?: (id: string) => void,
+    onEditDescription?: (id: string, currentDesc: string) => void,
+    role: string
+}) => {
+    const navigate = useNavigate();
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                        {(role === 'admin' || role === 'staff') && (
+                            <th className="px-6 py-4">Client</th>
+                        )}
+                        <th className="px-6 py-4">Service</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Description</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                    {loading ? (
+                        <tr>
+                            {/* Dynamic colSpan: 5 for admin/staff, 4 for user */}
+                            <td colSpan={(role === 'admin' || role === 'staff') ? 5 : 4} className="p-10 text-center text-gray-400 italic">
+                                Syncing Request Ledger...
                             </td>
                         </tr>
-                    ))
-                )}
-            </tbody>
-        </table>
-    </div>
-);
+                    ) : qrs.length === 0 ? (
+                        <tr>
+                            <td colSpan={(role === 'admin' || role === 'staff') ? 5 : 4} className="p-10 text-center text-gray-400 font-mono text-xs uppercase tracking-widest">
+                                No matching requests.
+                            </td>
+                        </tr>
+                    ) : (
+                        qrs.map((qr) => {
+                            // 1. Define logic variables inside the map block
+                            const isElevated = role === 'admin' || role === 'staff';
+                            const isQuoted = qr.status === 'quoted';
+
+                            // 2. Explicitly return the JSX
+                            return (
+                                <tr key={qr.id} className="hover:bg-gray-50/50 transition-colors group">
+                                    {isElevated && (
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm font-bold text-gray-900">{qr.user_name}</p>
+                                            <p className="text-[10px] text-gray-400 uppercase font-mono">{qr.user_email}</p>
+                                        </td>
+                                    )}
+
+                                    <td className="px-6 py-4 text-xs font-bold text-gray-700">{qr.service_name}</td>
+
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${QUOTE_REQUEST_STATUS_STYLES[qr.status] || QUOTE_REQUEST_STATUS_STYLES.default}`}>
+                                            {qr.status}
+                                        </span>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-medium text-gray-600 truncate max-w-[180px] block" title={qr.description}>
+                                                {qr.description}
+                                            </span>
+                                            {role === 'user' && qr.status === 'pending' && (
+                                                <button onClick={() => onEditDescription?.(qr.id, qr.description)} className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="material-symbols-outlined text-sm">edit</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex justify-end items-center gap-2">
+                                            {/* 1. View Request - Always shows for everyone */}
+                                            <button
+                                                onClick={() => navigate(`/dashboard/view-qr/${qr.id}`, { state: { qr } })}
+                                                className="flex items-center gap-1 px-3 py-1.5 border border-gray-100 rounded-lg text-gray-500 text-[9px] font-black uppercase tracking-tighter hover:bg-gray-50 hover:text-primary transition-all shadow-sm"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">visibility</span>
+                                                Request
+                                            </button>
+
+                                            {/* 2. Create Quote - Only Admin/Staff & Only if NOT quoted */}
+                                            {!isQuoted && isElevated && (
+                                                <button
+                                                    onClick={() => onAddQuote?.(qr.id)}
+                                                    className="bg-primary text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 flex items-center gap-1 transition-all"
+                                                >
+                                                    <span className="material-symbols-outlined text-xs">add</span>
+                                                    Quote
+                                                </button>
+                                            )}
+
+                                            {/* 3. View Quote - Shows for everyone ONLY if status is 'quoted' */}
+                                            {isQuoted && qr && qr.quote_id && (
+                                                <button
+                                                    onClick={() => navigate(`/dashboard/view-quote/${qr.quote_id}`)}
+                                                    className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">visibility</span>
+                                                    Quote
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+const QuotesTable = ({
+    qs,
+    loading,
+    onUpdateStatus,
+    navigate,
+    role
+}: {
+    qs: Quote[],
+    loading: boolean,
+    onUpdateStatus?: (id: string, newStatus: string) => void,
+    navigate: NavigateFunction,
+    role: string
+}) => {
+    const [activeMenu, setActiveMenu] = useState<string | null>(null);
+    const statuses: Quote['status'][] = ['draft', 'sent', 'accepted', 'declined', 'expired'];
+
+    return (
+        <div className="overflow-x-auto min-h-[400px]">
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                        <th className="px-6 py-4">Quote Ref</th>
+                        <th className="px-6 py-4">Service</th>
+
+                        <th className="px-6 py-4">Amount</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Valid Until</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                    {loading ? (
+                        <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Syncing Quotes...</td></tr>
+                    ) : qs.length === 0 ? (
+                        <tr><td colSpan={5} className="p-10 text-center text-gray-400 font-mono text-xs uppercase tracking-widest">No quotes found.</td></tr>
+                    ) : qs.map((q) => {
+                        const dateValue = (q as any).exire_at || q.expires_at;
+                        const formattedDate = dateValue && !isNaN(Date.parse(dateValue))
+                            ? new Date(dateValue).toLocaleDateString('en-NG', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : "Invalid Date";
+
+                        return (
+                            <tr key={q.id} className="hover:bg-gray-50/50 transition-colors group">
+                                <td className="px-6 py-4 font-mono text-[10px] font-bold text-gray-900 uppercase">
+                                    Q-{q.id.slice(0, 8)}
+                                </td>
+                                <td className="px-6 py-4 text-xs font-bold text-gray-700">{q.service_name}</td>
+
+                                <td className="px-6 py-4 font-black text-gray-900 text-sm">
+                                    ₦{parseFloat(q.amount || "0").toLocaleString()}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="relative inline-block">
+                                        {/* Status Switcher (Disabled for Users) */}
+                                        <button
+                                            disabled={role === 'user'}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveMenu(activeMenu === q.id ? null : q.id);
+                                            }}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-black uppercase tracking-wider transition-all ${role !== 'user' ? 'hover:bg-white active:scale-95' : 'cursor-default'} z-20 ${QUOTE_STATUS_STYLES[q.status] || QUOTE_STATUS_STYLES.default}`}
+                                        >
+                                            <span className="w-1 h-1 rounded-full bg-current"></span>
+                                            {q.status}
+                                            {role !== 'user' && <span className="material-symbols-outlined text-[14px]">expand_more</span>}
+                                        </button>
+
+                                        {/* Dropdown Menu - Restricted to Admin/Staff */}
+                                        {activeMenu === q.id && role !== 'user' && (
+                                            <>
+                                                <div className="fixed inset-0 z-[80]" onClick={() => setActiveMenu(null)}></div>
+                                                <div className="absolute left-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-2xl z-[90] py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                    {statuses.filter(s => s !== q.status).map(status => (
+                                                        <button
+                                                            key={status}
+                                                            onClick={() => { onUpdateStatus?.(q.id, status); setActiveMenu(null); }}
+                                                            className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-gray-500 hover:bg-gray-50 hover:text-primary transition-colors"
+                                                        >
+                                                            {status}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 text-xs font-bold text-gray-700">
+                                    {formattedDate}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <button
+                                        className="text-gray-400 hover:text-primary transition-all"
+                                        onClick={() => navigate(`/dashboard/view-quote/${q.id}`, { state: { quote: q } })}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">visibility</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div >
+    );
+};
 
 // --- Admin Terminal ---
 
-// const AdminConsole = ({ user }: { user: User }) => {
-const AdminConsole = () => {
+const AdminConsole = ({ user }: { user: User }) => {
 
     const navigate = useNavigate();
-    const [currentTab, setCurrentTab] = useState<'invoices' | 'services' | 'quote-requests'>('invoices');
+    const [currentTab, setCurrentTab] = useState<'invoices' | 'services' | 'quote-requests' | 'quotes'>('invoices');
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [services, setServices] = useState<Service[]>([]);
-    const [qrs, setQrs] = useState<GetQuoteRequest[]>([]);
+    const [qrs, setQrs] = useState<QuoteRequest[]>([]);
+    const [qs, setQs] = useState<Quote[]>([]);
+    const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+
 
     const LIMIT = 10;
     const [offset, setOffset] = useState(0);
     const [total, setTotal] = useState(0);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const endpoints: Record<string, string> = {
+                'invoices': `/worker/invoices`,
+                'services': `/admin/services`,
+                'quote-requests': `/admin/quote-requests`,
+                'quotes': `/admin/quotes`
+            };
+            const res = await api.get(`${endpoints[currentTab]}?limit=${LIMIT}&offset=${offset}`);
 
+            if (currentTab === 'invoices') setInvoices(res.data.invoices || []);
+            else if (currentTab === 'services') setServices(res.data.services || []);
+            else if (currentTab === 'quote-requests') setQrs(res.data.quote_requests || []);
+            else if (currentTab === 'quotes') setQs(res.data.quotes || []);
+
+            setTotal(res.data.total || 0);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                currentTab === 'invoices' ? `/invoices` : `/admin/services`;
-                if (currentTab === 'invoices') {
-                    const res = await api.get(`/invoices?limit=${LIMIT}&offset=${offset}`);
 
-                    setInvoices(res.data.invoices || []);
-                    setTotal(res.data.total || 0);
-                } else if (currentTab === "services") {
-                    const res = await api.get(`/admin/services?limit=${LIMIT}&offset=${offset}`);
-                    setServices(res.data.services || []);
-                    setTotal(res.data.total || 0);
-                } else if (currentTab === "quote-requests") {
-                    const res = await api.get(`/admin/quote-requests?limit=${LIMIT}&offset=${offset}`);
-                    setQrs(res.data.quote_requests || []);
-                    setTotal(res.data.total || 0);
-                }
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
         fetchData();
     }, [currentTab, offset]);
 
@@ -303,6 +696,12 @@ const AdminConsole = () => {
             await api.patch(`/admin/services/${id}/status`, { is_active: !status });
             setServices(prev => prev.map(s => s.id === id ? { ...s, is_active: !status } : s));
         } catch (err) { alert("Status update failed"); }
+    };
+    const handleUpdateQuoteStatus = async (id: string, newStatus: string) => {
+        try {
+            await api.patch(`/admin/quotes/${id}/status`, { status: newStatus });
+            setQs(prev => prev.map(q => q.id === id ? { ...q, status: newStatus as any } : q));
+        } catch (err) { alert("Quote update failed"); }
     };
     const TabContent = {
         "invoices": (
@@ -319,13 +718,8 @@ const AdminConsole = () => {
                 onToggle={handleToggleActive}
             />
         ),
-        "quote-requests": (
-            <QuoteRequestTable
-                qrs={qrs}
-                loading={loading}
-            // props for quotes...
-            />
-        )
+        'quote-requests': <QuoteRequestTable qrs={qrs} loading={loading} onAddQuote={(id) => setSelectedQuoteId(id)} role={user.role} />,
+        quotes: <QuotesTable qs={qs} loading={loading} onUpdateStatus={handleUpdateQuoteStatus} navigate={navigate} role={user.role} />
     };
     return (
         <div className="max-w-6xl mx-auto">
@@ -349,6 +743,7 @@ const AdminConsole = () => {
                     <button onClick={() => { setCurrentTab('invoices'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'invoices' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Invoices</button>
                     <button onClick={() => { setCurrentTab('services'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'services' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Services</button>
                     <button onClick={() => { setCurrentTab('quote-requests'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'quote-requests' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Quote Requests</button>
+                    <button onClick={() => { setCurrentTab('quotes'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'quotes' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Quotes</button>
 
                 </div>
                 <div className="flex items-center gap-4 mb-4">
@@ -367,6 +762,7 @@ const AdminConsole = () => {
                 {TabContent[currentTab]}
             </div>
             {isServiceModalOpen && <CreateServiceModal onClose={() => setIsServiceModalOpen(false)} />}
+            {selectedQuoteId && <CreateQuoteModal requestId={selectedQuoteId} onClose={() => setSelectedQuoteId(null)} onSuccess={fetchData} />}
         </div>
     );
 };
@@ -422,53 +818,158 @@ const StaffTerminal = () => {
 };
 
 // --- Client Portal ---
-
-const ClientPortal = () => {
+const ClientPortal = ({ user }: { user: User }) => {
     const navigate = useNavigate();
+
+    // --- State Management ---
+    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'offers'>('billing');
     const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [qrs, setQrs] = useState<QuoteRequest[]>([]);
+    const [qs, setQs] = useState<Quote[]>([]);
+
+    // Pagination
+    const LIMIT = 10;
+    const [offset, setOffset] = useState(0);
+    const [total, setTotal] = useState(0);
+
+    // Modal State
+    const [editTarget, setEditTarget] = useState<{ id: string, desc: string } | null>(null);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const endpoints: Record<string, string> = {
+                'billing': `/customer/invoices`,
+                'requests': `/customer/quotes/my-requests`,
+                'offers': `/customer/quotes`
+            };
+            const res = await api.get(`${endpoints[currentTab]}?limit=${LIMIT}&offset=${offset}`);
+
+            if (currentTab === 'billing') {
+                setInvoices(res.data.invoices || []);
+            } else if (currentTab === 'requests') {
+                setQrs(res.data.quote_requests || []);
+            } else if (currentTab === 'offers') {
+                setQs(res.data.quotes || []);
+            }
+
+            setTotal(res.data.total || 0);
+        } catch (err) {
+            console.error("Terminal Sync Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchInvoices = async () => {
-            setLoading(true);
-            try {
-                const res = await api.get(`/customer/invoices?limit=5&offset=0`);
-                setInvoices(res.data.invoices || []);
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
-        fetchInvoices();
-    }, []);
+        fetchData();
+    }, [currentTab, offset]);
+
+    // --- Tab Content Mapping ---
+    const TabContent = {
+        billing: (
+            <InvoiceTable
+                invoices={invoices}
+                loading={loading}
+                navigate={navigate}
+            />
+        ),
+        requests: (
+            <QuoteRequestTable
+                qrs={qrs}
+                loading={loading}
+                role={user.role}
+                onEditDescription={(id, desc) => setEditTarget({ id, desc })}
+            />
+        ),
+        offers: (
+            <QuotesTable
+                qs={qs}
+                loading={loading}
+                role={user.role}
+                navigate={navigate}
+                onUpdateStatus={() => { }} // Users cannot update status
+            />
+        )
+    };
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
             <header className="mb-12">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Secure Client Access</span>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter">My Account</h1>
-                <p className="text-gray-400 font-mono text-xs uppercase mt-1">Status: Authorized Session</p>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary underline underline-offset-4">
+                    Authorized Session: {user.first_name}
+                </span>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tighter mt-2">My Account</h1>
             </header>
 
+            {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Unpaid Balance</p>
-                    <h3 className="text-2xl font-black text-amber-500">₦{invoices.reduce((acc, inv) => inv.status.toLowerCase() !== 'paid' ? acc + inv.total : acc, 0).toLocaleString()}</h3>
+                    <h3 className="text-3xl font-black text-amber-500 tracking-tighter">
+                        ₦{invoices.reduce((acc, inv) => inv.status.toLowerCase() !== 'paid' ? acc + inv.total : acc, 0).toLocaleString()}
+                    </h3>
                 </div>
-                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Quotes</p>
-                    <h3 className="text-2xl font-black text-primary">0</h3>
+                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Offers</p>
+                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.length}</h3>
                 </div>
-                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Security Level</p>
-                    <h3 className="text-sm font-black text-green-500 uppercase flex items-center gap-2">Standard User</h3>
+                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Requests</p>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+                        {qrs.filter(r => r.status === 'pending').length}
+                    </h3>
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-900">Recent Transactions</h3>
+            {/* Tab Navigation */}
+            <div className="flex justify-between items-center mb-6 border-b border-gray-200">
+                <div className="flex gap-8">
+                    {['billing', 'requests', 'offers'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => { setCurrentTab(tab as any); setOffset(0); }}
+                            className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all ${currentTab === tab ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
+                        >
+                            {tab === 'billing' ? 'Invoices' : tab === 'requests' ? 'My Requests' : 'Quotes Received'}
+                        </button>
+                    ))}
                 </div>
-                <InvoiceTable invoices={invoices} loading={loading} navigate={navigate} />
+
+                {/* Pagination Controls */}
+                <div className="flex gap-2 mb-4">
+                    <button
+                        disabled={offset === 0 || loading}
+                        onClick={() => setOffset(prev => Math.max(0, prev - LIMIT))}
+                        className="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm"
+                    >
+                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                    </button>
+                    <button
+                        disabled={offset + LIMIT >= total || loading}
+                        onClick={() => setOffset(prev => prev + LIMIT)}
+                        className="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm"
+                    >
+                        <span className="material-symbols-outlined text-sm">chevron_right</span>
+                    </button>
+                </div>
             </div>
+
+            {/* Content Container */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[400px] overflow-hidden transition-all">
+                {TabContent[currentTab]}
+            </div>
+
+            {/* Modals */}
+            {editTarget && (
+                <EditDescriptionModal
+                    requestId={editTarget.id}
+                    initialValue={editTarget.desc}
+                    onClose={() => setEditTarget(null)}
+                    onSuccess={fetchData}
+                />
+            )}
         </div>
     );
 };
@@ -481,11 +982,11 @@ const Dashboard = () => {
     if (user) {
         return (<div className="min-h-screen bg-gray-50 p-8 pt-24">
             {user.role === 'admin' ? (
-                <AdminConsole />
+                <AdminConsole user={user} />
             ) : user.role === 'staff' ? (
                 <StaffTerminal />
             ) : (
-                <ClientPortal />
+                <ClientPortal user={user} />
             )}
         </div>
         )
