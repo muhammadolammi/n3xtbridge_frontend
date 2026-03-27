@@ -34,16 +34,44 @@ export interface User {
     role: string;
     created_at?: { Time: string; Valid: boolean } | null;
 }
-export interface GetQuoteRequest {
+export interface QuoteRequest {
     id: string;
-    user_id: string;
+    user_id?: string;
+    quote_id?: string;
     service_id: string;
     description: string;
     attachments: string[];
     status: 'pending' | 'reviewing' | 'quoted' | 'rejected';
     created_at: string; // Dates come as ISO strings from the Go JSON encoder
     updated_at: string;
-    user_email: string;
-    user_name: string;
-    service_name: string;
+    user_email?: string;
+    user_name?: string;
+    service_name?: string;
+}
+
+
+
+
+
+export interface QuoteBreakdown {
+
+    name: string;
+    cost: string;
+    quantity: number;
+    description: string
+}
+export interface Quote {
+
+    id: string;
+    service_name?: string;
+    quote_request_id: string;
+    service_id?: string;
+    amount: string;
+    breakdown: QuoteBreakdown[];
+    notes: string;
+    status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | "in-review";
+    created_at: string;
+    expires_at: string;
+    updated_at: string;
+
 }

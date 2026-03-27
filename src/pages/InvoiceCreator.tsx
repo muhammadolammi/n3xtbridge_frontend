@@ -88,7 +88,7 @@ export default function InvoiceCreator() {
 
         try {
             setLoading(true);
-            const res = await api.post("/invoices", payload);
+            const res = await api.post("/worker/invoices", payload);
 
             if (res.status === 201) {
                 const createdInvoice: Invoice = res.data;

@@ -13,6 +13,8 @@ import InvoiceViewer from './pages/InvoiceViewer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Services from './pages/Services';
+import QuoteViewer from './pages/QuoteViewer';
+import QuoteRequestViewer from './pages/QuoteRequestViewer';
 
 const App: React.FC = () => {
   return (
@@ -47,11 +49,22 @@ const App: React.FC = () => {
               </ProtectedRoute>
             } />
             <Route path="view-invoice/:id" element={
-              <ProtectedRoute allowedRoles={["staff", "admin", "user"]}>
+              <ProtectedRoute >
                 <InvoiceViewer />
               </ProtectedRoute>
             } />
+            <Route path="view-quote/:id" element={
+              <ProtectedRoute >
+                <QuoteViewer />
+              </ProtectedRoute>
+            } />
+            <Route path="view-qr/:id" element={
+              <ProtectedRoute >
+                <QuoteRequestViewer />
+              </ProtectedRoute>
+            } />
           </Route>
+
 
 
 

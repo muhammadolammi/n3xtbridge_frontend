@@ -64,7 +64,7 @@ const QuoteModal = ({ serviceName, serviceId, onClose }: { serviceName: string, 
                 attachments: [] // Will be implemented later
             };
 
-            const res = await api.post("/quotes/request", payload);
+            const res = await api.post("/customer/quotes/requests", payload);
 
             if (res.status === 201 || res.status === 200) {
                 alert(`Quote request for ${serviceName} dispatched successfully.`);
