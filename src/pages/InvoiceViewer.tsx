@@ -215,9 +215,11 @@ export default function InvoiceViewer() {
                                 </p>
                             </div>
                             <div className="md:w-72 space-y-4">
+                                <h4 className="text-[10px] font-bold uppercase tracking-widest mb-3 text-gray-400">Discounts</h4>
+
                                 {invoice.discounts.map((d, i) => (
                                     <div key={i} className="flex justify-between text-sm">
-                                        <span className="text-red-500 font-bold uppercase text-[10px] tracking-widest">Discount: {d.name}</span>
+                                        <span className="text-red-500 font-bold uppercase text-[10px] tracking-widest"> {d.name}</span>
                                         <span className="text-red-500 font-bold">-₦{d.amount.toLocaleString()}</span>
                                     </div>
                                 ))}

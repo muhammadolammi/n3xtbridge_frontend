@@ -60,6 +60,7 @@ const QuoteModal = ({ serviceName, serviceId, onClose }: { serviceName: string, 
             const payload = {
                 user_id: user.id,
                 service_id: serviceId,
+                service_name: serviceName,
                 description: description,
                 attachments: [] // Will be implemented later
             };

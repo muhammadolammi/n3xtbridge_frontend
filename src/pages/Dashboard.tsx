@@ -17,6 +17,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 
 const QUOTE_STATUS_STYLES: Record<string, string> = {
+    "in-review": "bg-gray-100 text-gray-600 border-gray-200",
     draft: "bg-gray-100 text-gray-600 border-gray-200",
     sent: "bg-blue-100 text-blue-700 border-blue-200",
     accepted: "bg-green-100 text-green-700 border-green-200",
@@ -104,14 +105,15 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
         </div>
     );
 };
-const CreateQuoteModal = ({ requestId, onClose, onSuccess }: { requestId: string, onClose: () => void, onSuccess: () => void }) => {
+
+const CreateQuoteModal = ({ requestId, onClose, onSuccess, adminID }: { requestId: string, onClose: () => void, onSuccess: () => void, adminID: string }) => {
     const [loading, setLoading] = useState(false);
-    // Initializing with quantity 1 as a better default
-    const [items, setItems] = useState([{ name: '', cost: '', description: '', quantity: 1 }]);
+    const [items, setItems] = useState([{ name: '', price: '', description: '', quantity: 1 }]);
+    const [discounts, setDiscounts] = useState([{ name: '', amount: '' }]);
     const [notes, setNotes] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
 
-    const handleAddItem = () => setItems([...items, { name: '', cost: '', description: '', quantity: 1 }]);
+    const handleAddItem = () => setItems([...items, { name: '', price: '', description: '', quantity: 1 }]);
 
     const handleItemChange = (index: number, field: string, value: string | number) => {
         const newItems = [...items];
@@ -119,15 +121,39 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess }: { requestId: string
         setItems(newItems);
     };
 
+    const handleAddDiscount = () => setDiscounts([...discounts, { name: '', amount: '' }]);
+
+    const handleDiscountChange = (index: number, field: string, value: string | number) => {
+        const newDiscounts = [...discounts];
+        (newDiscounts[index] as any)[field] = value;
+        setDiscounts(newDiscounts);
+    };
+
+    // New logic: Select an item to automatically fill discount details
+    const applyItemToDiscount = (discountIndex: number, itemIndex: number) => {
+        if (itemIndex === -1) return; // "Custom Discount" selected
+        const selectedItem = items[itemIndex];
+        const newDiscounts = [...discounts];
+        newDiscounts[discountIndex] = {
+            name: `Discount: ${selectedItem.name}`,
+            amount: selectedItem.price // Sets full unit price as default discount
+        };
+        setDiscounts(newDiscounts);
+    };
+
     const calculateTotal = () => {
-        return items.reduce((acc, item) => {
-            const price = parseFloat(item.cost) || 0;
+        const gross = items.reduce((acc, item) => {
+            const price = parseFloat(item.price) || 0;
             const qty = item.quantity || 0;
             return acc + (price * qty);
         }, 0);
+
+        const totalDiscounts = discounts.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
+
+        return Math.max(0, gross - totalDiscounts);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
@@ -135,15 +161,19 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess }: { requestId: string
                 quote_request_id: requestId,
                 amount: calculateTotal().toString(),
                 breakdown: items,
+                discounts: discounts.filter(d => d.name.trim() !== ""),
                 notes: notes,
                 expires_at: new Date(expiryDate).toISOString(),
-                status: 'draft'
+                status: 'draft',
+                user_id: adminID
             };
+            console.log(payload)
             await api.post('/admin/quotes', payload);
             alert("Official Quote dispatched to registry.");
             onSuccess();
             onClose();
         } catch (err) {
+            console.log(err)
             alert("Failed to deploy quote. Please check connection.");
         } finally {
             setLoading(false);
@@ -167,53 +197,73 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess }: { requestId: string
                         <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Line Items (Breakdown)</label>
                         {items.map((item, index) => (
                             <div key={index} className="grid grid-cols-12 gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100 relative group">
-                                {/* Item Name */}
                                 <div className="col-span-12 md:col-span-6">
-                                    <input placeholder="Item Name (e.g. 4K IP Camera)" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary transition-colors"
+                                    <input placeholder="Item Name" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary"
                                         value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required />
                                 </div>
-                                {/* Quantity */}
                                 <div className="col-span-4 md:col-span-2">
-                                    <input placeholder="Qty" type="number" min="1" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary transition-colors"
+                                    <input placeholder="Qty" type="number" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary"
                                         value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} required />
                                 </div>
-                                {/* Unit Cost */}
                                 <div className="col-span-6 md:col-span-3">
-                                    <input placeholder="Unit Cost (₦)" type="number" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary transition-colors"
-                                        value={item.cost} onChange={e => handleItemChange(index, 'cost', e.target.value)} required />
+                                    <input placeholder="Unit Price (₦)" type="number" className="w-full bg-transparent border-b border-gray-200 py-1 text-sm font-bold outline-none focus:border-primary"
+                                        value={item.price} onChange={e => handleItemChange(index, 'price', e.target.value)} required />
                                 </div>
-                                {/* Delete Button */}
-                                <div className="col-span-2 md:col-span-1 flex justify-end items-center">
-                                    <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-red-300 hover:text-red-500 transition-colors">
+                                <div className="col-span-2 md:col-span-1 flex justify-end">
+                                    <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-red-300 hover:text-red-500">
                                         <span className="material-symbols-outlined text-lg">delete</span>
                                     </button>
                                 </div>
-                                {/* Item Description */}
                                 <div className="col-span-12">
-                                    <input placeholder="Technical specification or item details..." className="w-full bg-transparent border-b border-gray-100 py-1 text-[10px] outline-none text-gray-500 italic"
+                                    <input placeholder="Description..." className="w-full bg-transparent border-b border-gray-100 py-1 text-[10px] outline-none italic"
                                         value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} />
                                 </div>
                             </div>
                         ))}
-
-                        <button type="button" onClick={handleAddItem} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:border-primary hover:text-primary transition-all active:scale-[0.98]">
-                            + Add Infrastructure Component
-                        </button>
+                        <button type="button" onClick={handleAddItem} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:border-primary hover:text-primary transition-all">+ Add Component</button>
                     </div>
 
-                    {/* General Quote Notes */}
+                    {/* Discounts Section */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Discounts & Deductions</label>
+                        {discounts.map((discount, index) => (
+                            <div key={index} className="grid grid-cols-12 gap-4 p-5 bg-amber-50/50 rounded-2xl border border-amber-100 relative group">
+                                {/* Item Selector for Fast Discounting */}
+                                <div className="col-span-12">
+                                    <select
+                                        className="w-full bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase text-amber-700 outline-none mb-2"
+                                        onChange={(e) => applyItemToDiscount(index, parseInt(e.target.value))}
+                                    >
+                                        <option value="-1">Apply Discount to Item...</option>
+                                        {items.map((item, i) => (
+                                            item.name && <option key={i} value={i}>Full Unit Discount: {item.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="col-span-12 md:col-span-7">
+                                    <input placeholder="Discount Name" className="w-full bg-transparent border-b border-amber-200 py-1 text-sm font-bold outline-none focus:border-amber-500"
+                                        value={discount.name} onChange={e => handleDiscountChange(index, 'name', e.target.value)} required />
+                                </div>
+                                <div className="col-span-10 md:col-span-4">
+                                    <input placeholder="Amount (₦)" type="number" className="w-full bg-transparent border-b border-amber-200 py-1 text-sm font-bold outline-none focus:border-amber-500 text-red-600"
+                                        value={discount.amount} onChange={e => handleDiscountChange(index, 'amount', e.target.value)} required />
+                                </div>
+                                <div className="col-span-2 md:col-span-1 flex justify-end">
+                                    <button type="button" onClick={() => setDiscounts(discounts.filter((_, i) => i !== index))} className="text-amber-300 hover:text-amber-600">
+                                        <span className="material-symbols-outlined text-lg">close</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        <button type="button" onClick={handleAddDiscount} className="w-full py-3 border-2 border-dashed border-amber-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-amber-400 hover:border-amber-500 hover:text-amber-600 transition-all">+ Add Discount</button>
+                    </div>
+
                     <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Quote Notes / Terms</label>
-                        <textarea
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm outline-none focus:border-primary transition-all"
-                            rows={3}
-                            placeholder="Add payment terms, installation timelines, or warranty info..."
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                        />
+                        <textarea className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm outline-none focus:border-primary transition-all" rows={3} placeholder="..." value={notes} onChange={(e) => setNotes(e.target.value)} />
                     </div>
 
-                    {/* Footer Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 items-end">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold uppercase text-gray-400">Validity Period</label>
@@ -221,27 +271,20 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess }: { requestId: string
                                 value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
                         </div>
                         <div className="text-right">
-                            <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Estimated Total</label>
+                            <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Final Investment Total</label>
                             <span className="text-3xl font-black text-primary tracking-tighter">₦{calculateTotal().toLocaleString()}</span>
                         </div>
                     </div>
 
-                    {/* Final Action */}
-                    <button disabled={loading} className="w-full bg-secondary-dark text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl hover:shadow-secondary-dark/20 disabled:opacity-50 flex items-center justify-center gap-3">
-                        {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : (
-                            <>
-                                <span>Dispatch Final Quote</span>
-                                <span className="material-symbols-outlined text-sm">verified</span>
-                            </>
-                        )}
+                    <button disabled={loading} className="w-full bg-secondary-dark text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-3">
+                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <><span>Dispatch Final Quote</span><span className="material-symbols-outlined text-sm">verified</span></>}
                     </button>
                 </form>
             </div>
         </div>
     );
 };
+
 const EditDescriptionModal = ({
     requestId,
     initialValue,
@@ -379,6 +422,8 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
             <thead>
                 <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
                     <th className="px-6 py-4">ID / Reference</th>
+                    <th className="px-6 py-4">Quote Ref</th>
+
                     <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Amount</th>
@@ -390,27 +435,48 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
                     <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Syncing Ledger...</td></tr>
                 ) : invoices.length === 0 ? (
                     <tr><td colSpan={5} className="p-10 text-center text-gray-400">No matching records found.</td></tr>
-                ) : invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-xs text-gray-600">{inv.invoice_number}</td>
-                        <td className="px-6 py-4">
-                            <p className="text-sm font-bold text-gray-900">{inv.customer_name}</p>
-                            <p className="text-[10px] text-gray-400 uppercase font-mono">{inv.customer_email}</p>
-                        </td>
-                        <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${STATUS_STYLES[inv.status.toLowerCase()] || STATUS_STYLES.default}`}>
-                                {inv.status}
-                            </span>
-                        </td>
-                        <td className="px-6 py-4 text-right font-bold text-gray-900">₦{inv.total.toLocaleString()}</td>
-                        <td className="px-6 py-4 text-right">
-                            <button onClick={() => navigate(`/dashboard/view-invoice/${inv.id}`, { state: { invoice: inv } })} className="text-primary hover:underline text-xs font-black uppercase tracking-tighter">View</button>
-                        </td>
-                    </tr>
-                ))}
+                ) : (
+                    invoices.map((inv) => {
+                        let quoteRef = "Empty"
+                        if (inv.quote_id) {
+                            quoteRef = `Q-${inv.quote_id.slice(0, 8)}`
+                        }
+                        return (
+                            <tr key={inv.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4">
+                                    {inv.invoice_number}
+                                    {inv.deleted_at.Valid && inv.deleted_at.Valid === true && (
+                                        <span className="ml-2 text-[8px] bg-red-100 text-red-600 px-1 rounded font-black uppercase">Archived</span>
+                                    )}
+                                </td>
+                                {/* ... rest of columns ... */}
+                                {/* <td className="px-6 py-4 font-mono text-xs text-gray-600">{inv.invoice_number}</td> */}
+                                <td className="px-6 py-4 font-mono text-xs text-gray-600">{inv.quote_id?.startsWith("00000000") ? "Empty" : quoteRef}</td>
+
+                                <td className="px-6 py-4">
+                                    <p className="text-sm font-bold text-gray-900">{inv.customer_name}</p>
+                                    <p className="text-[10px] text-gray-400 uppercase font-mono">{inv.customer_email}</p>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${STATUS_STYLES[inv.status.toLowerCase()] || STATUS_STYLES.default}`}>
+                                        {inv.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 text-right font-bold text-gray-900">₦{inv.total.toLocaleString()}</td>
+                                <td className="px-6 py-4 text-right">
+                                    <button onClick={() => navigate(`/dashboard/view-invoice/${inv.id}`, { state: { invoice: inv } })} className="text-primary hover:underline text-xs font-black uppercase tracking-tighter">View</button>
+                                </td>
+                            </tr>
+                        )
+                    }
+
+
+                    )
+                )
+                }
             </tbody>
         </table>
-    </div>
+    </div >
 );
 
 
@@ -552,7 +618,11 @@ const QuotesTable = ({
     role: string
 }) => {
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
-    const statuses: Quote['status'][] = ['draft', 'sent', 'accepted', 'declined', 'expired'];
+    var statuses: Quote['status'][] = ['draft', 'sent', 'expired', 'in-review'];
+    if (role === "user") {
+        statuses = ['accepted', 'declined'];
+
+    }
 
     return (
         <div className="overflow-x-auto min-h-[400px]">
@@ -561,7 +631,6 @@ const QuotesTable = ({
                     <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
                         <th className="px-6 py-4">Quote Ref</th>
                         <th className="px-6 py-4">Service</th>
-
                         <th className="px-6 py-4">Amount</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4">Valid Until</th>
@@ -593,7 +662,7 @@ const QuotesTable = ({
                                     <div className="relative inline-block">
                                         {/* Status Switcher (Disabled for Users) */}
                                         <button
-                                            disabled={role === 'user'}
+                                            disabled={role === 'user' || q.status === 'declined'}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setActiveMenu(activeMenu === q.id ? null : q.id);
@@ -701,7 +770,7 @@ const AdminConsole = ({ user }: { user: User }) => {
         try {
             await api.patch(`/admin/quotes/${id}/status`, { status: newStatus });
             setQs(prev => prev.map(q => q.id === id ? { ...q, status: newStatus as any } : q));
-        } catch (err) { alert("Quote update failed"); }
+        } catch (err) { alert(`Quote update failed`); }
     };
     const TabContent = {
         "invoices": (
@@ -762,7 +831,7 @@ const AdminConsole = ({ user }: { user: User }) => {
                 {TabContent[currentTab]}
             </div>
             {isServiceModalOpen && <CreateServiceModal onClose={() => setIsServiceModalOpen(false)} />}
-            {selectedQuoteId && <CreateQuoteModal requestId={selectedQuoteId} onClose={() => setSelectedQuoteId(null)} onSuccess={fetchData} />}
+            {selectedQuoteId && <CreateQuoteModal requestId={selectedQuoteId} onClose={() => setSelectedQuoteId(null)} onSuccess={fetchData} adminID={user.id} />}
         </div>
     );
 };
@@ -822,7 +891,7 @@ const ClientPortal = ({ user }: { user: User }) => {
     const navigate = useNavigate();
 
     // --- State Management ---
-    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'offers'>('billing');
+    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers'>('billing');
     const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
@@ -842,7 +911,8 @@ const ClientPortal = ({ user }: { user: User }) => {
             const endpoints: Record<string, string> = {
                 'billing': `/customer/invoices`,
                 'requests': `/customer/quotes/my-requests`,
-                'offers': `/customer/quotes`
+                'active-offers': `/customer/quotes`,
+                'declined-offers': `/customer/quotes`
             };
             const res = await api.get(`${endpoints[currentTab]}?limit=${LIMIT}&offset=${offset}`);
 
@@ -850,7 +920,7 @@ const ClientPortal = ({ user }: { user: User }) => {
                 setInvoices(res.data.invoices || []);
             } else if (currentTab === 'requests') {
                 setQrs(res.data.quote_requests || []);
-            } else if (currentTab === 'offers') {
+            } else if (currentTab === 'active-offers' || currentTab === 'declined-offers') {
                 setQs(res.data.quotes || []);
             }
 
@@ -875,6 +945,26 @@ const ClientPortal = ({ user }: { user: User }) => {
                 navigate={navigate}
             />
         ),
+        "active-offers": (
+            <QuotesTable
+                // Filter: Only show quotes the user can still act on or has accepted
+                qs={qs.filter(q => q.status === 'sent' || q.status === 'accepted' || q.status === 'in-review')}
+                loading={loading}
+                role={user.role}
+                navigate={navigate}
+                onUpdateStatus={() => { }}
+            />
+        ),
+        "declined-offers": (
+            <QuotesTable
+                // Filter: Only show quotes that were rejected or have expired
+                qs={qs.filter(q => q.status === 'declined' || q.status === 'expired')}
+                loading={loading}
+                role={user.role}
+                navigate={navigate}
+                onUpdateStatus={() => { }}
+            />
+        ),
         requests: (
             <QuoteRequestTable
                 qrs={qrs}
@@ -883,17 +973,7 @@ const ClientPortal = ({ user }: { user: User }) => {
                 onEditDescription={(id, desc) => setEditTarget({ id, desc })}
             />
         ),
-        offers: (
-            <QuotesTable
-                qs={qs}
-                loading={loading}
-                role={user.role}
-                navigate={navigate}
-                onUpdateStatus={() => { }} // Users cannot update status
-            />
-        )
     };
-
     return (
         <div className="max-w-6xl mx-auto">
             <header className="mb-12">
@@ -912,27 +992,38 @@ const ClientPortal = ({ user }: { user: User }) => {
                     </h3>
                 </div>
                 <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Offers</p>
-                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.length}</h3>
-                </div>
-                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Requests</p>
                     <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
                         {qrs.filter(r => r.status === 'pending').length}
                     </h3>
                 </div>
+                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Offers</p>
+                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.reduce((acc, q) => {
+                        const isActive = q.status === 'sent' || q.status === 'accepted';
+                        return isActive ? acc + 1 : acc;
+                    }, 0)}</h3>
+                </div>
+                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Declined Offers</p>
+                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.reduce((acc, q) => {
+                        const isActive = q.status === 'declined';
+                        return isActive ? acc + 1 : acc;
+                    }, 0)}</h3>
+                </div>
+
             </div>
 
             {/* Tab Navigation */}
             <div className="flex justify-between items-center mb-6 border-b border-gray-200">
                 <div className="flex gap-8">
-                    {['billing', 'requests', 'offers'].map((tab) => (
+                    {['billing', 'requests', 'active-offers', 'declined-offers'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => { setCurrentTab(tab as any); setOffset(0); }}
                             className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all ${currentTab === tab ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                            {tab === 'billing' ? 'Invoices' : tab === 'requests' ? 'My Requests' : 'Quotes Received'}
+                            {tab === 'billing' ? 'Invoices' : tab === 'requests' ? 'My Requests' : tab === 'active-offers' ? 'Active Quotes' : 'Declined Quotes'}
                         </button>
                     ))}
                 </div>
