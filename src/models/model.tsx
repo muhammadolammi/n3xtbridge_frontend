@@ -1,6 +1,8 @@
 
 export interface Invoice {
     id: string;
+    quote_id?: string;
+    deleted_at?: any;
     invoice_number: string;
     customer_name: string;
     customer_email: string;
@@ -56,18 +58,20 @@ export interface QuoteRequest {
 export interface QuoteBreakdown {
 
     name: string;
-    cost: string;
+    price: string;
     quantity: number;
     description: string
 }
 export interface Quote {
-
     id: string;
     service_name?: string;
     quote_request_id: string;
     service_id?: string;
+    user_id?: string;
+
     amount: string;
     breakdown: QuoteBreakdown[];
+    discounts: Array<{ name: string; amount: string; }>;
     notes: string;
     status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | "in-review";
     created_at: string;

@@ -14,25 +14,22 @@ export default function InvoiceCreator() {
     const [notes, setNotes] = useState("");
 
     // --- State for Line Items & Discounts ---
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState([{ name: '', price: 0, description: '', quantity: 1 }]);
     const [discounts, setDiscounts] = useState<any[]>([]);
 
     const addItem = () => {
-        setItems([...items, { name: "", quantity: 1, price: 0 }]);
+        setItems([...items, { name: "", quantity: 1, price: 0, description: '' }]);
     };
 
     const removeItem = (index: number) => {
         setItems(items.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: string, value: any) => {
+    const updateItem = (index: number, field: string, value: string | number) => {
         const updated = [...items];
         // Mapping UI "description" to Backend "name"
-        if (field === "description") {
-            updated[index]["name"] = value;
-        } else {
-            updated[index][field] = Number(value);
-        }
+        (updated[index] as any)[field] = value;
+
         setItems(updated);
     };
 
@@ -51,7 +48,7 @@ export default function InvoiceCreator() {
     };
 
     // --- Calculations ---
-    const itemsTotal = items.reduce((acc, item) => acc + item.quantity * item.price, 0);
+    const itemsTotal = items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
     const discountTotal = discounts.reduce((acc, d) => acc + d.amount, 0);
     const total = itemsTotal - discountTotal;
 
@@ -181,7 +178,10 @@ export default function InvoiceCreator() {
                         <div className="p-0 overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50/50">
+
                                     <tr>
+                                        <th className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Name</th>
+
                                         <th className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Description</th>
                                         <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 w-24 text-center">Qty</th>
                                         <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 w-32 text-right">Unit Price</th>
@@ -203,7 +203,16 @@ export default function InvoiceCreator() {
                                                         className={`w-full bg-transparent border-0 p-0 text-sm focus:ring-0 font-medium ${!item.name ? "border-b border-red-400" : "text-secondary-dark"}`}
                                                         type="text"
                                                         value={item.name}
-                                                        placeholder="Item description (e.g Solar Panel)"
+                                                        placeholder="Item name (e.g Solar Panel)"
+                                                        onChange={(e) => updateItem(index, "description", e.target.value)}
+                                                    />
+                                                </td>
+                                                <td className="px-8 py-4">
+                                                    <input
+                                                        className={`w-full bg-transparent border-0 p-0 text-sm focus:ring-0 font-medium ${!item.description ? "border-b border-red-400" : "text-secondary-dark"}`}
+                                                        type="text"
+                                                        value={item.name}
+                                                        placeholder="Item short description"
                                                         onChange={(e) => updateItem(index, "description", e.target.value)}
                                                     />
                                                 </td>

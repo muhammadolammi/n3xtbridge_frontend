@@ -17,19 +17,22 @@ const getQuoteStatusStyles = (status: string) => {
     return map[s] || map.default;
 };
 
+
+
 export default function QuoteViewer() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const location = useLocation();
     const { user, loading: authLoading } = useAuth();
 
-    // Support in-memory value from navigate state or fetch from backend
     const [quote, setQuote] = useState<Quote | null>(location.state?.quote || null);
     const [loading, setLoading] = useState<boolean>(!location.state?.quote);
     const [error, setError] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
         if (authLoading) return;
+
 
         if (!user) {
             setError("Invalid Session");
@@ -38,29 +41,56 @@ export default function QuoteViewer() {
         }
 
         if (quote) {
+            console.log(quote)
             setLoading(false);
             return;
         }
 
+        let isMounted = true;
+
         const fetchQuoteFromAPI = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const res = await api.get(`/customer/quotes/${id}`);
-                setQuote(res.data.quote);
+
+                if (isMounted) {
+                    const fetchedQuote = res.data.quote;
+                    if (fetchedQuote) {
+                        setQuote(fetchedQuote);
+                    } else {
+                        setError("Quote data is empty");
+                    }
+                }
             } catch (err: any) {
-                console.error("API Error:", err);
-                // Distinguish between 404 (Missing) and other errors (Connection)
-                const msg = err.response?.status === 404
-                    ? "Quote Not Found"
-                    : "Terminal Connection Error";
-                setError(msg);
+                if (isMounted) {
+                    // Ignore 401s if we are still technically in an auth-transition
+                    // but usually, if authLoading is false, this is a real error.
+                    console.error(err);
+                    setError(err.response?.status === 404 ? "Quote Not Found" : "Terminal Connection Error");
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         if (id) fetchQuoteFromAPI();
+
+        return () => { isMounted = false; };
     }, [id, authLoading, user, !!quote]);
+    const handleUpdateStatus = async (newStatus: 'accepted' | 'declined') => {
+        if (!id) return;
+        setActionLoading(true);
+        try {
+            await api.patch(`/customer/quotes/${id}/status`, { status: newStatus });
+            setQuote(prev => prev ? { ...prev, status: newStatus } : null);
+            alert(`Quote successfully ${newStatus}.`);
+        } catch (err) {
+            alert("Failed to update quote status. Please try again.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     const handlePrint = () => {
         const originalTitle = document.title;
@@ -69,89 +99,103 @@ export default function QuoteViewer() {
         document.title = originalTitle;
     };
 
-    if (authLoading || loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+    if (authLoading || loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    );
 
-    if (error || !quote) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6 text-center">
-                <div className="bg-white p-10 rounded-2xl border border-gray-200 shadow-sm max-w-sm">
-                    <span className="material-symbols-outlined text-red-400 text-5xl mb-4">history_edu</span>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Technical Specification Missing</h3>
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-widest mb-6">{error}</p>
-                    <button onClick={() => navigate('/dashboard')} className="text-primary font-black text-xs uppercase hover:underline">Return to Hub</button>
-                </div>
+    if (error || !quote) return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6 text-center">
+            <div className="bg-white p-10 rounded-2xl border border-gray-200 shadow-sm max-w-sm">
+                <span className="material-symbols-outlined text-red-400 text-5xl mb-4">history_edu</span>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Quote Unavailable</h3>
+                <p className="text-gray-500 text-xs uppercase font-bold tracking-widest mb-6">{error}</p>
+                <button onClick={() => navigate('/dashboard')} className="text-primary font-black text-xs uppercase hover:underline">Return to Hub</button>
             </div>
-        );
-    }
+        </div>
+    );
 
-    // Handle the typo from backend "exire_at"
-    const expiryDate = (quote as any).exire_at || quote.expires_at;
+    const expiryDate = quote.expires_at;
 
     return (
         <main className="pt-24 pb-12 px-4 md:px-6 bg-gray-50 min-h-screen print:bg-white print:pt-0">
             <div className="max-w-4xl mx-auto">
-
-                {/* Actions */}
+                {/* Actions Header */}
                 <div className="flex justify-between items-center mb-8 print:hidden">
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors">
                         <span className="material-symbols-outlined text-sm">arrow_back</span> Back
                     </button>
-                    <button onClick={handlePrint} className="flex items-center gap-2 px-6 py-2 bg-secondary-dark text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl">
-                        <span className="material-symbols-outlined text-sm">print</span> Export PDF
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        {/* User Action Buttons - Only show if user is client and quote is sent */}
+                        {user?.role === 'user' && (<>
+                            <button
+                                disabled={actionLoading || quote.status === 'accepted'}
+                                onClick={() => handleUpdateStatus('accepted')}
+                                className="bg-green-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50"
+                            >
+                                Accept &amp; Pay
+                            </button>
+                            <button
+                                disabled={actionLoading || quote.status === 'declined' || quote.status == 'accepted'}
+                                onClick={() => handleUpdateStatus('declined')}
+                                className="bg-red-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50"
+                            >
+                                Decline
+                            </button>
+                            <button className="bg-gray-800 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+                                Discuss
+                            </button>
+                        </>
+                        )}
+                        <button onClick={handlePrint} className="flex items-center gap-2 px-5 py-2 border border-gray-200 bg-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
+                            <span className="material-symbols-outlined text-sm">print</span> Print
+                        </button>
+                    </div>
                 </div>
 
-                {/* Document Body */}
                 <div className="bg-white border border-gray-100 shadow-2xl rounded-sm relative overflow-hidden print:shadow-none print:border-none">
                     <div className="absolute top-0 left-0 w-full h-1.5 bg-secondary-dark"></div>
 
                     <div className="p-8 md:p-16">
-                        {/* Header */}
                         <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-16">
                             <div className="space-y-4">
                                 <h1 className="text-2xl font-black tracking-tighter text-gray-900 uppercase">N3xtbridge Holdings</h1>
                                 <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest leading-relaxed">
-                                    Technical Architecture & Digital Infrastructure<br />
+                                    Innovative Tech Solutions<br />
                                     Abuja, Nigeria | support@n3xtbridge.com
                                 </p>
                             </div>
                             <div className="text-left md:text-right">
+
                                 <h2 className="text-4xl font-black text-gray-900 tracking-tighter uppercase mb-2">Quote</h2>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">
+                                    {quote.service_name || "Technical Service"}
+                                </p>
                                 <span className={`px-3 py-1 rounded border text-[10px] font-black uppercase tracking-widest ${getQuoteStatusStyles(quote.status)}`}>
                                     {quote.status}
                                 </span>
                             </div>
                         </div>
 
-                        {/* Details Grid */}
                         <div className="grid grid-cols-2 gap-12 mb-16 py-8 border-y border-gray-50">
                             <div>
                                 <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Reference ID:</p>
-                                <p className="text-sm font-mono font-bold text-gray-900 uppercase">Q-{quote.id.slice(0, 12)}</p>
-                                <p className="text-[10px] text-gray-400 mt-1 uppercase">Related Req: {quote.quote_request_id.slice(0, 8)}</p>
+                                <p className="text-sm font-mono font-bold text-gray-900 uppercase tracking-tighter">Q-{quote.id.slice(0, 12)}</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Valid Until:</p>
                                 <p className="text-sm font-bold text-gray-900">
                                     {new Date(expiryDate).toLocaleDateString('en-NG', { dateStyle: 'long' })}
                                 </p>
-                                {new Date(expiryDate) < new Date() && (
-                                    <p className="text-[10px] font-black text-red-500 uppercase mt-1">Status: Expired</p>
-                                )}
                             </div>
                         </div>
 
-                        {/* Breakdown Table */}
-                        <table className="w-full mb-12">
+                        <table className="w-full mb-8">
                             <thead>
                                 <tr className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                                    <th className="py-4 text-left">Infrastructure Component</th>
+                                    <th className="py-4 text-left">Description</th>
                                     <th className="py-4 text-center w-20">Qty</th>
                                     <th className="py-4 text-right w-32">Unit Price</th>
                                     <th className="py-4 text-right w-32">Subtotal</th>
@@ -165,33 +209,47 @@ export default function QuoteViewer() {
                                             <p className="text-[10px] text-gray-400 mt-1 italic">{item.description}</p>
                                         </td>
                                         <td className="py-6 text-center text-sm text-gray-600 font-mono">x{item.quantity || 1}</td>
-                                        <td className="py-6 text-right text-sm text-gray-600 font-mono">₦{parseFloat(item.cost).toLocaleString()}</td>
+                                        <td className="py-6 text-right text-sm text-gray-600 font-mono">₦{parseFloat(item.price).toLocaleString()}</td>
                                         <td className="py-6 text-right font-bold text-gray-900 font-mono">
-                                            ₦{((item.quantity || 1) * parseFloat(item.cost)).toLocaleString()}
+                                            ₦{((item.quantity || 1) * parseFloat(item.price)).toLocaleString()}
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
 
-                        {/* Summary */}
+                        {/* Discounts Section */}
+                        {quote.discounts && quote.discounts.length > 0 && (
+                            <div className="mb-12 border-t border-gray-50 pt-4">
+                                {quote.discounts.map((discount, i) => (
+                                    <div key={i} className="flex justify-between items-center py-2">
+                                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest italic">
+                                            {discount.name}
+                                        </span>
+                                        <span className="font-mono text-sm font-bold text-red-500">
+                                            - ₦{parseFloat(discount.amount).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         <div className="flex flex-col md:flex-row justify-between gap-12 pt-8 border-t-2 border-gray-900">
                             <div className="max-w-xs">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-gray-400">Notes & Provisions</h4>
-                                <p className="text-xs text-gray-500 leading-relaxed italic">
-                                    {quote.notes || "This architectural quote is subject to site inspection and standard terms of service."}
+                                <p className="text-xs text-gray-500 leading-relaxed italic border-l-2 border-gray-100 pl-4">
+                                    {quote.notes || "This architectural quote is subject to standard terms of service."}
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Estimated Total Investment</p>
-                                <p className="text-4xl font-black text-primary tracking-tighter">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Final Investment Total</p>
+                                <p className="text-4xl font-black text-primary tracking-tighter leading-none mb-2">
                                     ₦{parseFloat(quote.amount).toLocaleString()}
                                 </p>
-                                <p className="text-[9px] font-bold text-gray-400 uppercase mt-2 italic">Currency: Nigerian Naira (NGN)</p>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase italic">Currency: Nigerian Naira (NGN)</p>
                             </div>
                         </div>
 
-                        {/* Signature Block - Print Only */}
                         <div className="hidden print:flex justify-between mt-24">
                             <div className="w-48 border-t border-gray-300 pt-2 text-center">
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Authorized Signature</p>
