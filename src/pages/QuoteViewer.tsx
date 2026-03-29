@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import type { Quote } from '../models/model';
+import type { Invoice, Quote } from '../models/model';
 import { useAuth } from '../context/AuthContext';
+import { makePayment } from '../api/payment';
 
 const getQuoteStatusStyles = (status: string) => {
     const s = status?.toLowerCase();
@@ -18,6 +19,24 @@ const getQuoteStatusStyles = (status: string) => {
 };
 
 
+const PaymentPromptModal = ({ onPay, onLater }: { onPay: () => void, onLater: () => void }) => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-white max-w-sm w-full rounded-2xl shadow-2xl p-8 text-center animate-in zoom-in duration-300">
+            <span className="material-symbols-outlined text-green-500 text-6xl mb-4">check_circle</span>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Proposal Accepted</h3>
+            <p className="text-gray-500 text-sm mb-8">Specification recorded. Would you like to proceed to secure payment now to begin implementation?</p>
+            <div className="flex flex-col gap-3">
+                <button onClick={onPay} className="w-full bg-primary text-white py-3 rounded-xl font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+                    Pay Now
+                </button>
+                <button onClick={onLater} className="w-full bg-gray-50 text-gray-400 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-gray-100 transition-all">
+                    I'll Pay Later
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 
 export default function QuoteViewer() {
     const { id } = useParams<{ id: string }>();
@@ -26,65 +45,74 @@ export default function QuoteViewer() {
     const { user, loading: authLoading } = useAuth();
 
     const [quote, setQuote] = useState<Quote | null>(location.state?.quote || null);
+    const [quoteInvoice, setQuoteInvoice] = useState<Invoice | null>(null);
+
     const [loading, setLoading] = useState<boolean>(!location.state?.quote);
     const [error, setError] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
-
+    const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
+    const [associatedInvoiceId, setAssociatedInvoiceId] = useState<string | null>(null);
     useEffect(() => {
-        if (authLoading) return;
-
-
-        if (!user) {
-            setError("Invalid Session");
-            setLoading(false);
-            return;
-        }
-
-        if (quote) {
-            console.log(quote)
-            setLoading(false);
-            return;
-        }
+        if (authLoading || !user || !id) return;
 
         let isMounted = true;
 
-        const fetchQuoteFromAPI = async () => {
+        const syncTerminalData = async () => {
+            // If we have a quote and it's NOT accepted, we don't need to fetch anything
+            if (quote && quote.status !== 'accepted') {
+                setLoading(false);
+                return;
+            }
+
             try {
                 setLoading(true);
                 setError(null);
-                const res = await api.get(`/customer/quotes/${id}`);
 
-                if (isMounted) {
-                    const fetchedQuote = res.data.quote;
-                    if (fetchedQuote) {
-                        setQuote(fetchedQuote);
-                    } else {
-                        setError("Quote data is empty");
-                    }
+                // 1. Check if we need the Quote (if not in state)
+                let currentQuote = quote;
+                if (!currentQuote) {
+                    const quoteRes = await api.get(`/customer/quotes/${id}`);
+                    currentQuote = quoteRes.data.quote;
+                    if (isMounted) setQuote(currentQuote);
                 }
+
+                // 2. Check if we need the Invoice (Only if status is 'accepted')
+                if (currentQuote?.status === 'accepted' && !quoteInvoice) {
+                    const invRes = await api.get(`/quotes/invoices/${id}`);
+                    if (isMounted) setQuoteInvoice(invRes.data);
+                }
+
             } catch (err: any) {
                 if (isMounted) {
-                    // Ignore 401s if we are still technically in an auth-transition
-                    // but usually, if authLoading is false, this is a real error.
-                    console.error(err);
-                    setError(err.response?.status === 404 ? "Quote Not Found" : "Terminal Connection Error");
+                    // Only error out if we don't even have a quote to show
+                    if (!quote) {
+                        setError(err.response?.status === 404 ? "Quote Not Found" : "Terminal Connection Error");
+                    }
+                    console.error("Data sync error:", err);
                 }
             } finally {
                 if (isMounted) setLoading(false);
             }
         };
 
-        if (id) fetchQuoteFromAPI();
+        syncTerminalData();
 
         return () => { isMounted = false; };
-    }, [id, authLoading, user, !!quote]);
+    }, [id, authLoading, user]); // Note: 'quote' is excluded to prevent loops
+
     const handleUpdateStatus = async (newStatus: 'accepted' | 'declined') => {
         if (!id) return;
         setActionLoading(true);
         try {
-            await api.patch(`/customer/quotes/${id}/status`, { status: newStatus });
+            const res = await api.patch(`/customer/quotes/${id}/status`, { status: newStatus });
             setQuote(prev => prev ? { ...prev, status: newStatus } : null);
-            alert(`Quote successfully ${newStatus}.`);
+            if (newStatus === 'accepted') {
+                // Store the invoice ID returned from your Go transaction
+                setAssociatedInvoiceId(res.data.invoice_id);
+                setShowPaymentPrompt(true);
+            } else {
+                alert("Quote declined.");
+            }
         } catch (err) {
             alert("Failed to update quote status. Please try again.");
         } finally {
@@ -92,6 +120,18 @@ export default function QuoteViewer() {
         }
     };
 
+    const handlePay = async (invoiceID: string) => {
+        setActionLoading(true);
+        try {
+            const checkoutUrl = await makePayment(invoiceID);
+            // This is how you redirect to the Paystack checkout page
+            window.location.href = checkoutUrl;
+        } catch (err) {
+            alert("Payment gateway communication failed. Please try from your billing dashboard.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
     const handlePrint = () => {
         const originalTitle = document.title;
         document.title = `N3xtbridge_Quote_${quote?.id.slice(0, 8)}`;
@@ -116,6 +156,7 @@ export default function QuoteViewer() {
         </div>
     );
 
+
     const expiryDate = quote.expires_at;
 
     return (
@@ -129,31 +170,54 @@ export default function QuoteViewer() {
 
                     <div className="flex items-center gap-3">
                         {/* User Action Buttons - Only show if user is client and quote is sent */}
-                        {user?.role === 'user' && (<>
-                            <button
-                                disabled={actionLoading || quote.status === 'accepted'}
-                                onClick={() => handleUpdateStatus('accepted')}
-                                className="bg-green-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50"
-                            >
-                                Accept &amp; Pay
-                            </button>
-                            <button
-                                disabled={actionLoading || quote.status === 'declined' || quote.status == 'accepted'}
-                                onClick={() => handleUpdateStatus('declined')}
-                                className="bg-red-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50"
-                            >
-                                Decline
-                            </button>
-                            <button className="bg-gray-800 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
-                                Discuss
-                            </button>
-                        </>
-                        )}
+                        {
+                            user?.role === 'user' && (
+                                <div className="flex items-center gap-3">
+
+                                    {quote.status === 'accepted' && !!quoteInvoice && quoteInvoice.id && (
+                                        <button
+                                            disabled={actionLoading}
+                                            onClick={() => handlePay(quoteInvoice.id)}
+                                            className="bg-green-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg"
+                                        >
+                                            {actionLoading ? "Redirecting..." : "Pay Now"}
+                                        </button>
+                                    )}
+
+                                    <button
+                                        disabled={actionLoading || quote.status === 'accepted'}
+                                        onClick={() => handleUpdateStatus('accepted')}
+                                        className="bg-green-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50"
+                                    >
+                                        Accept
+                                    </button>
+                                    <button
+                                        disabled={actionLoading || quote.status === 'declined' || quote.status == 'accepted'}
+                                        onClick={() => handleUpdateStatus('declined')}
+                                        className="bg-red-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50"
+                                    >
+                                        Decline
+                                    </button>
+                                    <button className="bg-gray-800 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+                                        Discuss
+                                    </button>
+                                </div>
+
+                            )
+                        }
                         <button onClick={handlePrint} className="flex items-center gap-2 px-5 py-2 border border-gray-200 bg-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
                             <span className="material-symbols-outlined text-sm">print</span> Print
                         </button>
                     </div>
                 </div>
+
+                {/* Modal Rendering */}
+                {showPaymentPrompt && associatedInvoiceId && (
+                    <PaymentPromptModal
+                        onPay={() => handlePay(associatedInvoiceId)}
+                        onLater={() => setShowPaymentPrompt(false)}
+                    />
+                )}
 
                 <div className="bg-white border border-gray-100 shadow-2xl rounded-sm relative overflow-hidden print:shadow-none print:border-none">
                     <div className="absolute top-0 left-0 w-full h-1.5 bg-secondary-dark"></div>

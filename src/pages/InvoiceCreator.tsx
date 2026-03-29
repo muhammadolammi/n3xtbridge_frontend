@@ -14,11 +14,11 @@ export default function InvoiceCreator() {
     const [notes, setNotes] = useState("");
 
     // --- State for Line Items & Discounts ---
-    const [items, setItems] = useState([{ name: '', price: 0, description: '', quantity: 1 }]);
-    const [discounts, setDiscounts] = useState<any[]>([]);
+    const [items, setItems] = useState([{ name: '', price: "", description: '', quantity: 1 }]);
+    const [discounts, setDiscounts] = useState([{ name: '', amount: "" }]);
 
     const addItem = () => {
-        setItems([...items, { name: "", quantity: 1, price: 0, description: '' }]);
+        setItems([...items, { name: "", quantity: 1, price: '', description: '' }]);
     };
 
     const removeItem = (index: number) => {
@@ -27,19 +27,28 @@ export default function InvoiceCreator() {
 
     const updateItem = (index: number, field: string, value: string | number) => {
         const updated = [...items];
-        // Mapping UI "description" to Backend "name"
-        (updated[index] as any)[field] = value;
 
+        if (field === "quantity") {
+            // Force conversion to integer to ensure backend receives a number
+            const numValue = parseInt(value.toString(), 10) || 0;
+            updated[index][field] = numValue;
+        } else if (field === "price") {
+            // Use parseFloat for money/price fields
+            updated[index][field] = (value.toString());
+        } else {
+            (updated[index] as any)[field] = value;
+        }
+
+        // CRITICAL: Always call the state setter regardless of which field was updated
         setItems(updated);
     };
-
     const addDiscount = () => {
-        setDiscounts([...discounts, { name: "", amount: 0 }]);
+        setDiscounts([...discounts, { name: "", amount: "" }]);
     };
 
-    const updateDiscount = (index: number, field: string, value: any) => {
+    const updateDiscount = (index: number, field: string, value: string) => {
         const updated = [...discounts];
-        updated[index][field] = field === "name" ? value : Number(value);
+        (updated[index] as any)[field] = value;
         setDiscounts(updated);
     };
 
@@ -48,8 +57,19 @@ export default function InvoiceCreator() {
     };
 
     // --- Calculations ---
-    const itemsTotal = items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
-    const discountTotal = discounts.reduce((acc, d) => acc + d.amount, 0);
+    const itemsTotal = items.reduce((acc, item) => {
+        const price = parseFloat(item.price) || 0; // Fallback to 0 if NaN
+        const qty = (item.quantity);  // Ensure quantity is a number
+        return acc + (qty * price);
+    }, 0);
+
+    // 2. Calculate Discount Total
+    const discountTotal = discounts.reduce((acc, d) => {
+        const amount = parseFloat(d.amount) || 0; // Fallback to 0 if NaN
+        return acc + amount;
+    }, 0);
+    // const itemsTotal = items.reduce((acc, item) => acc + (item.quantity * parseFloat(item.price)), 0);
+    // const discountTotal = discounts.reduce((acc, d) => acc + parseFloat(d.amount), 0);
     const total = itemsTotal - discountTotal;
 
     const validate = () => {
@@ -71,21 +91,32 @@ export default function InvoiceCreator() {
 
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
+        const sanitizedItems = items.map(item => ({
+            ...item,
+            quantity: parseFloat(item.quantity.toString()) || 0,
+            price: item.price.toString()
+        }));
         if (!validate()) return;
+
+
 
         // Construct the payload to match Go's InvoiceInput struct
         const payload = {
             customer_name: customerName,
             customer_email: customerEmail,
             customer_phone: customerPhone,
-            items: items, // Contains name, quantity, price
+            items: sanitizedItems, // Contains name, quantity, price
             discounts: discounts, // Contains name, amount
             notes: notes
         };
+        // console.log(items)
+        console.log(payload)
+
 
         try {
             setLoading(true);
             const res = await api.post("/worker/invoices", payload);
+
 
             if (res.status === 201) {
                 const createdInvoice: Invoice = res.data;
@@ -204,14 +235,14 @@ export default function InvoiceCreator() {
                                                         type="text"
                                                         value={item.name}
                                                         placeholder="Item name (e.g Solar Panel)"
-                                                        onChange={(e) => updateItem(index, "description", e.target.value)}
+                                                        onChange={(e) => updateItem(index, "name", e.target.value)}
                                                     />
                                                 </td>
                                                 <td className="px-8 py-4">
                                                     <input
                                                         className={`w-full bg-transparent border-0 p-0 text-sm focus:ring-0 font-medium ${!item.description ? "border-b border-red-400" : "text-secondary-dark"}`}
                                                         type="text"
-                                                        value={item.name}
+                                                        value={item.description}
                                                         placeholder="Item short description"
                                                         onChange={(e) => updateItem(index, "description", e.target.value)}
                                                     />
