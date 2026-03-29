@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { SITE_CONFIG } from '../constants/content';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { Service } from '../models/model';
 import api from '../api/axios';
 
 const Home: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchServices = async () => {
@@ -119,6 +120,16 @@ const Home: React.FC = () => {
                                                         Featured
                                                     </span>
                                                 )}
+                                            </div>
+                                            <div className='h-10'></div>
+                                            <div className="p-8 pt-0 mt-auto">
+                                                <button
+                                                    onClick={() => navigate(`/service/${service.id}`, { state: { service: service } })}
+                                                    className="w-full inline-flex items-center justify-center gap-2 bg-gray-50 text-gray-900 font-bold py-4 rounded-2xl hover:bg-primary hover:text-white transition-all group/btn"
+                                                >
+                                                    View Specifications
+                                                    <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

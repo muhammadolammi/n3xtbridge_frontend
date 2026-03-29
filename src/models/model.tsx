@@ -1,4 +1,19 @@
 
+
+export interface Discount {
+    name: string;
+    amount?: string;
+    type: 'fixed' | 'percentage' | 'item_match';
+    description?: string;
+    item_name?: string;
+}
+export interface Item {
+    name: string;
+    price: string;
+    description?: string;
+    quantity: number;
+}
+
 export interface Invoice {
     id: string;
     quote_id?: string;
@@ -7,8 +22,8 @@ export interface Invoice {
     customer_name: string;
     customer_email: string;
     customer_phone: string;
-    items: Array<{ name: string; quantity: number; price: number; }>;
-    discounts: Array<{ name: string; amount: number; }>;
+    items: Item[];
+    discounts: Discount[];
     total: number;
     notes: string;
     status: string;
@@ -24,6 +39,7 @@ export interface Service {
     is_featured: boolean;
     is_active: boolean;
     tags?: string[];
+    promo_id?: string;
 }
 
 export interface User {
@@ -68,7 +84,6 @@ export interface Quote {
     quote_request_id: string;
     service_id?: string;
     user_id?: string;
-
     amount: string;
     breakdown: QuoteBreakdown[];
     discounts: Array<{ name: string; amount: string; }>;
@@ -78,4 +93,17 @@ export interface Quote {
     expires_at: string;
     updated_at: string;
 
+}
+
+
+export interface Promotion {
+    id: string;
+    code: string;
+    name: string;
+    description: { String: string; Valid: boolean };
+    breakdown: Discount[];
+    is_active: boolean;
+    starts_at: string;
+    expires_at?: { Time: string; Valid: boolean };
+    created_at: string;
 }

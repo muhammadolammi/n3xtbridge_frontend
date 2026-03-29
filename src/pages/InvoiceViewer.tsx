@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import type { Invoice } from '../models/model';
 import { useAuth } from '../context/AuthContext';
+import { makePayment } from '../api/payment';
 
 const getStatusStyles = (status: string) => {
     const s = status?.toLowerCase();
@@ -55,6 +56,7 @@ export default function InvoiceViewer() {
 
                 if (res.data) {
                     setInvoice(res.data);
+                    console.log(res.data)
                 } else {
                     setError("Record Not Found");
                 }
@@ -116,6 +118,20 @@ export default function InvoiceViewer() {
         document.title = originalTitle;
     };
 
+
+    const handlePay = async (invoiceID: string) => {
+        setLoading(true);
+        try {
+            const checkoutUrl = await makePayment(invoiceID);
+            // This is how you redirect to the Paystack checkout page
+            window.location.href = checkoutUrl;
+        } catch (err) {
+            alert("Payment gateway communication failed. Please try again later. ");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <main className="flex-grow pt-24 pb-12 px-4 md:px-6 bg-gray-50 min-h-screen print:bg-white print:pt-0">
             <div className="max-w-5xl mx-auto">
@@ -131,6 +147,15 @@ export default function InvoiceViewer() {
                         {/* <span className={`px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyles(invoice.status)}`}>
                             {invoice.status}
                         </span> */}
+                        {invoice.status === 'unpaid' && (
+                            <button
+                                disabled={loading}
+                                onClick={() => handlePay(invoice.id)}
+                                className="bg-green-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg"
+                            >
+                                {loading ? "Redirecting..." : "Pay Now"}
+                            </button>
+                        )}
                         <button
                             onClick={handlePrint}
                             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-gray-200 rounded-lg text-sm font-bold bg-white hover:bg-gray-50 shadow-sm transition-all active:scale-95">
@@ -199,7 +224,7 @@ export default function InvoiceViewer() {
                                             </td>
                                             <td className="py-6 text-center text-sm text-gray-600">{item.quantity}</td>
                                             <td className="py-6 text-right text-sm text-gray-600">₦{item.price.toLocaleString()}</td>
-                                            <td className="py-6 text-right font-bold text-gray-900">₦{(item.quantity * item.price).toLocaleString()}</td>
+                                            <td className="py-6 text-right font-bold text-gray-900">₦{(item.quantity * parseFloat(item.price)).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -220,7 +245,7 @@ export default function InvoiceViewer() {
                                 {invoice.discounts.map((d, i) => (
                                     <div key={i} className="flex justify-between text-sm">
                                         <span className="text-red-500 font-bold uppercase text-[10px] tracking-widest"> {d.name}</span>
-                                        <span className="text-red-500 font-bold">-₦{d.amount.toLocaleString()}</span>
+                                        <span className="text-red-500 font-bold">-₦{d.amount?.toLocaleString() ?? 0}</span>
                                     </div>
                                 ))}
                                 <div className="flex justify-between items-end pt-6 border-t-2 border-gray-900">

@@ -15,6 +15,8 @@ import Dashboard from './pages/Dashboard';
 import Services from './pages/Services';
 import QuoteViewer from './pages/QuoteViewer';
 import QuoteRequestViewer from './pages/QuoteRequestViewer';
+import PaymentSuccess from './pages/PaymentSuccess';
+import ServiceDetail from './pages/Service';
 
 const App: React.FC = () => {
   return (
@@ -32,6 +34,8 @@ const App: React.FC = () => {
             <Route path="signup" element={<SignUp />} />
             <Route path="signin" element={<SignIn />} />
             <Route path="services" element={<Services />} />
+            <Route path="services/:id" element={<ServiceDetail />} />
+
 
 
           </Route>
@@ -62,9 +66,18 @@ const App: React.FC = () => {
               <ProtectedRoute >
                 <QuoteRequestViewer />
               </ProtectedRoute>
-            } />
-          </Route>
 
+            } />
+            <Route path="payment-success" element={
+              <ProtectedRoute >
+
+                <PaymentSuccess />
+              </ProtectedRoute>
+            } />
+
+
+
+          </Route>
 
 
 

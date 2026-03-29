@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import type { Invoice, Service, Quote, QuoteRequest, User } from '../models/model';
+import type { Invoice, Service, Quote, QuoteRequest, User, Promotion, Discount } from '../models/model';
 import { useNavigate, type NavigateFunction } from 'react-router-dom';
 import { QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
 
@@ -373,6 +373,247 @@ const EditDescriptionModal = ({
     );
 };
 
+const CreatePromotionModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
+    const [formData, setFormData] = useState({
+        code: '',
+        name: '',
+        description: '',
+        service_id: '',
+        is_active: true,
+        starts_at: new Date().toISOString().split('T')[0],
+        expires_at: ''
+    });
+
+    const [discounts, setDiscounts] = useState<Discount[]>([
+        { name: '', amount: "", type: 'fixed', description: '', item_name: "" }
+    ]);
+    const [services, setServices] = useState<Service[]>([]);
+
+    const [loading, setLoading] = useState(false);
+
+
+    const handleAddDiscount = () => {
+        setDiscounts([...discounts, { name: '', amount: "", type: 'fixed', description: '', item_name: "" }]);
+    };
+
+    const handleRemoveDiscount = (index: number) => {
+        setDiscounts(discounts.filter((_, i) => i !== index));
+    };
+
+
+
+    const updateDiscount = (index: number, field: keyof Discount, value: string | number) => {
+        const updated = [...discounts];
+
+        if (field === "type") {
+            // Reset logic: if switching to service_match, clear amount. 
+            // If switching to fixed/percentage, clear item_name.
+            if (value === "item_match") {
+                updated[index].amount = "0";
+            } else {
+                updated[index].item_name = "";
+            }
+        }
+
+        if (field === "amount") {
+            value = value.toString() || 0;
+        }
+
+        updated[index] = { ...updated[index], [field]: value } as any;
+        setDiscounts(updated);
+    };
+
+    const handleSubmit = async (e: React.SubmitEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const payload = {
+                ...formData,
+                service_id: formData.service_id || "",
+                breakdown: discounts,
+                starts_at: new Date(formData.starts_at).toISOString(),
+                expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null
+            };
+            console.log(payload)
+            await api.post('/admin/promotions', payload);
+            alert("Marketing Campaign Registered Successfully.");
+            onSuccess();
+            onClose();
+        } catch (err: any) {
+            alert(err.response?.data?.error || "Failed to sync promotion.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const res = await api.get('/services?limit=100');
+                const fetchedServices = res.data.services || [];
+                setServices(fetchedServices);
+
+                // Fix: If there's no service_id yet and we just got services, pick the first one
+                if (fetchedServices.length > 0 && !formData.service_id) {
+                    setFormData(prev => ({ ...prev, service_id: fetchedServices[0].id }));
+                }
+            } catch (err) {
+                console.error("Failed to fetch services");
+            }
+        };
+        fetchServices();
+    }, []); // Empty dependency array is fine here as it's the mount fetch
+
+    return (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+                    <div>
+                        <h3 className="font-black uppercase tracking-tighter text-lg text-gray-900">Configure Campaign Breakdown</h3>
+                        <p className="text-[10px] font-mono text-primary font-bold uppercase tracking-widest">Logic: Targeted Item Matching Enabled</p>
+                    </div>
+                    <button onClick={onClose} className="material-symbols-outlined text-gray-400">close</button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[85vh] overflow-y-auto">
+                    <div className="p-6 bg-primary/5 border border-primary/10 rounded-2xl space-y-3">
+                        <label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm">link</span>
+                            Link to Service Registry
+                        </label>
+                        <select
+                            className="w-full bg-white border border-primary/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all"
+                            value={formData.service_id}
+                            onChange={(e) => {
+                                setFormData({ ...formData, service_id: e.target.value })
+                                console.log(formData.service_id)
+                                console.log("here")
+
+                            }}
+                        >
+                            {/* <option value="">Global Promotion (Applies to all/none specifically)</option> */}
+                            {services.map(s => (
+                                <option key={s.id} value={s.id}> {s.name} ({s.category})</option>
+                            ))}
+                        </select>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-relaxed">
+                            Linking a service ensures this promo automatically appears on the service's detail page and grid card.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase text-gray-400">Promo Code</label>
+                            <input required className="w-full border-b border-gray-100 focus:border-primary outline-none py-2 text-sm font-bold uppercase"
+                                placeholder="E.G. VISION-ZERO"
+
+                                value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })} />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase text-gray-400">Campaign Name</label>
+
+                            <input required className="w-full border-b border-gray-100 focus:border-primary outline-none py-2 text-sm font-bold"
+                                placeholder="E.G. Free Camera Installation"
+
+                                onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Stacked Benefits</label>
+                        {discounts.map((d, index) => (
+                            <div key={index} className="p-5 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-4 relative group">
+                                <div className="grid grid-cols-12 gap-x-4 gap-y-2 items-end">
+                                    {/* Label */}
+                                    <div className="col-span-12 md:col-span-4 space-y-1">
+                                        <label className="text-[8px] font-bold text-amber-600 uppercase">Discount Label</label>
+                                        <input required placeholder="e.g. Free Installation" className="w-full bg-transparent border-b border-amber-200 py-1 text-xs font-bold outline-none"
+                                            value={d.name} onChange={e => updateDiscount(index, 'name', e.target.value)} />
+                                    </div>
+
+                                    {/* Type Selector */}
+                                    <div className="col-span-6 md:col-span-3 space-y-1">
+                                        <label className="text-[8px] font-bold text-amber-600 uppercase">Benefit Type</label>
+                                        <select
+                                            className="w-full bg-transparent border-b border-amber-200 py-1 text-xs font-bold outline-none cursor-pointer"
+                                            value={d.type}
+                                            onChange={e => updateDiscount(index, 'type', e.target.value)}
+                                        >
+                                            <option value="fixed">Fixed (₦)</option>
+                                            <option value="percentage">Percentage (%)</option>
+                                            <option value="item_match">Item Match (Free)</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Conditional Value or Service Name Input */}
+                                    <div className="col-span-5 md:col-span-4 space-y-1">
+                                        {d.type === 'item_match' ? (
+                                            <>
+                                                <label className="text-[8px] font-bold text-primary uppercase flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[10px]">target</span>
+                                                    Target Service Name
+                                                </label>
+                                                <input
+                                                    required
+                                                    placeholder="e.g. Camera Install"
+                                                    className="w-full bg-transparent border-b border-primary/30 py-1 text-xs font-bold outline-none text-primary"
+                                                    value={d.item_name}
+                                                    onChange={e => updateDiscount(index, 'item_name', e.target.value)}
+                                                />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <label className="text-[8px] font-bold text-amber-600 uppercase">Discount Value</label>
+                                                <input
+                                                    required
+                                                    type="number"
+                                                    placeholder="0.00"
+                                                    className="w-full bg-transparent border-b border-amber-200 py-1 text-xs font-bold outline-none text-amber-700 font-mono"
+                                                    value={d.amount}
+                                                    onChange={e => updateDiscount(index, 'amount', e.target.value)}
+                                                />
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Delete Action */}
+                                    <div className="col-span-1 md:col-span-1 flex justify-end pb-1">
+                                        <button type="button" onClick={() => handleRemoveDiscount(index)} className="text-amber-300 hover:text-red-500 transition-colors">
+                                            <span className="material-symbols-outlined text-lg">close</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        <button type="button" onClick={handleAddDiscount} className="w-full py-3 border-2 border-dashed border-amber-200 rounded-2xl text-[10px] font-black uppercase text-amber-500 hover:bg-amber-50 transition-all">+ Add Another Component</button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase text-gray-400">Expiration Date</label>
+                            <input type="date" className="w-full border-b border-gray-100 py-2 text-sm font-bold outline-none"
+                                onChange={e => setFormData({ ...formData, expires_at: e.target.value })} />
+                        </div>
+                        <div className="flex items-center gap-3 pt-6">
+                            <input type="checkbox" id="promo-active" className="w-4 h-4 accent-primary" checked={formData.is_active}
+                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })} />
+                            <label htmlFor="promo-active" className="text-xs font-bold uppercase">Active Immediately</label>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase text-gray-400">Public Description</label>
+                        <textarea rows={2} className="w-full border border-gray-100 bg-gray-50 rounded-xl p-3 text-sm outline-none focus:border-primary"
+                            placeholder="..." onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                    </div>
+
+                    <button disabled={loading} className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 flex items-center justify-center gap-3 transition-all">
+                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Deploy Campaign Node"}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 // --- Table Components ---
 
 const ServicesTable = ({ services, loading, onToggle }: { services: Service[], loading: boolean, onToggle: any }) => (
@@ -479,6 +720,94 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
     </div >
 );
 
+const PromotionsTable = ({
+    promos,
+    loading,
+    onToggleStatus
+}: {
+    promos: Promotion[],
+    loading: boolean,
+    onToggleStatus: (id: string, current: boolean) => void
+}) => (
+    <div className="overflow-x-auto">
+        <table className="w-full text-left">
+            <thead>
+                <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                    <th className="px-6 py-4">Campaign Node</th>
+                    <th className="px-6 py-4">Promo Code</th>
+                    <th className="px-6 py-4">Service Name</th>
+                    <th className="px-6 py-4">Breakdown (Templates)</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Validity</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Accessing Campaign Registry...</td></tr>
+                ) : promos.length === 0 ? (
+                    <tr><td colSpan={5} className="p-10 text-center text-gray-400">No active promotions found.</td></tr>
+                ) : (
+                    promos.map((p) => {
+                        const isExpired = p.expires_at?.Valid && new Date(p.expires_at.Time) < new Date();
+
+                        return (
+                            <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4">
+                                    <p className="text-sm font-bold text-gray-900">{p.name}</p>
+                                    <p className="text-[10px] text-gray-400 uppercase font-mono truncate max-w-[150px]">
+                                        {p.description.String || "No description set"}
+                                    </p>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-primary font-black">
+                                        {p.code}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-primary font-black">
+                                        {/* {p.code} */}
+                                        COMING SOON
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex flex-wrap gap-1">
+                                        {/* Add (p.breakdown || []) to prevent the crash */}
+                                        {(p.breakdown || []).map((d, idx) => (
+                                            <span
+                                                key={idx}
+                                                className="text-[8px] font-black bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded uppercase"
+                                                title={`Target: ${d.item_name || 'Global'}`}
+                                            >
+                                                {d.type === 'percentage' ? `${d.amount}%` : `₦${(Number(d.amount) || 0).toLocaleString()}`}
+                                                {d.item_name && <span className="ml-1 opacity-50 text-[6px]">({d.item_name})</span>}
+                                            </span>
+                                        ))}
+                                        {(!p.breakdown || p.breakdown.length === 0) && (
+                                            <span className="text-[8px] text-gray-400 italic">No benefits set</span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <button
+                                        onClick={() => onToggleStatus(p.id, p.is_active)}
+                                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider transition-all ${p.is_active && !isExpired ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}
+                                    >
+                                        <span className={`w-1 h-1 rounded-full ${p.is_active && !isExpired ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                        {isExpired ? 'Expired' : p.is_active ? 'Active' : 'Disabled'}
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <p className="text-[10px] font-bold text-gray-900">{new Date(p.starts_at).toLocaleDateString()}</p>
+                                    <p className="text-[9px] text-gray-400 uppercase">TO {p.expires_at?.Valid ? new Date(p.expires_at.Time).toLocaleDateString() : 'INF'}</p>
+                                </td>
+                            </tr>
+                        );
+                    })
+                )}
+            </tbody>
+        </table>
+    </div>
+);
 
 
 const QuoteRequestTable = ({
@@ -718,7 +1047,8 @@ const QuotesTable = ({
 const AdminConsole = ({ user }: { user: User }) => {
 
     const navigate = useNavigate();
-    const [currentTab, setCurrentTab] = useState<'invoices' | 'services' | 'quote-requests' | 'quotes'>('invoices');
+    const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+    const [currentTab, setCurrentTab] = useState<'invoices' | 'services' | 'quote-requests' | 'quotes' | 'promotions'>('invoices');
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -727,7 +1057,7 @@ const AdminConsole = ({ user }: { user: User }) => {
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
     const [qs, setQs] = useState<Quote[]>([]);
     const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
-
+    const [promos, setPromos] = useState<Promotion[]>([]);
 
     const LIMIT = 10;
     const [offset, setOffset] = useState(0);
@@ -739,7 +1069,8 @@ const AdminConsole = ({ user }: { user: User }) => {
                 'invoices': `/worker/invoices`,
                 'services': `/admin/services`,
                 'quote-requests': `/admin/quote-requests`,
-                'quotes': `/admin/quotes`
+                'quotes': `/admin/quotes`,
+                'promotions': `/admin/promotions`
             };
             const res = await api.get(`${endpoints[currentTab]}?limit=${LIMIT}&offset=${offset}`);
 
@@ -747,6 +1078,10 @@ const AdminConsole = ({ user }: { user: User }) => {
             else if (currentTab === 'services') setServices(res.data.services || []);
             else if (currentTab === 'quote-requests') setQrs(res.data.quote_requests || []);
             else if (currentTab === 'quotes') setQs(res.data.quotes || []);
+            else if (currentTab === 'promotions') {
+                console.log(res.data.promotions)
+                setPromos(res.data.promotions || [])
+            };
 
             setTotal(res.data.total || 0);
         } catch (err) { console.error(err); }
@@ -756,7 +1091,14 @@ const AdminConsole = ({ user }: { user: User }) => {
 
         fetchData();
     }, [currentTab, offset]);
-
+    const handleTogglePromoStatus = async (id: string, current: boolean) => {
+        try {
+            await api.patch(`/admin/promotions/${id}/status`, { is_active: !current });
+            setPromos(prev => prev.map(p => p.id === id ? { ...p, is_active: !current } : p));
+        } catch (err) {
+            alert("Failed to toggle campaign status.");
+        }
+    };
     const filteredInvoices = useMemo(() => invoices.filter(inv => inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())), [invoices, searchQuery]);
     const filteredServices = useMemo(() => services.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.category.toLowerCase().includes(searchQuery.toLowerCase())), [services, searchQuery]);
 
@@ -788,18 +1130,28 @@ const AdminConsole = ({ user }: { user: User }) => {
             />
         ),
         'quote-requests': <QuoteRequestTable qrs={qrs} loading={loading} onAddQuote={(id) => setSelectedQuoteId(id)} role={user.role} />,
-        quotes: <QuotesTable qs={qs} loading={loading} onUpdateStatus={handleUpdateQuoteStatus} navigate={navigate} role={user.role} />
+        quotes: <QuotesTable qs={qs} loading={loading} onUpdateStatus={handleUpdateQuoteStatus} navigate={navigate} role={user.role} />,
+        'promotions': (
+            <PromotionsTable
+                promos={promos}
+                loading={loading}
+                onToggleStatus={handleTogglePromoStatus}
+            />
+        )
     };
     return (
         <div className="max-w-6xl mx-auto">
             <header className="mb-10 flex justify-between items-end">
                 <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Administrative Terminal</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Admin</span>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Enterprise Console</h1>
                 </div>
                 <div className="flex gap-4">
                     <button onClick={() => setIsServiceModalOpen(true)} className="bg-secondary-dark text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-black transition-all">
                         <span className="material-symbols-outlined text-sm">inventory_2</span> New Service
+                    </button>
+                    <button onClick={() => setIsPromoModalOpen(true)} className="bg-amber-500 text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all">
+                        <span className="material-symbols-outlined text-sm">campaign</span> Create Promotion
                     </button>
                     <button onClick={() => navigate('/dashboard/create-invoice')} className="bg-primary text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
                         <span className="material-symbols-outlined text-sm">add</span> Create Invoice
@@ -813,7 +1165,12 @@ const AdminConsole = ({ user }: { user: User }) => {
                     <button onClick={() => { setCurrentTab('services'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'services' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Services</button>
                     <button onClick={() => { setCurrentTab('quote-requests'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'quote-requests' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Quote Requests</button>
                     <button onClick={() => { setCurrentTab('quotes'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'quotes' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Quotes</button>
-
+                    <button
+                        onClick={() => { setCurrentTab('promotions'); setOffset(0) }}
+                        className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'promotions' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}
+                    >
+                        Promotions
+                    </button>
                 </div>
                 <div className="flex items-center gap-4 mb-4">
                     <div className="relative">
@@ -832,6 +1189,7 @@ const AdminConsole = ({ user }: { user: User }) => {
             </div>
             {isServiceModalOpen && <CreateServiceModal onClose={() => setIsServiceModalOpen(false)} />}
             {selectedQuoteId && <CreateQuoteModal requestId={selectedQuoteId} onClose={() => setSelectedQuoteId(null)} onSuccess={fetchData} adminID={user.id} />}
+            {isPromoModalOpen && <CreatePromotionModal onClose={() => setIsPromoModalOpen(false)} onSuccess={fetchData} />}
         </div>
     );
 };
