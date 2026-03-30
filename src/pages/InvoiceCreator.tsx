@@ -110,7 +110,7 @@ export default function InvoiceCreator() {
             notes: notes
         };
         // console.log(items)
-        console.log(payload)
+        // console.log(payload)
 
 
         try {

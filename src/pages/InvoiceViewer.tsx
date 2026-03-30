@@ -56,7 +56,7 @@ export default function InvoiceViewer() {
 
                 if (res.data) {
                     setInvoice(res.data);
-                    console.log(res.data)
+                    // console.log(res.data)
                 } else {
                     setError("Record Not Found");
                 }
@@ -147,7 +147,7 @@ export default function InvoiceViewer() {
                         {/* <span className={`px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyles(invoice.status)}`}>
                             {invoice.status}
                         </span> */}
-                        {invoice.status === 'unpaid' && (
+                        {invoice.status === 'unpaid' && invoice.customer_email === user?.email && (
                             <button
                                 disabled={loading}
                                 onClick={() => handlePay(invoice.id)}

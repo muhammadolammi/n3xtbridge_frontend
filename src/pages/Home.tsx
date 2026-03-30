@@ -124,7 +124,7 @@ const Home: React.FC = () => {
                                             <div className='h-10'></div>
                                             <div className="p-8 pt-0 mt-auto">
                                                 <button
-                                                    onClick={() => navigate(`/service/${service.id}`, { state: { service: service } })}
+                                                    onClick={() => navigate(`/services/${service.id}`, { state: { service: service } })}
                                                     className="w-full inline-flex items-center justify-center gap-2 bg-gray-50 text-gray-900 font-bold py-4 rounded-2xl hover:bg-primary hover:text-white transition-all group/btn"
                                                 >
                                                     View Specifications

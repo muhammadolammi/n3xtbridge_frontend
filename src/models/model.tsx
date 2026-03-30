@@ -2,10 +2,10 @@
 
 export interface Discount {
     name: string;
-    amount?: string;
+    amount: string;
     type: 'fixed' | 'percentage' | 'item_match';
-    description?: string;
-    item_name?: string;
+    description: string;
+    item_name: string;
 }
 export interface Item {
     name: string;
@@ -39,7 +39,8 @@ export interface Service {
     is_featured: boolean;
     is_active: boolean;
     tags?: string[];
-    promo_id?: string;
+    promo_ids: string[];
+    active_promotions?: Promotion[];
 }
 
 export interface User {
@@ -59,6 +60,7 @@ export interface QuoteRequest {
     service_id: string;
     description: string;
     attachments: string[];
+    promo_ids: string[];
     status: 'pending' | 'reviewing' | 'quoted' | 'rejected';
     created_at: string; // Dates come as ISO strings from the Go JSON encoder
     updated_at: string;
@@ -86,9 +88,11 @@ export interface Quote {
     user_id?: string;
     amount: string;
     breakdown: QuoteBreakdown[];
-    discounts: Array<{ name: string; amount: string; }>;
+    discounts: Discount[]
     notes: string;
-    status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | "in-review";
+    promo_ids: string[];
+
+    status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | "in-review" | "paid";
     created_at: string;
     expires_at: string;
     updated_at: string;
@@ -104,6 +108,6 @@ export interface Promotion {
     breakdown: Discount[];
     is_active: boolean;
     starts_at: string;
-    expires_at?: { Time: string; Valid: boolean };
+    expires_at: string;
     created_at: string;
 }

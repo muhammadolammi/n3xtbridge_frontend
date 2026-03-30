@@ -3,7 +3,7 @@ import api from "./axios"
 
 
 export const makePayment = async (invoiceID: string) => {
-    console.log(invoiceID)
+    // console.log(invoiceID)
     const res = await api.post(`/customer/payments/${invoiceID}`);
     return res.data.checkout_url;
 };

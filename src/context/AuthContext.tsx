@@ -2,7 +2,6 @@ import { createContext, useState, useContext, useEffect, type ReactNode } from '
 import api from '../api/axios';
 import type { User } from '../models/model';
 
-// Exact match for your Go 'User' struct
 
 
 interface AuthContextType {

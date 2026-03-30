@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import type { QuoteRequest } from '../models/model';
+import type { Promotion, QuoteRequest } from '../models/model';
 import { QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
 
 export default function QuoteRequestViewer() {
@@ -19,7 +19,18 @@ export default function QuoteRequestViewer() {
     // Editing State
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState("");
+    const [claimedPromos, setClaimedPromos] = useState<Promotion[]>([]);
 
+    useEffect(() => {
+        const fetchClaimed = async () => {
+            if (qr?.promo_ids?.length) {
+                const reqs = qr.promo_ids.map(id => api.get(`/promotions/${id}`));
+                const res = await Promise.all(reqs);
+                setClaimedPromos(res.map(r => r.data.promotion));
+            }
+        };
+        fetchClaimed();
+    }, [qr?.id]);
     useEffect(() => {
         if (authLoading) return;
         if (!user) { navigate('/login'); return; }
@@ -43,7 +54,7 @@ export default function QuoteRequestViewer() {
         };
 
         if (id) fetchQRFromAPI();
-    }, [id, authLoading, user, !!qr]);
+    }, [id, authLoading, user]);
 
     const handleUpdateDescription = async () => {
         if (!qr) return;
@@ -173,6 +184,28 @@ export default function QuoteRequestViewer() {
                                 </div>
                             )}
                         </div>
+                        {/* promos */}
+                        {claimedPromos.length > 0 && (
+                            <div className="mb-12">
+                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Claimed Promotions</h4>
+                                <div className="flex flex-wrap gap-3">
+                                    {claimedPromos.map(p => (
+                                        <div key={p.id} className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl">
+                                            <div className="w-8 h-8 bg-amber-500 text-white rounded-lg flex items-center justify-center">
+                                                <span className="material-symbols-outlined text-sm">campaign</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-amber-700 uppercase leading-none">{p.name}</p>
+                                                <p className="text-[9px] font-mono text-amber-600/60 mt-1">{p.code}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="mt-2 text-[9px] font-bold text-gray-400 uppercase italic">
+                                    * These incentives will be evaluated and applied to the final architectural quote.
+                                </p>
+                            </div>
+                        )}
 
                         {/* Attachments Section */}
                         <div>

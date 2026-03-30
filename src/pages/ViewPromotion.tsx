@@ -39,7 +39,7 @@ export default function ViewPromotion() {
     if (loading) return <div className="p-20 text-center font-mono text-xs uppercase animate-pulse">Syncing Campaign Node...</div>;
     if (!promo) return <div className="p-20 text-center font-bold text-red-500">PROMO_NOT_FOUND_IN_REGISTRY</div>;
 
-    const isExpired = promo.expires_at?.Valid && new Date(promo.expires_at.Time) < new Date();
+    const isExpired = promo.expires_at && new Date(promo.expires_at) < new Date();
 
     return (
         <main className="max-w-4xl mx-auto pt-32 pb-20 px-6">
@@ -81,7 +81,7 @@ export default function ViewPromotion() {
                             <div>
                                 <p className="text-[9px] font-bold text-gray-400 uppercase">Expires At</p>
                                 <p className="text-sm font-bold">
-                                    {promo.expires_at?.Valid ? new Date(promo.expires_at.Time).toLocaleDateString() : 'Indefinite'}
+                                    {promo.expires_at ? new Date(promo.expires_at).toLocaleDateString() : 'Indefinite'}
                                 </p>
                             </div>
                         </div>
