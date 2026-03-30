@@ -24,7 +24,7 @@ const Services: React.FC = () => {
                 setServices(res.data.services || []);
                 setTotalCount(res.data.total || 0);
             } catch (err) {
-                console.error("Catalog fetch failed", err);
+                console.error("Catalog fetch failed");
             } finally {
                 setLoading(false);
             }
@@ -79,7 +79,7 @@ const Services: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="mb-16 flex justify-between items-end">
                         <div>
-                            <h2 className="text-3xl font-bold tracking-tight mb-4 text-on-background">Precision Catalog</h2>
+                            <h2 className="text-3xl font-bold tracking-tight mb-4 text-on-background">Catalog</h2>
                             <div className="h-1.5 w-20 bg-primary rounded-full"></div>
                         </div>
 
@@ -115,8 +115,7 @@ const Services: React.FC = () => {
                         ) : (
                             services.map((service) => {
                                 // Check if the service has an active promo linked
-                                const hasActivePromo = !!service.promo_id && service.promo_id !== "";
-                                console.log(hasActivePromo)
+                                const hasActivePromo = !!service.promo_ids && service.promo_ids.length > 0;
                                 return (
                                     <div key={service.id} className={`group bg-white border rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col ${hasActivePromo ? 'border-primary/30 ring-4 ring-primary/5 shadow-lg shadow-primary/5' : 'border-gray-100'}`}>
 
@@ -167,10 +166,11 @@ const Services: React.FC = () => {
                                             )}
 
                                             <button
-                                                onClick={() => navigate(`/services/${service.id}`, { state: { service: service } })}
+
+                                                onClick={() => navigate(`/services/${service.id}`, { state: { service: service, } })}
                                                 className={`w-full inline-flex items-center justify-center gap-2 font-bold py-4 rounded-2xl transition-all group/btn ${hasActivePromo ? 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20' : 'bg-gray-50 text-gray-900 hover:bg-primary hover:text-white'}`}
                                             >
-                                                {hasActivePromo ? 'Claim Campaign Offer' : 'View Specifications'}
+                                                {hasActivePromo ? 'Claim Campaign Offer(s)' : 'View Specifications'}
                                                 <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                                             </button>
                                         </div>

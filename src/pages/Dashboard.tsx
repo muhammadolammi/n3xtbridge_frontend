@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import type { Invoice, Service, Quote, QuoteRequest, User, Promotion, Discount } from '../models/model';
+import type { Invoice, Service, Quote, QuoteRequest, User, Promotion, Discount, Item } from '../models/model';
 import { useNavigate, type NavigateFunction } from 'react-router-dom';
 import { QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
 
@@ -21,6 +21,8 @@ const QUOTE_STATUS_STYLES: Record<string, string> = {
     draft: "bg-gray-100 text-gray-600 border-gray-200",
     sent: "bg-blue-100 text-blue-700 border-blue-200",
     accepted: "bg-green-100 text-green-700 border-green-200",
+    paid: "bg-green-100 text-green-700 border-green-200",
+
     declined: "bg-red-100 text-red-700 border-red-200",
     expired: "bg-orange-100 text-orange-700 border-orange-200",
 };
@@ -106,22 +108,22 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
     );
 };
 
-const CreateQuoteModal = ({ requestId, onClose, onSuccess, adminID }: { requestId: string, onClose: () => void, onSuccess: () => void, adminID: string }) => {
+const CreateQuoteModal = ({ qr, onClose, onSuccess, adminID }: { qr: QuoteRequest, onClose: () => void, onSuccess: () => void, adminID: string }) => {
     const [loading, setLoading] = useState(false);
-    const [items, setItems] = useState([{ name: '', price: '', description: '', quantity: 1 }]);
-    const [discounts, setDiscounts] = useState([{ name: '', amount: '' }]);
+    const [items, setItems] = useState<Item[]>([{ name: '', price: '', description: '', quantity: 1 }]);
+    const [discounts, setDiscounts] = useState<Discount[]>([{ name: '', amount: '', item_name: '', type: 'fixed', description: "" }]);
     const [notes, setNotes] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
+    const [appliedPromos, setAppliedPromos] = useState<Promotion[]>([]);
 
     const handleAddItem = () => setItems([...items, { name: '', price: '', description: '', quantity: 1 }]);
-
     const handleItemChange = (index: number, field: string, value: string | number) => {
         const newItems = [...items];
         (newItems[index] as any)[field] = value;
         setItems(newItems);
     };
 
-    const handleAddDiscount = () => setDiscounts([...discounts, { name: '', amount: '' }]);
+    const handleAddDiscount = () => setDiscounts([...discounts, { name: '', amount: '', type: 'fixed', description: "", item_name: '' }]);
 
     const handleDiscountChange = (index: number, field: string, value: string | number) => {
         const newDiscounts = [...discounts];
@@ -129,57 +131,183 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess, adminID }: { requestI
         setDiscounts(newDiscounts);
     };
 
-    // New logic: Select an item to automatically fill discount details
-    const applyItemToDiscount = (discountIndex: number, itemIndex: number) => {
-        if (itemIndex === -1) return; // "Custom Discount" selected
-        const selectedItem = items[itemIndex];
-        const newDiscounts = [...discounts];
-        newDiscounts[discountIndex] = {
-            name: `Discount: ${selectedItem.name}`,
-            amount: selectedItem.price // Sets full unit price as default discount
-        };
-        setDiscounts(newDiscounts);
-    };
+    // const applyItemToDiscount = (discountIndex: number, itemIndex: number) => {
+    //     if (itemIndex === -1) {
+    //         // Reset to a standard fixed discount if "Custom" is picked
+    //         const newDiscounts = [...discounts];
+    //         newDiscounts[discountIndex] = { ...newDiscounts[discountIndex], type: 'fixed', item_name: '', name: '' };
+    //         setDiscounts(newDiscounts);
+    //         return;
+    //     }
+
+    //     const selectedItem = items[itemIndex];
+    //     const newDiscounts = [...discounts];
+    //     newDiscounts[discountIndex] = {
+    //         ...newDiscounts[discountIndex],
+    //         name: `Deduction: ${selectedItem.name}`,
+    //         item_name: selectedItem.name,
+    //         amount: selectedItem.price,
+    //         type: 'fixed', // Since we are matching a specific item price
+    //         description: `Full value offset for ${selectedItem.name}`
+    //     };
+    //     setDiscounts(newDiscounts);
+    // };
 
     const calculateTotal = () => {
+        // 1. Calculate Gross Total from Items
         const gross = items.reduce((acc, item) => {
-            const price = parseFloat(item.price) || 0;
-            const qty = item.quantity || 0;
-            return acc + (price * qty);
+            return acc + ((parseFloat(item.price) || 0) * (item.quantity || 0));
         }, 0);
 
-        const totalDiscounts = discounts.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
+        let totalDeductions = 0;
+        const handledItemPromos = new Set<string>(); // To ensure "one only counts" per unique item name
 
-        return Math.max(0, gross - totalDiscounts);
+        // 2. Process Applied Promotions (from the User's Request)
+        appliedPromos.forEach(promo => {
+            promo.breakdown?.forEach(d => {
+                if (d.type === 'percentage') {
+                    totalDeductions += (gross * (parseFloat(d.amount ?? "0") / 100));
+                } else if (d.type === 'fixed') {
+                    totalDeductions += parseFloat(d.amount ?? "0") || 0;
+                } else if (d.type === 'item_match') {
+                    // Logic: Find if the admin added this specific item name
+                    // Only count the first instance of this promo item
+                    if (!handledItemPromos.has(d.name)) {
+                        const matchingItem = items.find(i => i.name.toLowerCase() === d.item_name.toLowerCase());
+                        if (matchingItem) {
+                            totalDeductions += parseFloat(matchingItem.price) || 0;
+                            handledItemPromos.add(d.name);
+                        }
+                    }
+                }
+            });
+        });
+
+        // 3. Add Manual Admin Discounts
+        const manualDiscounts = discounts.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
+
+        return Math.max(0, gross - totalDeductions - manualDiscounts);
+    };
+    useEffect(() => {
+        const fetchPromos = async () => {
+            if (qr.promo_ids && qr.promo_ids.length > 0) {
+                try {
+                    // Fetch all promo details based on IDs in the QR
+                    const reqs = qr.promo_ids.map(id => api.get(`/promotions/${id}`));
+                    const res = await Promise.all(reqs);
+                    setAppliedPromos(res.map(r => r.data.promotion));
+                } catch (err) {
+                    console.error("Failed to sync promo registry", err);
+                }
+            }
+        };
+        fetchPromos();
+    }, [qr.promo_ids]);
+    const getMissingPromoItems = () => {
+        const requiredItemNames = new Set<string>();
+
+        // Collect all unique 'item_name' requirements from promos
+        appliedPromos.forEach(p => {
+            p.breakdown?.forEach(d => {
+                if (d.type === 'item_match') requiredItemNames.add(d.item_name.toLowerCase());
+            });
+        });
+
+        // Check which ones are NOT in the items list
+        const currentItemNames = new Set(items.map(i => i.name.toLowerCase()));
+        return Array.from(requiredItemNames).filter(name => !currentItemNames.has(name));
     };
 
+    const missingItems = getMissingPromoItems();
+    const isBlockedByMissingItems = missingItems.length > 0;
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
+
         try {
+            // 1. Calculate Gross for percentage math
+            const gross = items.reduce((acc, item) => acc + ((parseFloat(item.price) || 0) * (item.quantity || 0)), 0);
+
+            // 2. Map Applied Promos to the "Discount" format the backend expects
+            const promoDiscounts = appliedPromos.flatMap(promo =>
+                (promo.breakdown || []).map(d => {
+                    let amount = "0";
+                    if (d.type === 'percentage') {
+                        amount = (gross * (parseFloat(d.amount ?? "0") / 100)).toString();
+                    } else if (d.type === 'fixed') {
+                        amount = d.amount ?? "0";
+                    } else if (d.type === 'item_match') {
+                        const match = items.find(i => i.name.toLowerCase() === d.item_name.toLowerCase());
+                        amount = match ? match.price : "0";
+                    }
+
+                    return {
+                        // Include the Promo Code in the name for better tracking
+                        name: `[PROMO: ${promo.code}] ${d.name}`,
+                        amount: amount
+                    };
+                })
+            );
+
+            // 3. Combine with manual discounts
+            const allDiscounts = [
+                ...promoDiscounts,
+                ...discounts.filter(d => d.name.trim() !== "" && parseFloat(d.amount) > 0)
+            ];
+
+
+
             const payload = {
-                quote_request_id: requestId,
+                quote_request_id: qr.id,
+                promo_ids: appliedPromos.map(p => p.id),
                 amount: calculateTotal().toString(),
                 breakdown: items,
-                discounts: discounts.filter(d => d.name.trim() !== ""),
+                discounts: allDiscounts, // Send the combined list
                 notes: notes,
                 expires_at: new Date(expiryDate).toISOString(),
                 status: 'draft',
                 user_id: adminID
             };
-            console.log(payload)
+
             await api.post('/admin/quotes', payload);
             alert("Official Quote dispatched to registry.");
             onSuccess();
             onClose();
         } catch (err) {
-            console.log(err)
-            alert("Failed to deploy quote. Please check connection.");
+            alert("Failed to deploy quote.");
         } finally {
             setLoading(false);
         }
     };
 
+    const getExpiredPromos = () => {
+        const now = new Date();
+        return appliedPromos.filter(p => p.expires_at && new Date(p.expires_at) < now);
+    };
+    const getPricingSummary = () => {
+        const gross = items.reduce((acc, item) => acc + ((parseFloat(item.price) || 0) * (item.quantity || 0)), 0);
+
+        let promoDeductions = 0;
+        appliedPromos.forEach(promo => {
+            promo.breakdown?.forEach(d => {
+                if (d.type === 'percentage') promoDeductions += (gross * (parseFloat(d.amount ?? "0") / 100));
+                else if (d.type === 'fixed') promoDeductions += parseFloat(d.amount ?? "0") || 0;
+                else if (d.type === 'item_match') {
+                    const match = items.find(i => i.name.toLowerCase() === d.item_name.toLowerCase());
+                    if (match) promoDeductions += parseFloat(match.price) || 0;
+                }
+            });
+        });
+
+        const manualDeductions = discounts.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
+        const total = Math.max(0, gross - promoDeductions - manualDeductions);
+
+        return { gross, promoDeductions, manualDeductions, total };
+    };
+
+    const summary = getPricingSummary();
+
+    const isBlockedByExpiry = getExpiredPromos().length > 0;
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
@@ -223,42 +351,133 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess, adminID }: { requestI
                         <button type="button" onClick={handleAddItem} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:border-primary hover:text-primary transition-all">+ Add Component</button>
                     </div>
 
+                    {appliedPromos.length > 0 && (
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-2">
+                                <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                                User-Attached Promotions
+                            </label>
+                            <div className="grid gap-2">
+                                {appliedPromos.map((p) => {
+                                    const isExpired = p.expires_at && new Date(p.expires_at) < new Date();
+                                    {/* Inside the promo display loop */ }
+                                    {
+                                        p.breakdown?.filter(d => d.type === 'item_match').map((d, i) => {
+                                            const isPresent = items.some(item => item.name.toLowerCase() === d.name.toLowerCase());
+                                            return (
+                                                <div key={i} className={`flex items-center gap-2 mt-1 text-[10px] font-bold ${isPresent ? 'text-green-600' : 'text-amber-600'}`}>
+                                                    <span className="material-symbols-outlined text-[12px]">
+                                                        {isPresent ? 'check_circle' : 'error_outline'}
+                                                    </span>
+                                                    Requirement: Add "{d.name}" to items (Value: -100%)
+                                                </div>
+                                            );
+                                        })
+                                    }
+                                    return (
+                                        <div key={p.id} className={`p-4 rounded-2xl border flex justify-between items-center transition-all ${isExpired ? 'bg-red-50 border-red-200' : 'bg-primary/5 border-primary/10'}`}>
+                                            <div>
+                                                <p className={`text-xs font-black uppercase ${isExpired ? 'text-red-600' : 'text-primary'}`}>{p.name}</p>
+                                                <p className="text-[9px] font-mono text-gray-500">EXPIRES: {new Date(p.expires_at).toLocaleDateString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                {/* Display the value (Percentage or Fixed) */}
+                                                {p.breakdown?.map((d, i) => (
+                                                    <p key={i} className="text-[10px] font-bold text-gray-700">
+                                                        {d.item_name} {d.type === 'item_match' ? "" : d.type === 'percentage' ? `:-${d.amount}%` : `:-₦${Number(d.amount).toLocaleString()}`}
+                                                    </p>
+                                                ))}
+                                                {isExpired && <span className="text-[9px] font-black text-red-600 uppercase">Expired - Action Required</span>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            {isBlockedByExpiry && (
+                                <p className="text-[10px] text-red-500 font-bold bg-red-50 p-2 rounded-lg border border-red-100 italic">
+                                    ⚠️ Blocked: One or more attached promos have expired. Please manually adjust or remove them in the final quote notes.
+                                </p>
+                            )}
+                        </div>
+                    )}
+
                     {/* Discounts Section */}
+
                     <div className="space-y-4">
                         <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Discounts & Deductions</label>
                         {discounts.map((discount, index) => (
                             <div key={index} className="grid grid-cols-12 gap-4 p-5 bg-amber-50/50 rounded-2xl border border-amber-100 relative group">
-                                {/* Item Selector for Fast Discounting */}
-                                <div className="col-span-12">
-                                    <select
-                                        className="w-full bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase text-amber-700 outline-none mb-2"
+
+                                {/* Type Indicator Badge */}
+                                <div className="col-span-12 flex justify-between items-center mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md border ${discount.item_name ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+                                            }`}>
+                                            {discount.item_name ? 'Type: Item Match' : 'Type: Fixed Deduction'}
+                                        </span>
+                                        {discount.item_name && (
+                                            <span className="text-[9px] font-mono text-gray-400">Target: {discount.item_name}</span>
+                                        )}
+                                    </div>
+
+                                    {/* <select
+                                        className="bg-white border border-amber-200 rounded px-2 py-1 text-[9px] font-bold uppercase text-amber-700 outline-none"
                                         onChange={(e) => applyItemToDiscount(index, parseInt(e.target.value))}
                                     >
-                                        <option value="-1">Apply Discount to Item...</option>
+                                        <option value="-1">Custom / Manual</option>
                                         {items.map((item, i) => (
-                                            item.name && <option key={i} value={i}>Full Unit Discount: {item.name}</option>
+                                            item.name && <option key={i} value={i}>Match Item: {item.name}</option>
                                         ))}
-                                    </select>
+                                    </select> */}
                                 </div>
 
                                 <div className="col-span-12 md:col-span-7">
-                                    <input placeholder="Discount Name" className="w-full bg-transparent border-b border-amber-200 py-1 text-sm font-bold outline-none focus:border-amber-500"
-                                        value={discount.name} onChange={e => handleDiscountChange(index, 'name', e.target.value)} required />
+                                    <input
+                                        placeholder="Discount Name"
+                                        className="w-full bg-transparent border-b border-amber-200 py-1 text-sm font-bold outline-none focus:border-amber-500"
+                                        value={discount.name}
+                                        onChange={e => handleDiscountChange(index, 'name', e.target.value)}
+                                        required
+                                    />
                                 </div>
+
                                 <div className="col-span-10 md:col-span-4">
-                                    <input placeholder="Amount (₦)" type="number" className="w-full bg-transparent border-b border-amber-200 py-1 text-sm font-bold outline-none focus:border-amber-500 text-red-600"
-                                        value={discount.amount} onChange={e => handleDiscountChange(index, 'amount', e.target.value)} required />
+                                    <div className="relative flex items-center">
+                                        {/* Visual Currency/Type Sign */}
+                                        <span className="absolute left-0 text-red-400 font-bold text-sm">
+                                            {discount.type === 'fixed' ? '₦' : '%'}
+                                        </span>
+                                        <input
+                                            placeholder="0.00"
+                                            type="number"
+                                            className="w-full bg-transparent border-b border-amber-200 py-1 pl-4 text-sm font-bold outline-none focus:border-amber-500 text-red-600"
+                                            value={discount.amount}
+                                            onChange={e => handleDiscountChange(index, 'amount', e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
+
                                 <div className="col-span-2 md:col-span-1 flex justify-end">
-                                    <button type="button" onClick={() => setDiscounts(discounts.filter((_, i) => i !== index))} className="text-amber-300 hover:text-amber-600">
-                                        <span className="material-symbols-outlined text-lg">close</span>
+                                    <button type="button" onClick={() => setDiscounts(discounts.filter((_, i) => i !== index))} className="text-amber-300 hover:text-red-500 transition-colors">
+                                        <span className="material-symbols-outlined text-lg">delete_sweep</span>
                                     </button>
+                                </div>
+
+                                {/* Optional Description Field from your State */}
+                                <div className="col-span-12">
+                                    <input
+                                        placeholder="Internal deduction notes..."
+                                        className="w-full bg-transparent text-[10px] text-gray-400 italic outline-none"
+                                        value={discount.description}
+                                        onChange={e => handleDiscountChange(index, 'description', e.target.value)}
+                                    />
                                 </div>
                             </div>
                         ))}
-                        <button type="button" onClick={handleAddDiscount} className="w-full py-3 border-2 border-dashed border-amber-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-amber-400 hover:border-amber-500 hover:text-amber-600 transition-all">+ Add Discount</button>
-                    </div>
 
+                        <button type="button" onClick={handleAddDiscount} className="w-full py-3 border-2 border-dashed border-amber-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-amber-400 hover:border-amber-500 hover:text-amber-600 transition-all">+ Add Discount Slot</button>
+                    </div>
                     <div className="space-y-1">
                         <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Quote Notes / Terms</label>
                         <textarea className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm outline-none focus:border-primary transition-all" rows={3} placeholder="..." value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -275,9 +494,50 @@ const CreateQuoteModal = ({ requestId, onClose, onSuccess, adminID }: { requestI
                             <span className="text-3xl font-black text-primary tracking-tighter">₦{calculateTotal().toLocaleString()}</span>
                         </div>
                     </div>
+                    <div className="bg-gray-900 rounded-3xl p-8 text-white space-y-4 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-white/10 pb-4">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Gross Subtotal</span>
+                            <span className="font-mono font-bold">₦{summary.gross.toLocaleString()}</span>
+                        </div>
 
-                    <button disabled={loading} className="w-full bg-secondary-dark text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-3">
-                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <><span>Dispatch Final Quote</span><span className="material-symbols-outlined text-sm">verified</span></>}
+                        {summary.promoDeductions > 0 && (
+                            <div className="flex justify-between items-center text-primary-container">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Campaign Credits</span>
+                                <span className="font-mono font-bold">- ₦{summary.promoDeductions.toLocaleString()}</span>
+                            </div>
+                        )}
+
+                        {summary.manualDeductions > 0 && (
+                            <div className="flex justify-between items-center text-amber-400">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Admin Adjustments</span>
+                                <span className="font-mono font-bold">- ₦{summary.manualDeductions.toLocaleString()}</span>
+                            </div>
+                        )}
+
+                        <div className="flex justify-between items-end pt-2">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-1">Total Net</p>
+                                <h4 className="text-4xl font-black tracking-tighter text-white">
+                                    ₦{summary.total.toLocaleString()}
+                                </h4>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[9px] font-bold text-gray-500 uppercase italic">
+                                    Valid Till {expiryDate
+                                        ? new Date(expiryDate).toLocaleDateString()
+                                        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        disabled={loading || isBlockedByExpiry || isBlockedByMissingItems}
+                        className="w-full bg-secondary-dark text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-3"
+                    >
+                        {isBlockedByExpiry ? 'Expired Promos Found' :
+                            isBlockedByMissingItems ? `Add required item: ${missingItems[0]}` :
+                                (loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <><span>Dispatch Final Quote</span><span className="material-symbols-outlined text-sm">verified</span></>)}
                     </button>
                 </form>
             </div>
@@ -434,7 +694,6 @@ const CreatePromotionModal = ({ onClose, onSuccess }: { onClose: () => void, onS
                 starts_at: new Date(formData.starts_at).toISOString(),
                 expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null
             };
-            console.log(payload)
             await api.post('/admin/promotions', payload);
             alert("Marketing Campaign Registered Successfully.");
             onSuccess();
@@ -485,8 +744,7 @@ const CreatePromotionModal = ({ onClose, onSuccess }: { onClose: () => void, onS
                             value={formData.service_id}
                             onChange={(e) => {
                                 setFormData({ ...formData, service_id: e.target.value })
-                                console.log(formData.service_id)
-                                console.log("here")
+
 
                             }}
                         >
@@ -748,7 +1006,7 @@ const PromotionsTable = ({
                     <tr><td colSpan={5} className="p-10 text-center text-gray-400">No active promotions found.</td></tr>
                 ) : (
                     promos.map((p) => {
-                        const isExpired = p.expires_at?.Valid && new Date(p.expires_at.Time) < new Date();
+                        const isExpired = p.expires_at && new Date(p.expires_at) < new Date();
 
                         return (
                             <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
@@ -798,7 +1056,7 @@ const PromotionsTable = ({
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <p className="text-[10px] font-bold text-gray-900">{new Date(p.starts_at).toLocaleDateString()}</p>
-                                    <p className="text-[9px] text-gray-400 uppercase">TO {p.expires_at?.Valid ? new Date(p.expires_at.Time).toLocaleDateString() : 'INF'}</p>
+                                    <p className="text-[9px] text-gray-400 uppercase">TO {p.expires_at ? new Date(p.expires_at).toLocaleDateString() : 'INF'}</p>
                                 </td>
                             </tr>
                         );
@@ -819,7 +1077,7 @@ const QuoteRequestTable = ({
 }: {
     qrs: QuoteRequest[],
     loading: boolean,
-    onAddQuote?: (id: string) => void,
+    onAddQuote?: (qr: QuoteRequest) => void,
     onEditDescription?: (id: string, currentDesc: string) => void,
     role: string
 }) => {
@@ -904,7 +1162,7 @@ const QuoteRequestTable = ({
                                             {/* 2. Create Quote - Only Admin/Staff & Only if NOT quoted */}
                                             {!isQuoted && isElevated && (
                                                 <button
-                                                    onClick={() => onAddQuote?.(qr.id)}
+                                                    onClick={() => onAddQuote?.(qr)}
                                                     className="bg-primary text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 flex items-center gap-1 transition-all"
                                                 >
                                                     <span className="material-symbols-outlined text-xs">add</span>
@@ -949,7 +1207,7 @@ const QuotesTable = ({
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     var statuses: Quote['status'][] = ['draft', 'sent', 'expired', 'in-review'];
     if (role === "user") {
-        statuses = ['accepted', 'declined'];
+        statuses = ['accepted', 'declined', "paid"];
 
     }
 
@@ -991,7 +1249,7 @@ const QuotesTable = ({
                                     <div className="relative inline-block">
                                         {/* Status Switcher (Disabled for Users) */}
                                         <button
-                                            disabled={role === 'user' || q.status === 'declined'}
+                                            disabled={role === 'user' || q.status === 'declined' || q.status === 'accepted'}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setActiveMenu(activeMenu === q.id ? null : q.id);
@@ -1056,7 +1314,7 @@ const AdminConsole = ({ user }: { user: User }) => {
     const [services, setServices] = useState<Service[]>([]);
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
     const [qs, setQs] = useState<Quote[]>([]);
-    const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+    const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
     const [promos, setPromos] = useState<Promotion[]>([]);
 
     const LIMIT = 10;
@@ -1079,7 +1337,6 @@ const AdminConsole = ({ user }: { user: User }) => {
             else if (currentTab === 'quote-requests') setQrs(res.data.quote_requests || []);
             else if (currentTab === 'quotes') setQs(res.data.quotes || []);
             else if (currentTab === 'promotions') {
-                console.log(res.data.promotions)
                 setPromos(res.data.promotions || [])
             };
 
@@ -1129,7 +1386,7 @@ const AdminConsole = ({ user }: { user: User }) => {
                 onToggle={handleToggleActive}
             />
         ),
-        'quote-requests': <QuoteRequestTable qrs={qrs} loading={loading} onAddQuote={(id) => setSelectedQuoteId(id)} role={user.role} />,
+        'quote-requests': <QuoteRequestTable qrs={qrs} loading={loading} onAddQuote={(qr) => setSelectedQuote(qr)} role={user.role} />,
         quotes: <QuotesTable qs={qs} loading={loading} onUpdateStatus={handleUpdateQuoteStatus} navigate={navigate} role={user.role} />,
         'promotions': (
             <PromotionsTable
@@ -1188,7 +1445,7 @@ const AdminConsole = ({ user }: { user: User }) => {
                 {TabContent[currentTab]}
             </div>
             {isServiceModalOpen && <CreateServiceModal onClose={() => setIsServiceModalOpen(false)} />}
-            {selectedQuoteId && <CreateQuoteModal requestId={selectedQuoteId} onClose={() => setSelectedQuoteId(null)} onSuccess={fetchData} adminID={user.id} />}
+            {selectedQuote && <CreateQuoteModal qr={selectedQuote} onClose={() => setSelectedQuote(null)} onSuccess={fetchData} adminID={user.id} />}
             {isPromoModalOpen && <CreatePromotionModal onClose={() => setIsPromoModalOpen(false)} onSuccess={fetchData} />}
         </div>
     );
@@ -1249,7 +1506,7 @@ const ClientPortal = ({ user }: { user: User }) => {
     const navigate = useNavigate();
 
     // --- State Management ---
-    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers'>('billing');
+    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers' | 'paid-offers'>('billing');
     const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
@@ -1323,6 +1580,16 @@ const ClientPortal = ({ user }: { user: User }) => {
                 onUpdateStatus={() => { }}
             />
         ),
+        "paid-offers": (
+            <QuotesTable
+                // Filter: Only show quotes that were rejected or have expired
+                qs={qs.filter(q => q.status === 'paid')}
+                loading={loading}
+                role={user.role}
+                navigate={navigate}
+                onUpdateStatus={() => { }}
+            />
+        ),
         requests: (
             <QuoteRequestTable
                 qrs={qrs}
@@ -1375,13 +1642,13 @@ const ClientPortal = ({ user }: { user: User }) => {
             {/* Tab Navigation */}
             <div className="flex justify-between items-center mb-6 border-b border-gray-200">
                 <div className="flex gap-8">
-                    {['billing', 'requests', 'active-offers', 'declined-offers'].map((tab) => (
+                    {['billing', 'requests', 'active-offers', 'declined-offers', 'paid-offers'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => { setCurrentTab(tab as any); setOffset(0); }}
                             className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all ${currentTab === tab ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                            {tab === 'billing' ? 'Invoices' : tab === 'requests' ? 'My Requests' : tab === 'active-offers' ? 'Active Quotes' : 'Declined Quotes'}
+                            {tab === 'billing' ? 'Invoices' : tab === 'requests' ? 'My Requests' : tab === 'active-offers' ? 'Active Quotes' : tab === 'paid-offers' ? 'Paid Quotes' : 'Declined Quotes'}
                         </button>
                     ))}
                 </div>

@@ -11,6 +11,8 @@ export default function PaymentSuccess() {
 
     const [isSyncing, setIsSyncing] = useState(true);
     const { user, loading: authLoading } = useAuth();
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
+
 
     // 1. Guard Clause: If auth is still loading, show global spinner
     // 2. If auth finished and no user, redirect to signin
@@ -31,12 +33,17 @@ export default function PaymentSuccess() {
             try {
                 const res = await api.get(`/customer/payments/verify/${reference}`);
                 if (res.data.status === 'success' && isMounted) {
-                    setIsSyncing(false);
+                    setPaymentSuccess(true)
                     clearInterval(interval);
+                    setIsSyncing(false)
+                }
+                if (res.data.status !== 'success' && isMounted) {
+                    setPaymentSuccess(false)
                 }
             } catch (err) {
                 console.error("Syncing with terminal...");
             }
+
         }, 2000);
 
         const timeout = setTimeout(() => {
@@ -44,7 +51,7 @@ export default function PaymentSuccess() {
                 clearInterval(interval);
                 setIsSyncing(false);
             }
-        }, 15000);
+        }, 150000);
 
         return () => {
             isMounted = false;
@@ -67,7 +74,7 @@ export default function PaymentSuccess() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-            {!isSyncing && <Confetti numberOfPieces={150} recycle={false} gravity={0.2} />}
+            {!isSyncing && paymentSuccess && <Confetti numberOfPieces={150} recycle={false} gravity={0.2} />}
 
             <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center border border-gray-100 animate-in zoom-in duration-500">
                 <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${isSyncing ? 'bg-blue-50' : 'bg-green-100'}`}>
@@ -77,13 +84,13 @@ export default function PaymentSuccess() {
                 </div>
 
                 <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase mb-2">
-                    {isSyncing ? 'Verifying...' : 'Payment Received'}
+                    {isSyncing ? 'Verifying...' : paymentSuccess ? 'Payment Received' : "Try again"}
                 </h1>
 
                 <p className="text-gray-500 text-sm mb-8 leading-relaxed">
                     {isSyncing
                         ? "We're confirming your transaction with the bank. Please don't close this window."
-                        : "Your transaction has been authorized. Your digital ledger is now up to date."
+                        : paymentSuccess ? "Your transaction has been authorized. Your digital ledger is now up to date." : "Your transaction could not be verified. Kindly try again"
                     }
                 </p>
 

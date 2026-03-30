@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import type { Invoice, Quote } from '../models/model';
+import type { Invoice, Promotion, Quote } from '../models/model';
 import { useAuth } from '../context/AuthContext';
 import { makePayment } from '../api/payment';
 
@@ -14,6 +14,8 @@ const getQuoteStatusStyles = (status: string) => {
         declined: "bg-red-100 text-red-700 border-red-200",
         expired: "bg-orange-100 text-orange-700 border-orange-200",
         default: "bg-gray-100 text-gray-600 border-gray-200",
+        paid: "bg-green-100 text-green-700 border-green-200",
+
     };
     return map[s] || map.default;
 };
@@ -46,12 +48,23 @@ export default function QuoteViewer() {
 
     const [quote, setQuote] = useState<Quote | null>(location.state?.quote || null);
     const [quoteInvoice, setQuoteInvoice] = useState<Invoice | null>(null);
-
     const [loading, setLoading] = useState<boolean>(!location.state?.quote);
     const [error, setError] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
     const [associatedInvoiceId, setAssociatedInvoiceId] = useState<string | null>(null);
+    const [appliedPromos, setAppliedPromos] = useState<Promotion[]>([]);
+
+    useEffect(() => {
+        const fetchPromoDetails = async () => {
+            if (quote?.promo_ids?.length) {
+                const reqs = quote.promo_ids.map(id => api.get(`/promotions/${id}`));
+                const res = await Promise.all(reqs);
+                setAppliedPromos(res.map(r => r.data.promotion));
+            }
+        };
+        fetchPromoDetails();
+    }, [quote?.id]);
     useEffect(() => {
         if (authLoading || !user || !id) return;
 
@@ -60,6 +73,7 @@ export default function QuoteViewer() {
         const syncTerminalData = async () => {
             // If we have a quote and it's NOT accepted, we don't need to fetch anything
             if (quote && quote.status !== 'accepted') {
+                // console.log(quote)
                 setLoading(false);
                 return;
             }
@@ -98,7 +112,7 @@ export default function QuoteViewer() {
         syncTerminalData();
 
         return () => { isMounted = false; };
-    }, [id, authLoading, user]); // Note: 'quote' is excluded to prevent loops
+    }, [id, user, authLoading]);
 
     const handleUpdateStatus = async (newStatus: 'accepted' | 'declined') => {
         if (!id) return;
@@ -107,7 +121,9 @@ export default function QuoteViewer() {
             const res = await api.patch(`/customer/quotes/${id}/status`, { status: newStatus });
             setQuote(prev => prev ? { ...prev, status: newStatus } : null);
             if (newStatus === 'accepted') {
-                // Store the invoice ID returned from your Go transaction
+                if (quote) {
+                    quote.status = "accepted"
+                }
                 setAssociatedInvoiceId(res.data.invoice_id);
                 setShowPaymentPrompt(true);
             } else {
@@ -184,20 +200,20 @@ export default function QuoteViewer() {
                                         </button>
                                     )}
 
-                                    <button
+                                    {quote.status !== "paid" && (<button
                                         disabled={actionLoading || quote.status === 'accepted'}
                                         onClick={() => handleUpdateStatus('accepted')}
                                         className="bg-green-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50"
                                     >
                                         Accept
-                                    </button>
-                                    <button
+                                    </button>)}
+                                    {quote.status !== "paid" && (< button
                                         disabled={actionLoading || quote.status === 'declined' || quote.status == 'accepted'}
                                         onClick={() => handleUpdateStatus('declined')}
                                         className="bg-red-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50"
                                     >
                                         Decline
-                                    </button>
+                                    </button>)}
                                     <button className="bg-gray-800 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
                                         Discuss
                                     </button>
@@ -211,13 +227,7 @@ export default function QuoteViewer() {
                     </div>
                 </div>
 
-                {/* Modal Rendering */}
-                {showPaymentPrompt && associatedInvoiceId && (
-                    <PaymentPromptModal
-                        onPay={() => handlePay(associatedInvoiceId)}
-                        onLater={() => setShowPaymentPrompt(false)}
-                    />
-                )}
+
 
                 <div className="bg-white border border-gray-100 shadow-2xl rounded-sm relative overflow-hidden print:shadow-none print:border-none">
                     <div className="absolute top-0 left-0 w-full h-1.5 bg-secondary-dark"></div>
@@ -290,11 +300,27 @@ export default function QuoteViewer() {
                                         <span className="text-[10px] font-black text-red-500 uppercase tracking-widest italic">
                                             {discount.name}
                                         </span>
-                                        <span className="font-mono text-sm font-bold text-red-500">
+                                        {discount.type !== 'item_match' && (<span className="font-mono text-sm font-bold text-red-500">
                                             - ₦{parseFloat(discount.amount).toLocaleString()}
-                                        </span>
+                                        </span>)}
                                     </div>
                                 ))}
+                            </div>
+                        )}
+                        {appliedPromos.length > 0 && (
+                            <div className="mb-8 p-6 bg-primary/5 border border-primary/10 rounded-xl space-y-3">
+                                <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Applied  Incentives</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {appliedPromos.map(p => (
+                                        <div key={p.id} className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-primary text-sm">verified</span>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-900">{p.name}</p>
+                                                <p className="text-[9px] font-mono text-gray-400 uppercase">Code: {p.code}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
@@ -324,7 +350,14 @@ export default function QuoteViewer() {
                         </div>
                     </div>
                 </div>
+                {/* Modal Rendering */}
+                {showPaymentPrompt && associatedInvoiceId && (
+                    <PaymentPromptModal
+                        onPay={() => handlePay(associatedInvoiceId)}
+                        onLater={() => setShowPaymentPrompt(false)}
+                    />
+                )}
             </div>
-        </main>
+        </main >
     );
 }
