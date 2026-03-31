@@ -10,6 +10,8 @@ export const SignIn = () => {
     const redirectTo = searchParams.get('redirect') || '/dashboard';
     const location = useLocation();
 
+    const [showPassword, setShowPassword] = useState(false);
+
     useEffect(() => {
         if (user && !authLoading) {
             navigate(decodeURIComponent(redirectTo), { state: location.state });
@@ -99,14 +101,25 @@ export const SignIn = () => {
                                 <div className="flex justify-between items-center">
                                     <label className="block text-[10px] font-bold tracking-widest text-gray-400 uppercase">Password</label>
                                 </div>
-                                <input
-                                    className="w-full bg-transparent border-0 border-b border-gray-200 focus:border-primary focus:ring-0 transition-all px-0 py-3 text-gray-900 placeholder:text-gray-300"
-                                    placeholder="••••••••"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
+                                <div className='relative'>
+                                    <input
+                                        className="w-full bg-transparent border-0 border-b border-gray-200 focus:border-primary focus:ring-0 transition-all px-0 py-3 text-gray-900 placeholder:text-gray-300"
+                                        placeholder="••••••••"
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-0 top-3 text-gray-400 hover:text-primary"
+                                    >
+                                        <span className="material-symbols-outlined">
+                                            {showPassword ? 'visibility_off' : 'visibility'}
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-between">
@@ -136,7 +149,7 @@ export const SignIn = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </div >
+        </main >
     );
 };
