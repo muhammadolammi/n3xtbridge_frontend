@@ -1506,7 +1506,7 @@ const ClientPortal = ({ user }: { user: User }) => {
     const navigate = useNavigate();
 
     // --- State Management ---
-    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers' | 'paid-offers'>('billing');
+    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers' | 'paid-offers' | 'paid-offers'>('billing');
     const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
@@ -1527,7 +1527,8 @@ const ClientPortal = ({ user }: { user: User }) => {
                 'billing': `/customer/invoices`,
                 'requests': `/customer/quotes/my-requests`,
                 'active-offers': `/customer/quotes`,
-                'declined-offers': `/customer/quotes`
+                'declined-offers': `/customer/quotes`,
+                'paid-offers': `/customer/quotes`
             };
             const res = await api.get(`${endpoints[currentTab]}?limit=${LIMIT}&offset=${offset}`);
 
@@ -1535,7 +1536,7 @@ const ClientPortal = ({ user }: { user: User }) => {
                 setInvoices(res.data.invoices || []);
             } else if (currentTab === 'requests') {
                 setQrs(res.data.quote_requests || []);
-            } else if (currentTab === 'active-offers' || currentTab === 'declined-offers') {
+            } else if (currentTab === 'active-offers' || currentTab === 'declined-offers' || currentTab === 'paid-offers') {
                 setQs(res.data.quotes || []);
             }
 
@@ -1590,6 +1591,7 @@ const ClientPortal = ({ user }: { user: User }) => {
                 onUpdateStatus={() => { }}
             />
         ),
+
         requests: (
             <QuoteRequestTable
                 qrs={qrs}
@@ -1621,6 +1623,13 @@ const ClientPortal = ({ user }: { user: User }) => {
                     <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
                         {qrs.filter(r => r.status === 'pending').length}
                     </h3>
+                </div>
+                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Paid Offers</p>
+                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.reduce((acc, q) => {
+                        const isActive = q.status === 'paid';
+                        return isActive ? acc + 1 : acc;
+                    }, 0)}</h3>
                 </div>
                 <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Offers</p>

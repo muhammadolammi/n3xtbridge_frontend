@@ -10,6 +10,15 @@ const NIGERIA_STATES = [
     "Taraba", "Yobe", "Zamfara"
 ];
 
+const ValidationItem = ({ label, fulfilled }: { label: string; fulfilled: boolean }) => (
+    <div className={`flex items-center space-x-2 transition-colors ${fulfilled ? 'text-green-600' : 'text-gray-400'}`}>
+        <span className="material-symbols-outlined text-xs">
+            {fulfilled ? 'check_circle' : 'circle'}
+        </span>
+        <span>{label}</span>
+    </div>
+);
+
 export const SignUp: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -26,6 +35,15 @@ export const SignUp: React.FC = () => {
         state: '',
         password: '',
     });
+    const passwordRequirements = {
+        length: formData.password.length >= 10,
+        hasUpper: /[A-Z]/.test(formData.password),
+        hasLower: /[a-z]/.test(formData.password),
+        hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password),
+    };
+    const [showPassword, setShowPassword] = useState(false);
+    const isPasswordValid = Object.values(passwordRequirements).every(Boolean);
+    const isFormValid = isPasswordValid && formData.email && formData.first_name && formData.state;
 
     // Handle input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -35,20 +53,20 @@ export const SignUp: React.FC = () => {
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError("");
 
-        // 2. Basic Validation
-        if (!formData.email || !formData.password || !formData.first_name) {
-            setError("Please fill in all required fields.");
+        // if (!formData.email || !formData.password || !formData.first_name) {
+        //     setError("Please fill in all required fields.");
+        //     return;
+        // }
+        if (!isFormValid) {
+            setError("Ensure password meets all requirements.");
             return;
         }
 
-        if (formData.password.length < 6) {
-            setError("Password must be at least 6 characters.");
-            return;
-        }
+
 
         try {
             setLoading(true);
@@ -132,18 +150,36 @@ export const SignUp: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Password Field Added */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Password</label>
-                            <input
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 transition-all"
-                                placeholder="••••••••"
-                                type="password"
-                                required
-                            />
+                        {/* Password Field  */}
+                        <div className="space-y-2 relative">
+                            <label className="text-xs font-bold uppercase text-gray-400">Password</label>
+                            <div className="relative">
+                                <input
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="w-full bg-transparent border-b border-gray-200 py-3 pr-10 focus:ring-0 focus:border-primary"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-0 top-3 text-gray-400 hover:text-primary"
+                                >
+                                    <span className="material-symbols-outlined">
+                                        {showPassword ? 'visibility_off' : 'visibility'}
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Validation Checklist UI */}
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                <ValidationItem label="10+ Characters" fulfilled={passwordRequirements.length} />
+                                <ValidationItem label="Uppercase" fulfilled={passwordRequirements.hasUpper} />
+                                <ValidationItem label="Lowercase" fulfilled={passwordRequirements.hasLower} />
+                                <ValidationItem label="Symbol" fulfilled={passwordRequirements.hasSymbol} />
+                            </div>
                         </div>
 
                         <div className="pt-6 border-t border-gray-50">
@@ -193,11 +229,11 @@ export const SignUp: React.FC = () => {
 
                         <div className="pt-10 flex flex-col md:flex-row items-center justify-between gap-6">
                             <button
-                                disabled={loading}
+                                disabled={loading || !isFormValid}
                                 className="w-full md:w-auto px-10 py-4 bg-primary text-white font-bold rounded-lg shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
                             >
                                 <span>{loading ? "Creating..." : "Create Account"}</span>
-                                {!loading && <span className="material-symbols-outlined text-sm">arrow_forward</span>}
+                                {!loading && isFormValid && <span className="material-symbols-outlined text-sm">arrow_forward</span>}
                             </button>
                             {error && <p className="text-red-500 text-sm mt-2 font-medium">{error}</p>}
 
