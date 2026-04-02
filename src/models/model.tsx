@@ -28,6 +28,7 @@ export interface Invoice {
     notes: string;
     status: string;
     created_at: string;
+    reminder_sent_at: string;
 }
 export interface Service {
     id: string;

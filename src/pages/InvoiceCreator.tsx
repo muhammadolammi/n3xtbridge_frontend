@@ -121,7 +121,7 @@ export default function InvoiceCreator() {
             if (res.status === 201) {
                 const createdInvoice: Invoice = res.data;
                 alert("Invoice created successfully!");
-                navigate(`/dashboard/view-invoice/${createdInvoice.id}`, { state: { invoice: createdInvoice } });
+                navigate(`/dashboard/invoice/${createdInvoice.id}`, { state: { invoice: createdInvoice } });
             }
         } catch (err: any) {
             console.error(err);

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import type { Invoice, Service, Quote, QuoteRequest, User, Promotion, Discount, Item } from '../models/model';
 import { useNavigate, type NavigateFunction } from 'react-router-dom';
 import { QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
+import { sendInvoiceMail } from '../api/emails';
 
 // --- Shared Constants & Sub-Components ---
 
@@ -915,8 +916,76 @@ const ServicesTable = ({ services, loading, onToggle }: { services: Service[], l
     </div>
 );
 
-const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], loading: boolean, navigate: any }) => (
-    <div className="overflow-x-auto">
+const InvoiceActionMenu = ({ inv, navigate, onSendReminder }: { inv: any, navigate: any, onSendReminder: (id: string) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="relative inline-block text-left">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+                <span className="material-symbols-outlined text-gray-400">more_vert</span>
+            </button>
+
+            {isOpen && (
+                <>
+                    {/* Backdrop to close menu */}
+                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
+
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-20 overflow-hidden py-1">
+                        <button
+                            onClick={() => navigate(`/dashboard/invoice/${inv.id}`, { state: { invoice: inv } })}
+                            className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">visibility</span> View Detail
+                        </button>
+
+                        {inv.status !== 'paid' && (
+                            <button
+                                onClick={() => {
+                                    onSendReminder(inv.id);
+                                    setIsOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm">mail</span> Send Reminder
+                            </button>
+                        )}
+
+                        <button className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm">archive</span> Archive
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], loading: boolean, navigate: any }) => {
+    const handleSendReminder = async (id: string) => {
+        try {
+            await sendInvoiceMail(id);
+            alert("Reminder dispatched to registry.");
+        } catch (err) {
+            alert("Failed to send reminder.");
+        }
+    };
+    const formatReminderDate = (dateString: string) => {
+        // Check if it's the Go "Zero" time or undefined
+        if (!dateString || dateString.startsWith("0001") || dateString.startsWith("1970")) {
+            return <span className="text-gray-300 italic">Never Sent</span>;
+        }
+
+        const date = new Date(dateString);
+        return (
+            <div className="flex items-center gap-1 text-primary font-medium">
+                <span className="material-symbols-outlined text-[12px]">history</span>
+                {date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+            </div>
+        );
+    };
+    return (<div className="overflow-x-auto">
         <table className="w-full text-left">
             <thead>
                 <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
@@ -926,6 +995,7 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
                     <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Amount</th>
+                    <th className="px-6 py-4">Last Reminder</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
             </thead>
@@ -962,8 +1032,15 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right font-bold text-gray-900">₦{inv.total.toLocaleString()}</td>
+                                <td className="px-6 py-4 text-[10px] uppercase font-bold">
+                                    {formatReminderDate(inv.reminder_sent_at)}
+                                </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button onClick={() => navigate(`/dashboard/view-invoice/${inv.id}`, { state: { invoice: inv } })} className="text-primary hover:underline text-xs font-black uppercase tracking-tighter">View</button>
+                                    <InvoiceActionMenu
+                                        inv={inv}
+                                        navigate={navigate}
+                                        onSendReminder={handleSendReminder}
+                                    />
                                 </td>
                             </tr>
                         )
@@ -975,8 +1052,8 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
                 }
             </tbody>
         </table>
-    </div >
-);
+    </div >)
+};
 
 const PromotionsTable = ({
     promos,
@@ -1152,7 +1229,7 @@ const QuoteRequestTable = ({
                                         <div className="flex justify-end items-center gap-2">
                                             {/* 1. View Request - Always shows for everyone */}
                                             <button
-                                                onClick={() => navigate(`/dashboard/view-qr/${qr.id}`, { state: { qr } })}
+                                                onClick={() => navigate(`/dashboard/qr/${qr.id}`, { state: { qr } })}
                                                 className="flex items-center gap-1 px-3 py-1.5 border border-gray-100 rounded-lg text-gray-500 text-[9px] font-black uppercase tracking-tighter hover:bg-gray-50 hover:text-primary transition-all shadow-sm"
                                             >
                                                 <span className="material-symbols-outlined text-sm">visibility</span>
@@ -1173,7 +1250,7 @@ const QuoteRequestTable = ({
                                             {/* 3. View Quote - Shows for everyone ONLY if status is 'quoted' */}
                                             {isQuoted && qr && qr.quote_id && (
                                                 <button
-                                                    onClick={() => navigate(`/dashboard/view-quote/${qr.quote_id}`)}
+                                                    onClick={() => navigate(`/dashboard/quote/${qr.quote_id}`)}
                                                     className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all"
                                                 >
                                                     <span className="material-symbols-outlined text-sm">visibility</span>
@@ -1286,7 +1363,7 @@ const QuotesTable = ({
                                 <td className="px-6 py-4 text-right">
                                     <button
                                         className="text-gray-400 hover:text-primary transition-all"
-                                        onClick={() => navigate(`/dashboard/view-quote/${q.id}`, { state: { quote: q } })}
+                                        onClick={() => navigate(`/dashboard/quote/${q.id}`, { state: { quote: q } })}
                                     >
                                         <span className="material-symbols-outlined text-lg">visibility</span>
                                     </button>

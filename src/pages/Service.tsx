@@ -44,7 +44,7 @@ const QuoteRequestModal = ({
 
                 alert(`Quote request for ${serviceName} dispatched successfully.`);
                 const qr: QuoteRequest = res.data.quote_request
-                navigate(`/dashboard/view-qr/${qr.id}`, { state: { qr: qr, } })
+                navigate(`/dashboard/qr/${qr.id}`, { state: { qr: qr, } })
 
                 onClose();
             }

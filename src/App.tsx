@@ -17,6 +17,7 @@ import QuoteViewer from './pages/QuoteViewer';
 import QuoteRequestViewer from './pages/QuoteRequestViewer';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ServiceDetail from './pages/Service';
+import PublicInvoiceViewer from './pages/PublicInvoiceViewer';
 
 const App: React.FC = () => {
   return (
@@ -35,6 +36,12 @@ const App: React.FC = () => {
             <Route path="signin" element={<SignIn />} />
             <Route path="services" element={<Services />} />
             <Route path="services/:id" element={<ServiceDetail />} />
+            <Route path="payment-success" element={
+              <PaymentSuccess />
+            } />
+            <Route path="invoice/:id" element={
+              <PublicInvoiceViewer />
+            } />
 
 
 
@@ -52,28 +59,23 @@ const App: React.FC = () => {
                 <InvoiceCreator />
               </ProtectedRoute>
             } />
-            <Route path="view-invoice/:id" element={
+            <Route path="invoice/:id" element={
               <ProtectedRoute >
                 <InvoiceViewer />
               </ProtectedRoute>
             } />
-            <Route path="view-quote/:id" element={
+            <Route path="quote/:id" element={
               <ProtectedRoute >
                 <QuoteViewer />
               </ProtectedRoute>
             } />
-            <Route path="view-qr/:id" element={
+            <Route path="qr/:id" element={
               <ProtectedRoute >
                 <QuoteRequestViewer />
               </ProtectedRoute>
 
             } />
-            <Route path="payment-success" element={
-              <ProtectedRoute >
 
-                <PaymentSuccess />
-              </ProtectedRoute>
-            } />
 
 
 
