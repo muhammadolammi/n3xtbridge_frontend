@@ -1,46 +1,38 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import api from '../api/axios';
 import Confetti from 'react-confetti';
+import { verifyPayment } from '../api/payment';
 import { useAuth } from '../context/AuthContext';
 
 export default function PaymentSuccess() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const reference = searchParams.get('reference') || searchParams.get('trxref');
-
+    const { user } = useAuth();
     const [isSyncing, setIsSyncing] = useState(true);
-    const { user, loading: authLoading } = useAuth();
     const [paymentSuccess, setPaymentSuccess] = useState(false);
 
 
-    // 1. Guard Clause: If auth is still loading, show global spinner
-    // 2. If auth finished and no user, redirect to signin
-    useEffect(() => {
-        if (!authLoading && !user) {
-            // Include the current path so you can redirect back after login
-            const currentPath = encodeURIComponent(window.location.pathname + window.location.search);
-            navigate(`/signin?redirect=${currentPath}`);
-        }
-    }, [user, authLoading, navigate]);
+
 
     useEffect(() => {
-        if (authLoading || !user || !reference) return;
+        if (!reference) return;
 
         let isMounted = true;
 
         const interval = setInterval(async () => {
             try {
-                const res = await api.get(`/customer/payments/verify/${reference}`);
-                if (res.data.status === 'success' && isMounted) {
+                const status = await verifyPayment(reference);
+                if (status === 'success' && isMounted) {
                     setPaymentSuccess(true)
                     clearInterval(interval);
                     setIsSyncing(false)
                 }
-                if (res.data.status !== 'success' && isMounted) {
+                if (status !== 'success' && isMounted) {
                     setPaymentSuccess(false)
                 }
             } catch (err) {
+                console.log("Error verifying payment:", err);
                 console.error("Syncing with terminal...");
             }
 
@@ -58,19 +50,11 @@ export default function PaymentSuccess() {
             clearInterval(interval);
             clearTimeout(timeout);
         };
-    }, [reference, user, authLoading]);
+    }, [reference,]);
 
-    // Show loading state while checking Auth
-    if (authLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+
 
     // If no user, the useEffect above will handle the navigate, so we return null
-    if (!user) return null;
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -95,17 +79,18 @@ export default function PaymentSuccess() {
                 </p>
 
                 <div className="space-y-4">
-                    <button
+                    {user && (<button
                         disabled={isSyncing}
                         onClick={() => navigate('/dashboard')}
                         className="w-full bg-secondary-dark text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50 shadow-lg shadow-gray-200"
                     >
                         {isSyncing ? 'Finalizing Sync...' : 'Return to Dashboard'}
-                    </button>
+                    </button>)
+                    }
 
                     {!isSyncing && (
                         <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                            Ref: {reference?.slice(0, 12)}
+                            Ref: {reference}
                         </p>
                     )}
                 </div>
