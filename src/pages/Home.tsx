@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { SITE_CONFIG } from '../constants/content';
-import { Link, useNavigate } from 'react-router-dom';
+// import { SITE_CONFIG } from '../constants/content';
+// import { Link, useNavigate } from 'react-router-dom';
 import type { Service } from '../models/model';
 import api from '../api/axios';
 import { BrandLoader, scrollToSection } from '../components/resusable';
@@ -74,37 +74,37 @@ const HeroCameraSvg = () => (
 
 
 
-const servicesData = [
-    {
-        id: 'security',
-        title: 'Security & Access Control',
-        desc: 'Advanced CCTV surveillance and premises access control solutions integrated with AI-driven monitoring for 24/7 protection.',
-        tag: 'SECURITY',
-        image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=2000&auto=format&fit=crop'
-    },
-    {
-        id: 'solar',
-        title: 'Solar Power Solutions',
-        desc: 'Clean, sustainable energy installations designed to provide 100% uptime for your critical IT infrastructure and office operations.',
-        tag: 'RENEWABLES',
-        image: 'https://images.unsplash.com/photo-1668097613572-40b7c11c8727?q=80&w=1170&auto=format&fit=crop',
-        minPrice: '120,000'
-    },
-    {
-        id: 'web',
-        title: 'Web & App Development',
-        desc: 'High-performance, scalable web platforms and mobile applications built with modern stacks like React, Go, and .NET Core.',
-        tag: 'DEVELOPMENT',
-        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop'
-    },
-    {
-        id: 'general',
-        title: 'General IT & Infrastructure',
-        desc: 'From fiber optic cabling to data center management, we build the physical and digital backbone of your enterprise.',
-        tag: 'INFRASTRUCTURE',
-        image: 'https://images.unsplash.com/photo-1528845922818-cc5462be9a63?q=80&w=1074&auto=format&fit=crop'
-    }
-];
+// const servicesData = [
+//     {
+//         id: 'security',
+//         title: 'Security & Access Control',
+//         desc: 'Advanced CCTV surveillance and premises access control solutions integrated with AI-driven monitoring for 24/7 protection.',
+//         tag: 'SECURITY',
+//         image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=2000&auto=format&fit=crop'
+//     },
+//     {
+//         id: 'solar',
+//         title: 'Solar Power Solutions',
+//         desc: 'Clean, sustainable energy installations designed to provide 100% uptime for your critical IT infrastructure and office operations.',
+//         tag: 'RENEWABLES',
+//         image: 'https://images.unsplash.com/photo-1668097613572-40b7c11c8727?q=80&w=1170&auto=format&fit=crop',
+//         minPrice: '120,000'
+//     },
+//     {
+//         id: 'web',
+//         title: 'Web & App Development',
+//         desc: 'High-performance, scalable web platforms and mobile applications built with modern stacks like React, Go, and .NET Core.',
+//         tag: 'DEVELOPMENT',
+//         image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop'
+//     },
+//     {
+//         id: 'general',
+//         title: 'General IT & Infrastructure',
+//         desc: 'From fiber optic cabling to data center management, we build the physical and digital backbone of your enterprise.',
+//         tag: 'INFRASTRUCTURE',
+//         image: 'https://images.unsplash.com/photo-1528845922818-cc5462be9a63?q=80&w=1074&auto=format&fit=crop'
+//     }
+// ];
 
 const ServicesSection = ({ services }: { services: Service[] }) => {
     return (
