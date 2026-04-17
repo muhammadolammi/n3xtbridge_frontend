@@ -16,6 +16,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ['plical-flabbergastedly-jone.ngrok-free.dev'],
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // Your Go server
