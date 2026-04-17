@@ -161,12 +161,13 @@ const ServicesSection = ({ services }: { services: Service[] }) => {
                                 {service.description}
                             </p>
 
-                            <div className="mb-6 flex items-center gap-2">
+                            {service.min_price !== "" && (<div className="mb-6 flex items-center gap-2">
                                 <span className="text-[#838383] text-sm font-['Manrope'] uppercase tracking-wider">Starting from</span>
                                 <span className="text-white font-bold text-lg font-['Inter']">
                                     ₦{new Intl.NumberFormat('en-NG').format(Number(service.min_price))}
                                 </span>
                             </div>
+                            )}
 
                             <div className="flex flex-wrap gap-4 md:gap-5 items-center">
                                 {/* Main Quote Button */}
