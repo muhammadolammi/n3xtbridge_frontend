@@ -161,7 +161,7 @@ const ServicesSection = ({ services }: { services: Service[] }) => {
                                 {service.description}
                             </p>
 
-                            {service.min_price !== "" && (<div className="mb-6 flex items-center gap-2">
+                            {service.min_price.trim() !== `''` && service.min_price.trim() !== `""` && service.min_price.trim() !== "" && (<div className="mb-6 flex items-center gap-2">
                                 <span className="text-[#838383] text-sm font-['Manrope'] uppercase tracking-wider">Starting from</span>
                                 <span className="text-white font-bold text-lg font-['Inter']">
                                     ₦{new Intl.NumberFormat('en-NG').format(Number(service.min_price))}
@@ -177,8 +177,7 @@ const ServicesSection = ({ services }: { services: Service[] }) => {
 
                                 {/* WhatsApp Chat Button */}
                                 <a
-
-                                    href={`https://wa.me/2349139971163?text=Hello N3xtbridge, I'm interested in ${service.name}`}
+                                    href={`https://wa.me/2349139971163?text=${encodeURIComponent(`Hello N3xtbridge Sales, I'm interested in ${service.name}`)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 px-6 py-3.5 md:py-4 font-bold text-sm hover:bg-[#25D366] hover:text-white transition-all active:scale-95"

@@ -36,7 +36,6 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // if (!formData.icon.trim()) return alert("Icon name is required");
         setLoading(true);
         try {
             const payload = { ...formData, tags: formData.tags.split(',').map(t => t.trim()).filter(t => t !== "") };
@@ -47,7 +46,7 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
         finally { setLoading(false); }
     };
 
-    const isFormValid = formData.name.trim() !== "" && formData.description.trim() !== "" && formData.min_price.trim() !== "";
+    const isFormValid = formData.name.trim() !== "" && formData.description.trim() !== "";
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
