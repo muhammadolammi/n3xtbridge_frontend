@@ -42,6 +42,7 @@ export interface Service {
     tags?: string[];
     promo_ids: string[];
     active_promotions?: Promotion[];
+    min_price: string
 }
 
 export interface User {

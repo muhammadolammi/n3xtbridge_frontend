@@ -58,14 +58,17 @@ export default {
                 headline: ["Inter", "sans-serif"],
                 body: ["Inter", "sans-serif"],
                 label: ["Inter", "sans-serif"],
-            },
-            borderRadius: {
-                DEFAULT: "0.125rem",
-                lg: "0.25rem",
-                xl: "0.5rem",
-                full: "0.75rem",
-            },
+                inter: ['Inter', 'sans-serif'],
+                manrope: ['Manrope', 'sans-serif'],
+            }
+        },
+        borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem",
         },
     },
     plugins: [],
-};
+}
+

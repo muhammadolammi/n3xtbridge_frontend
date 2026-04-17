@@ -30,13 +30,13 @@ const QUOTE_STATUS_STYLES: Record<string, string> = {
 const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
     const [formData, setFormData] = useState({
         name: '', description: '', category: 'Tech Support',
-        is_featured: false, icon: '', image: '', tags: ''
+        is_featured: false, icon: '', image: '', tags: '', min_price: ''
     });
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.icon.trim()) return alert("Icon name is required");
+        // if (!formData.icon.trim()) return alert("Icon name is required");
         setLoading(true);
         try {
             const payload = { ...formData, tags: formData.tags.split(',').map(t => t.trim()).filter(t => t !== "") };
@@ -47,7 +47,7 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
         finally { setLoading(false); }
     };
 
-    const isFormValid = formData.name.trim() !== "" && formData.icon.trim() !== "" && formData.description.trim() !== "";
+    const isFormValid = formData.name.trim() !== "" && formData.description.trim() !== "" && formData.min_price.trim() !== "";
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -75,11 +75,7 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
                             <option>Cloud Infrastructure</option>
                         </select>
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-gray-400">Icon (Material Name)</label>
-                        <input className="w-full border-b-2 border-gray-100 focus:border-primary outline-none py-2 text-sm"
-                            placeholder="e.g. videocam" onChange={e => setFormData({ ...formData, icon: e.target.value })} />
-                    </div>
+
                     <div className="col-span-2 space-y-1">
                         <label className="text-[10px] font-bold uppercase text-gray-400">Description</label>
                         <textarea required rows={3} className="w-full border-2 border-gray-100 focus:border-primary rounded-lg p-3 text-sm"
@@ -94,6 +90,11 @@ const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
                         <label className="text-[10px] font-bold uppercase text-gray-400">Tags (comma separated)</label>
                         <input className="w-full border-b-2 border-gray-100 focus:border-primary outline-none py-2 text-sm"
                             placeholder="AI, 24/7, Cloud" onChange={e => setFormData({ ...formData, tags: e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase text-gray-400">Starting Price</label>
+                        <input className="w-full border-b-2 border-gray-100 focus:border-primary outline-none py-2 text-sm"
+                            placeholder="200000, 500000 " onChange={e => setFormData({ ...formData, min_price: e.target.value })} />
                     </div>
                     <div className="flex items-center gap-3">
                         <input type="checkbox" id="featured" className="w-4 h-4 accent-primary"
