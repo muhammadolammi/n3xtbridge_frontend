@@ -1,32 +1,50 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { useAuth } from '../context/AuthContext'; // Ensure this path is correct
+import { MENUSECTIONTOHASH } from './resusable';
 
 const Navbar: React.FC = () => {
     const { user, logout } = useAuth();
-    const location = useLocation();
+    const [isScrolled, setIsScrolled] = useState(false);
+
 
     const isLoggedin = !!user;
-    // const isAtDashboard = location.pathname.startsWith('/dashboard');
-    const isAtDashboard = location.pathname == '/dashboard';
+    const isAtDashboard = location.pathname.startsWith('/dashboard');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+
 
 
     return (
-        <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/15 dark:border-slate-800/15 shadow-sm dark:shadow-none font-sans tracking-tight antialiased print:hidden">
-            <div className="flex justify-between items-center h-16 px-6 md:px-12 max-w-7xl mx-auto">
-                <Link to="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-100">
-                    N3xtbridge Holdings
-                </Link>
+        <>
 
-                {/* Desktop Links */}
+            <nav
+                className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-between bg-black/85 backdrop-blur-md border-b border-[#111] transition-shadow duration-300 ${isScrolled ? 'shadow-[0_2px_24px_rgba(0,0,0,0.6)]' : ''
+                    }`}
+            >
+                <div className="px-8 py-5 text-[22px] font-medium tracking-tight">N3xtbridge</div>
+
+
+
+                {/* Geral links Links */}
+
+
                 <div className="hidden md:flex items-center space-x-8">
                     <Link to="/" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                         Home
                     </Link>
 
                     {/* Show Dashboard only if logged in AND not currently on a dashboard page */}
-                    {isLoggedin && !isAtDashboard && (
+                    {isLoggedin && (
                         <Link to="/dashboard" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                             Dashboard
                         </Link>
@@ -35,33 +53,62 @@ const Navbar: React.FC = () => {
                     <Link to="/services" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                         Services
                     </Link>
-                    <Link to="/about-us" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
+                    <HashLink to="/#why" className="text-on-surface-variant dark:text-slate-400 hover:text-blue-600 transition-colors">
                         About Us
-                    </Link>
+                    </HashLink>
                 </div>
+                {!isAtDashboard && (< HashLink
+                    to={"/#contact"}
+                    className="hidden md:block bg-[#0046FB] text-white font-['Manrope'] font-semibold px-8 py-5.5 hover:opacity-85 transition-opacity"
+                >
+                    Contact Us
+                </HashLink>
+                )}
+                {isAtDashboard && (< button
+                    onClick={() => logout()}
+                    className="hidden md:block bg-[#0046FB] text-white font-['Manrope'] font-semibold px-8 py-5.5 hover:opacity-85 transition-opacity"
+                >
+                    Sign Out
+                </button>
+                )}
 
-                <div className='space-x-5 flex items-center'>
-                    {!isLoggedin ? (
-                        <>
-                            <HashLink to="/#contact" className="bg-primary hover:opacity-80 transition-all duration-200 active:scale-95 transform text-white px-5 py-2 rounded-lg font-medium text-sm">
-                                Contact Us
-                            </HashLink>
-                            <Link to="/signin" className="bg-primary hover:opacity-80 transition-all duration-200 active:scale-95 transform text-white px-5 py-2 rounded-lg font-medium text-sm">
-                                Sign In
-                            </Link>
-                        </>
-                    ) : (
-                        /* Optional: Show Logout or User initials when logged in */
-                        <button
-                            onClick={logout}
-                            className="bg-primary hover:opacity-80 transition-all duration-200 active:scale-95 transform text-white px-5 py-2 rounded-lg font-medium text-sm"
+
+                <button
+                    className="md:hidden flex flex-col gap-[5px] px-6 py-5 bg-transparent border-none cursor-pointer"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                    <span className={`block w-[22px] h-[2px] bg-white transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                    <span className={`block w-[22px] h-[2px] bg-white transition-opacity ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+                    <span className={`block w-[22px] h-[2px] bg-white transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+                </button>
+            </nav >
+            {/* MOBILE MENU */}
+
+            < div className={`${isMenuOpen ? 'flex' : 'hidden'} flex-col bg-[#0a0a0a] border-t border-[#222] fixed top-16 left-0 right-0 z-[99] py-4`
+            }>
+                {
+                    ['Home', 'About Us', 'Services'].map((section) => (
+                        <HashLink
+                            key={section}
+                            to={`/#${MENUSECTIONTOHASH[section]}`}
+                            onClick={() => {
+                                setIsMenuOpen(false)
+                            }}
+                            className="font-['Manrope'] text-[17px] font-medium text-left px-8 py-3.5 border-b border-[#111] hover:bg-[#111]"
                         >
-                            Sign Out
-                        </button>
-                    )}
-                </div>
-            </div>
-        </nav>
+                            {section.charAt(0).toUpperCase() + section.slice(1)}
+                        </HashLink>
+                    ))
+                }
+                < HashLink
+                    to="/#contact"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="bg-[#0046FB] text-white mx-6 my-3 py-3.5 rounded font-semibold block text-center"
+                >
+                    Contact Us
+                </HashLink >
+            </div >
+        </>
     );
 };
 
