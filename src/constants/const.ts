@@ -10,3 +10,12 @@ export const QUOTE_REQUEST_STATUS_STYLES: Record<string, string> = {
     rejected: "bg-red-100 text-red-700 border-red-200",
     default: "bg-gray-100 text-gray-600 border-gray-200",
 };
+
+export
+    const NIGERIA_STATES = [
+        "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
+        "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe",
+        "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos",
+        "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto",
+        "Taraba", "Yobe", "Zamfara"
+    ];

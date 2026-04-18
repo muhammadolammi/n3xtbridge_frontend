@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
+import { NIGERIA_STATES } from '../constants/const';
 
-const NIGERIA_STATES = [
-    "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
-    "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe",
-    "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos",
-    "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto",
-    "Taraba", "Yobe", "Zamfara"
-];
 
 const ValidationItem = ({ label, fulfilled }: { label: string; fulfilled: boolean }) => (
     <div className={`flex items-center space-x-2 transition-colors ${fulfilled ? 'text-green-600' : 'text-gray-400'}`}>
