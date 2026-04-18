@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Promotion } from '../models/model';
+import { NIGERIA_STATES } from '../constants/const';
 
 interface ModalProps {
     serviceId: string;
@@ -11,7 +12,6 @@ interface ModalProps {
     appliedPromos?: Promotion[] | null;
 }
 
-const NIGERIA_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kwara", "Delta", "Anambra", "Edo", "Akwa Ibom"];
 
 export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName, onClose, appliedPromos }) => {
     const { user, login } = useAuth();
@@ -182,19 +182,32 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
 
 
         try {
+            let currentUserId = user?.id;
             if (!user) {
                 try {
                     await api.post('/auth/signup', {
                         ...formData,
-                        country: 'Nigeria' // Matches your requirement
+                        country: 'Nigeria'
                     });
 
-                    handleLogin()
 
+                    // Log them in to get the session/token
+                    // IMPORTANT: We need the user object returned from this flow
+                    const loginSuccess = await login(formData.email, formData.password);
+
+                    if (!loginSuccess) {
+                        throw new Error("Login failed after signup");
+                    }
+
+                    // Since React state 'user' is still null here, 
+                    // we fetch the user manually or from the login result if possible.
+                    // For now, let's fetch the fresh user directly so we have an ID.
+                    const userRes = await api.get('/auth/user');
+                    currentUserId = userRes.data.id;
                 } catch (err: any) {
-                    const msg = err.response?.data?.error || "Signup failed. Please try again.";
+                    const msg = err.response?.data?.error || "Authentication failed.";
                     setError(msg);
-                    setStep('profile'); // Send them back to fix signup issues
+                    setStep(step === 'profile' ? 'profile' : 'login');
                     return;
                 }
             }
@@ -233,7 +246,7 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
 
             const res = await api.post('/customer/quotes/requests', {
                 ...formData,
-                user_id: user?.id,
+                user_id: currentUserId,
                 description,
                 service_id: serviceId,
                 vn_key: vnKey,
@@ -241,7 +254,6 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                 promo_ids: appliedPromos?.map(p => p.id) || []
             });
             const qr = res.data.quote_request
-            console.log(qr)
 
             navigate(`/dashboard/qr/${res.data.quote_request.id}`, { state: { qr } });
             onClose();

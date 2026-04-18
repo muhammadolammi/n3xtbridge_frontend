@@ -107,6 +107,12 @@ const Navbar: React.FC = () => {
                 >
                     Contact Us
                 </HashLink >
+                {user && (< button
+                    onClick={() => logout()}
+                    className="bg-[#0046FB] text-white mx-6 my-3 py-3.5 rounded font-semibold"
+                >
+                    Sign Out
+                </button>)}
             </div >
         </>
     );

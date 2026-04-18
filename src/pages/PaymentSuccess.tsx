@@ -32,7 +32,7 @@ export default function PaymentSuccess() {
                     setPaymentSuccess(false)
                 }
             } catch (err) {
-                console.log("Error verifying payment:", err);
+                // console.log("Error verifying payment:", err);
                 console.error("Syncing with terminal...");
             }
 
