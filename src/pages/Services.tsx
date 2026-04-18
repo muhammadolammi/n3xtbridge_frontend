@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
 import type { Service } from '../models/model';
-import { useNavigate } from 'react-router-dom';
-
+import { QuoteRequestModal } from '../components/QuoteRequestModal';
 
 const Services: React.FC = () => {
-    const LIMIT = 6; // How many items per page
+    const LIMIT = 6;
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
-    // Pagination State
     const [offset, setOffset] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
-    const navigate = useNavigate()
+    const [selectedService, setSelectedService] = useState<Service | null>(null);
+    const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
+    const openQuoteModal = (service: Service) => {
+        setSelectedService(service);
+        setIsQuoteModalOpen(true);
+    };
     useEffect(() => {
         const fetchServices = async () => {
             try {
                 setLoading(true);
-                // Fetch with dynamic limit and offset
                 const res = await api.get(`/services?limit=${LIMIT}&offset=${offset}`);
-
-                // Expecting {services: [], total: 10 }
                 setServices(res.data.services || []);
                 setTotalCount(res.data.total || 0);
             } catch (err) {
@@ -30,11 +30,9 @@ const Services: React.FC = () => {
             }
         };
         fetchServices();
-        // Scroll to top on page change
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [offset]);
 
-    // Navigation Handlers
     const handleNext = () => {
         if (offset + LIMIT < totalCount) setOffset(prev => prev + LIMIT);
     };
@@ -43,145 +41,159 @@ const Services: React.FC = () => {
         if (offset > 0) setOffset(prev => prev - LIMIT);
     };
 
-    const isFirstPage = offset === 0;
-    const isLastPage = offset + LIMIT >= totalCount;
+    if (loading && offset === 0) {
+        return (
+            <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-[#0046FB] blur-[40px] rounded-full opacity-20 animate-pulse"></div>
+                    <div className="relative font-['Inter'] font-semibold text-3xl tracking-tighter text-white animate-bounce">
+                        N3xtbridge
+                    </div>
+                </div>
+                <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.3em] text-[#838383]">Syncing Technical Specs...</p>
+            </div>
+        );
+    }
 
     return (
-        <main className="pt-24 pb-20">
-            {/* Hero Section */}
-            <section className="relative py-20 overflow-hidden bg-surface">
-                <div className="blueprint-grid absolute inset-0 pointer-events-none"></div>
+        <main className="bg-black text-[#F5F5F5] min-h-screen font-['Inter']">
+            {/* HERO SECTION */}
+            <section className="relative pt-32 pb-20 overflow-hidden">
+                <div className="absolute w-[500px] h-[200px] bg-[#0046FB] blur-[180px] rounded-full opacity-20 -top-10 -left-20 pointer-events-none"></div>
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
-                    <div className="flex flex-col md:flex-row items-center gap-12">
-                        <div className="w-full md:w-3/5">
-                            <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-xs font-bold tracking-widest uppercase rounded-full mb-6">
-                                Technical Excellence
-                            </span>
-                            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-on-background mb-8">
-                                Our Technical <span className="text-primary">Services</span>
-                            </h1>
-                            <p className="text-xl text-on-surface-variant max-w-2xl leading-relaxed">
-                                Engineered for precision. Designed for scale. We provide high-fidelity infrastructure and software solutions that form the backbone of modern enterprise operations.
-                            </p>
-                        </div>
-                        <div className="w-full md:w-2/5 flex justify-end">
-                            <div className="relative group">
-                                <div className="absolute -inset-4 bg-primary/10 rounded-xl blur-2xl group-hover:bg-primary/20 transition-all"></div>
-                                <img alt="Technical engineering" className="relative rounded-xl shadow-2xl w-full max-w-sm object-cover aspect-square border border-outline-variant/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_ZVGiSt2LSNJOLJy3ui4cF0rmyzugmHVHHx2xd9KJ8jcz0Ypc2EdtXC-oB7FSrV6MsshjgGyZfNXiWQ8jnTIiEXOMXEIhk5TVQvlj8dGIj5BwJpmiuEzOkuVSn-OtsgEcEvI7oCcFXZIcB-A3k40EUgms_2mhWJrsuQp2RBjtboQL47TbIrc1-_T7JZfNUEmwxShVoF-ULd4Af1NoDQsRhYXi-anvp4j9ZxrDY8oRxZ5_E5hFG-FhOtJuR4XGMcUj3XSTpilLXLWb" />
-                            </div>
-                        </div>
-                    </div>
+                    <span className="inline-block text-[#0046FB] text-xs font-bold tracking-[0.3em] uppercase mb-6">
+                        Technical Catalog
+                    </span>
+                    <h1 className="text-5xl md:text-7xl font-['Manrope'] font-medium tracking-tight mb-8">
+                        Our Engineering <span className="text-[#0046FB]">Solutions</span>
+                    </h1>
+                    <p className="text-lg md:text-xl text-[#B5B5B5] max-w-3xl leading-relaxed font-['Manrope']">
+                        High-fidelity infrastructure and software ecosystems engineered for precision. We provide the technical backbone for modern enterprise operations in Nigeria and beyond.
+                    </p>
                 </div>
             </section>
 
-            {/* Grid Section */}
-            <section className="py-24 bg-surface-container-low">
+            {/* SERVICES LIST */}
+            <section className="py-12 pb-32">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="mb-16 flex justify-between items-end">
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tight mb-4 text-on-background">Catalog</h2>
-                            <div className="h-1.5 w-20 bg-primary rounded-full"></div>
-                        </div>
+                    {/* Header & Pagination Controls */}
+                    <div className="mb-16 flex justify-between items-center border-b border-[#1A1A1A] pb-8">
+                        <h2 className="text-xl font-['Manrope'] font-medium uppercase tracking-widest text-[#838383]">
+                            Showing {offset + 1} — {Math.min(offset + LIMIT, totalCount)} of {totalCount}
+                        </h2>
 
-                        {/* Pagination: < > Style */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <button
                                 onClick={handlePrev}
-                                disabled={isFirstPage || loading}
-                                className="w-12 h-12 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-400 hover:text-primary hover:border-primary disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
+                                disabled={offset === 0 || loading}
+                                className="p-4 rounded-full border border-[#2F2F2F] hover:border-[#0046FB] hover:text-[#0046FB] disabled:opacity-20 transition-all active:scale-90"
                             >
-                                <span className="material-symbols-outlined">chevron_left</span>
+                                ← Prev
                             </button>
                             <button
                                 onClick={handleNext}
-                                disabled={isLastPage || loading}
-                                className="w-12 h-12 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-400 hover:text-primary hover:border-primary disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
+                                disabled={offset + LIMIT >= totalCount || loading}
+                                className="p-4 rounded-full border border-[#2F2F2F] hover:border-[#0046FB] hover:text-[#0046FB] disabled:opacity-20 transition-all active:scale-90"
                             >
-                                <span className="material-symbols-outlined">chevron_right</span>
+                                Next →
                             </button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[500px]">
-                        {loading ? (
-                            <div className="col-span-full flex flex-col items-center justify-center py-20">
-                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-400">Syncing Catalog...</p>
-                            </div>
-                        ) : services.length === 0 ? (
-                            <div className="col-span-full py-20 text-center text-gray-400 font-mono text-xs uppercase tracking-widest">
+                    {/* SERVICES DISPLAY */}
+                    <div className="flex flex-col gap-20">
+                        {services.length === 0 ? (
+                            <div className="py-40 text-center text-[#838383] font-mono text-xs uppercase tracking-widest border border-dashed border-[#2F2F2F] rounded-3xl">
                                 No technical specs found in this range.
                             </div>
                         ) : (
-                            services.map((service) => {
-                                // Check if the service has an active promo linked
-                                const hasActivePromo = !!service.promo_ids && service.promo_ids.length > 0;
-                                return (
-                                    <div key={service.id} className={`group bg-white border rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col ${hasActivePromo ? 'border-primary/30 ring-4 ring-primary/5 shadow-lg shadow-primary/5' : 'border-gray-100'}`}>
+                            services.map((service, index) => (
+                                <div
+                                    key={service.id}
+                                    className="group grid grid-cols-1 lg:grid-cols-2 items-stretch bg-[#0C0C0C] rounded-3xl overflow-hidden border border-[#1A1A1A] hover:border-[#0046FB]/30 transition-all duration-500"
+                                >
+                                    {/* IMAGE SIDE */}
+                                    <div className="relative min-h-[300px] md:min-h-[450px] overflow-hidden order-first lg:order-none">
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0C0C0C] via-transparent to-transparent z-10 lg:hidden"></div>
+                                        <div className="absolute inset-0 bg-[#0046FB]/5 mix-blend-overlay z-10"></div>
+                                        <img
+                                            src={service.image || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b"}
+                                            alt={service.name}
+                                            className="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                                        />
+                                    </div>
 
-                                        {/* Service Image Header */}
-                                        <div className="relative h-48 overflow-hidden">
-                                            {/* PROMO RIBBON */}
-                                            {hasActivePromo && (
-                                                <div className="absolute top-4 -right-12 bg-primary text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-12 rotate-45 z-20 shadow-lg border-b border-white/20">
-                                                    Active Offer
-                                                </div>
-                                            )}
+                                    {/* TEXT SIDE */}
+                                    <div className={`p-8 md:p-12 lg:p-20 flex flex-col justify-center ${index % 2 !== 0 ? 'lg:order-first' : 'lg:order-last'}`}>
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="w-8 h-[1px] bg-[#0046FB]"></div>
+                                            <span className="text-[#0046FB] font-bold tracking-widest text-[10px] uppercase">
+                                                {service.category || "General ICT"}
+                                            </span>
+                                        </div>
 
-                                            <img
-                                                src={service.image || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b"}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                                alt={service.name}
-                                            />
+                                        <h3 className="text-3xl md:text-5xl font-['Manrope'] font-semibold mb-6 text-white leading-tight">
+                                            {service.name}
+                                        </h3>
 
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                        <p className="text-[#B5B5B5] text-base md:text-lg leading-relaxed mb-10 max-w-md font-['Manrope']">
+                                            {service.description}
+                                        </p>
 
-                                            <div className="absolute bottom-4 left-6 flex items-center gap-3 z-10">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-md border ${hasActivePromo ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-white/10 border-white/20 text-white'}`}>
-                                                    <span className="material-symbols-outlined text-xl">{service.icon}</span>
-                                                </div>
-                                                <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{service.category}</span>
+                                        {/* PRICE TAG */}
+                                        {service.min_price && (
+                                            <div className="mb-8 flex items-center gap-3">
+                                                <span className="text-[#838383] text-xs font-['Manrope'] uppercase tracking-wider">Starting at</span>
+                                                <span className="text-white font-bold text-xl">
+                                                    ₦{Number(service.min_price).toLocaleString('en-NG')}
+                                                </span>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        <div className="p-8 flex-grow">
-                                            <h3 className="text-2xl font-bold mb-3 text-gray-900 tracking-tight flex items-center gap-2">
-                                                {service.name}
-                                                {hasActivePromo && <span className="material-symbols-outlined text-primary text-sm animate-pulse">campaign</span>}
-                                            </h3>
-                                            <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">
-                                                {service.description}
-                                            </p>
-                                        </div>
-
-                                        <div className="p-8 pt-0 mt-auto space-y-4">
-                                            {/* PROMO SNIPPET BAR */}
-                                            {hasActivePromo && (
-                                                <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
-                                                    <span className="material-symbols-outlined text-primary text-sm">auto_awesome</span>
-                                                    <p className="text-[9px] font-black text-primary uppercase tracking-widest">
-                                                        Special Pricing Available
-                                                    </p>
-                                                </div>
-                                            )}
+                                        {/* BUTTON GROUP */}
+                                        <div className="flex flex-wrap gap-4 items-center">
 
                                             <button
+                                                onClick={() => openQuoteModal(service)}
+                                                className="bg-[#0046FB] text-white px-6 md:px-8 py-3.5 md:py-4 font-bold text-sm hover:scale-105 transition-transform active:scale-95">
+                                                Get a Quote
+                                            </button>
 
-                                                onClick={() => navigate(`/services/${service.id}`, { state: { service: service, } })}
-                                                className={`w-full inline-flex items-center justify-center gap-2 font-bold py-4 rounded-2xl transition-all group/btn ${hasActivePromo ? 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20' : 'bg-gray-50 text-gray-900 hover:bg-primary hover:text-white'}`}
+                                            {/* WhatsApp Chat Button */}
+                                            <a
+                                                href={`https://wa.me/2349139971163?text=${encodeURIComponent(`Hello N3xtbridge Sales, I'm interested in ${service.name}`)}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 px-6 py-3.5 md:py-4 font-bold text-sm hover:bg-[#25D366] hover:text-white transition-all active:scale-95"
                                             >
-                                                {hasActivePromo ? 'Claim Campaign Offer(s)' : 'View Specifications'}
-                                                <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.067 2.877 1.215 3.076.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                                </svg>
+                                                WhatsApp Chat
+                                            </a>
+
+                                            {/* Specifications Link */}
+                                            <button className="group/btn flex items-center gap-2 text-[#F5F5F5] font-semibold text-sm">
+                                                Full Specifications
+                                                <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
                                             </button>
                                         </div>
                                     </div>
-                                );
-                            })
+                                </div>
+                            ))
                         )}
                     </div>
                 </div>
+                {/* MODAL RENDERING (AT THE BOTTOM OF MAIN) */}
+                {isQuoteModalOpen && selectedService && (
+                    <QuoteRequestModal
+                        serviceId={selectedService.id}
+                        serviceName={selectedService.name}
+                        onClose={() => setIsQuoteModalOpen(false)}
+                        appliedPromos={null} // Or pass current active promos if you have them
+                    />
+                )}
             </section>
-
 
         </main>
     );

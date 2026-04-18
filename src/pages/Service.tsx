@@ -1,204 +1,205 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import api from '../api/axios';
-import type { Promotion, QuoteRequest, Service } from '../models/model';
-import { useAuth } from '../context/AuthContext';
+import type { Promotion, Service } from '../models/model';
+// import { useAuth } from '../context/AuthContext';
+import { QuoteRequestModal } from '../components/QuoteRequestModal';
 
-const QuoteRequestModal = ({
-    serviceName,
-    serviceId,
-    onClose,
-    appliedPromos
-}: {
-    serviceName: string,
-    serviceId: string,
-    onClose: () => void,
-    appliedPromos?: Promotion[] | null
-}) => {
-    const { user } = useAuth();
-    const [description, setDescription] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate()
-
-
-    const handleSendQuoteRequest = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
-        const promo_ids = appliedPromos?.map(p => p.id) ?? []
+// const QuoteRequestModal = ({
+//     serviceName,
+//     serviceId,
+//     onClose,
+//     appliedPromos
+// }: {
+//     serviceName: string,
+//     serviceId: string,
+//     onClose: () => void,
+//     appliedPromos?: Promotion[] | null
+// }) => {
+//     const { user } = useAuth();
+//     const [description, setDescription] = useState('');
+//     const [error, setError] = useState<string | null>(null);
+//     const [loading, setLoading] = useState(false);
+//     const navigate = useNavigate()
 
 
-        try {
-            const payload = {
-                user_id: user?.id,
-                service_id: serviceId,
-                service_name: serviceName,
-                description: description,
-                promo_ids: promo_ids,
-                attachments: []
-            };
-
-            const res = await api.post("/customer/quotes/requests", payload);
-            if (res.status === 201 || res.status === 200) {
-
-                alert(`Quote request for ${serviceName} dispatched successfully.`);
-                const qr: QuoteRequest = res.data.quote_request
-                navigate(`/dashboard/qr/${qr.id}`, { state: { qr: qr, } })
-
-                onClose();
-            }
-        } catch (err: any) {
-            setError(err.response?.data?.error || "Failed to dispatch request to terminal.");
-        } finally {
-            setLoading(false);
-        }
-    };
-    if (!user) {
-        return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
-                    <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50">
-                        <div>
-                            <h3 className="font-black uppercase tracking-tighter text-xl text-gray-900">Request Technical Quote</h3>
-                            <p className="text-[10px] font-mono text-primary font-bold uppercase mt-1">Registry Ref: {serviceName}</p>
-                        </div>
-                        <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors">
-                            <span className="material-symbols-outlined text-gray-400">close</span>
-                        </button>
-                    </div>
-
-                    <div className="p-8 space-y-6">
-
-                        <div className="space-y-4">
-                            <button
-                                type="button"
-                                disabled={loading}
-                                onClick={() => {
-                                    const currentPath = window.location.pathname + window.location.search;
-                                    const redirectUrl = encodeURIComponent(currentPath);
-
-                                    navigate(`/signin?redirect=${redirectUrl}`, {
-                                        state: { promos: appliedPromos }
-                                    });
-
-                                }
-                                }
-                                className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                            >
-                                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (
-                                    <><span>Sign In & Send</span><span className="material-symbols-outlined text-sm">send</span></>
-                                )}
-                            </button>
-                            {error && <p className="mt-4 text-xs font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
-
-                        </div>
+//     const handleSendQuoteRequest = async (e: React.FormEvent) => {
+//         e.preventDefault();
+//         setError(null);
+//         setLoading(true);
+//         const promo_ids = appliedPromos?.map(p => p.id) ?? []
 
 
+//         try {
+//             const payload = {
+//                 user_id: user?.id,
+//                 service_id: serviceId,
+//                 service_name: serviceName,
+//                 description: description,
+//                 promo_ids: promo_ids,
+//                 attachments: []
+//             };
 
-                    </div>
+//             const res = await api.post("/customer/quotes/requests", payload);
+//             if (res.status === 201 || res.status === 200) {
 
-                </div >
-            </div >
-        );
-    }
+//                 alert(`Quote request for ${serviceName} dispatched successfully.`);
+//                 const qr: QuoteRequest = res.data.quote_request
+//                 navigate(`/dashboard/qr/${qr.id}`, { state: { qr: qr, } })
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
-                <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50">
-                    <div>
-                        <h3 className="font-black uppercase tracking-tighter text-xl text-gray-900">Request Technical Quote</h3>
-                        <p className="text-[10px] font-mono text-primary font-bold uppercase mt-1">Registry Ref: {serviceName}</p>
-                    </div>
-                    <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors">
-                        <span className="material-symbols-outlined text-gray-400">close</span>
-                    </button>
-                </div>
+//                 onClose();
+//             }
+//         } catch (err: any) {
+//             setError(err.response?.data?.error || "Failed to dispatch request to terminal.");
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+//     if (!user) {
+//         return (
+//             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+//                 <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
+//                     <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50">
+//                         <div>
+//                             <h3 className="font-black uppercase tracking-tighter text-xl text-gray-900">Request Technical Quote</h3>
+//                             <p className="text-[10px] font-mono text-primary font-bold uppercase mt-1">Registry Ref: {serviceName}</p>
+//                         </div>
+//                         <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors">
+//                             <span className="material-symbols-outlined text-gray-400">close</span>
+//                         </button>
+//                     </div>
 
-                <form onSubmit={handleSendQuoteRequest} className="p-8 space-y-6">
+//                     <div className="p-8 space-y-6">
 
-                    <div className="space-y-4">
+//                         <div className="space-y-4">
+//                             <button
+//                                 type="button"
+//                                 disabled={loading}
+//                                 onClick={() => {
+//                                     const currentPath = window.location.pathname + window.location.search;
+//                                     const redirectUrl = encodeURIComponent(currentPath);
+
+//                                     navigate(`/signin?redirect=${redirectUrl}`, {
+//                                         state: { promos: appliedPromos }
+//                                     });
+
+//                                 }
+//                                 }
+//                                 className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+//                             >
+//                                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (
+//                                     <><span>Sign In & Send</span><span className="material-symbols-outlined text-sm">send</span></>
+//                                 )}
+//                             </button>
+//                             {error && <p className="mt-4 text-xs font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+
+//                         </div>
 
 
-                    </div>
+
+//                     </div>
+
+//                 </div >
+//             </div >
+//         );
+//     }
+
+//     return (
+//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+//             <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300">
+//                 <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50">
+//                     <div>
+//                         <h3 className="font-black uppercase tracking-tighter text-xl text-gray-900">Request Technical Quote</h3>
+//                         <p className="text-[10px] font-mono text-primary font-bold uppercase mt-1">Registry Ref: {serviceName}</p>
+//                     </div>
+//                     <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors">
+//                         <span className="material-symbols-outlined text-gray-400">close</span>
+//                     </button>
+//                 </div>
+
+//                 <form onSubmit={handleSendQuoteRequest} className="p-8 space-y-6">
+
+//                     <div className="space-y-4">
 
 
-                    {appliedPromos && appliedPromos.length > 0 && (
-                        <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl space-y-4 animate-in zoom-in duration-300">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-                                    <span className="material-symbols-outlined text-sm">campaign</span>
-                                </div>
-                                <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600">Promotions Active</p>
-                                    {/* {
-                                        appliedPromos.map((appliedPromo) => <>
-                                            <p key={appliedPromo.id} className="text-xs font-bold text-gray-900">{appliedPromo.name}</p>
+//                     </div>
 
-                                        </>)
-                                    } */}
-                                </div>
-                            </div>
 
-                            <div className="space-y-2 pt-2 border-t border-amber-200/50">
-                                {
-                                    appliedPromos.map((appliedPromo) => {
-                                        return (
-                                            <div key={appliedPromo.id}>
-                                                {appliedPromo.breakdown?.map((discount, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center text-[10px] font-bold uppercase">
-                                                        <span className="text-gray-500">{discount.name}</span>
-                                                        <span className="text-amber-700 bg-white px-2 py-0.5 rounded border border-amber-100">
-                                                            {discount.type === 'item_match' ? "" : discount.type === 'percentage' ? `-${discount.amount}%` : `-₦${Number(discount.amount).toLocaleString()}`}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )
+//                     {appliedPromos && appliedPromos.length > 0 && (
+//                         <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl space-y-4 animate-in zoom-in duration-300">
+//                             <div className="flex items-center gap-4">
+//                                 <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+//                                     <span className="material-symbols-outlined text-sm">campaign</span>
+//                                 </div>
+//                                 <div>
+//                                     <p className="text-[9px] font-black uppercase tracking-widest text-amber-600">Promotions Active</p>
+//                                     {/* {
+//                                         appliedPromos.map((appliedPromo) => <>
+//                                             <p key={appliedPromo.id} className="text-xs font-bold text-gray-900">{appliedPromo.name}</p>
 
-                                    }
+//                                         </>)
+//                                     } */}
+//                                 </div>
+//                             </div>
 
-                                    )
-                                }
+//                             <div className="space-y-2 pt-2 border-t border-amber-200/50">
+//                                 {
+//                                     appliedPromos.map((appliedPromo) => {
+//                                         return (
+//                                             <div key={appliedPromo.id}>
+//                                                 {appliedPromo.breakdown?.map((discount, idx) => (
+//                                                     <div key={idx} className="flex justify-between items-center text-[10px] font-bold uppercase">
+//                                                         <span className="text-gray-500">{discount.name}</span>
+//                                                         <span className="text-amber-700 bg-white px-2 py-0.5 rounded border border-amber-100">
+//                                                             {discount.type === 'item_match' ? "" : discount.type === 'percentage' ? `-${discount.amount}%` : `-₦${Number(discount.amount).toLocaleString()}`}
+//                                                         </span>
+//                                                     </div>
+//                                                 ))}
+//                                             </div>
+//                                         )
 
-                            </div>
-                        </div>
-                    )}
+//                                     }
 
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Project Requirements</label>
-                        <textarea
-                            required
-                            rows={4}
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder={`Detail your specific requirements for ${serviceName}...`}
-                            className="w-full border-2 border-gray-100 focus:border-primary rounded-xl p-4 text-sm outline-none transition-all"
-                        />
-                    </div>
+//                                     )
+//                                 }
 
-                    <div className="space-y-4">
-                        <button
-                            disabled={loading || !description.trim()}
-                            className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                        >
-                            {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (
-                                <><span>Dispatch Request</span><span className="material-symbols-outlined text-sm">send</span></>
-                            )}
-                        </button>
-                        <p className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                            {appliedPromos && appliedPromos.length > 0 ? "Campaign ID logged for automatic discounting" : "Standard registry response within 24h"}
-                        </p>
-                    </div>
-                    {error && <p className="mt-4 text-xs font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+//                             </div>
+//                         </div>
+//                     )}
 
-                </form>
+//                     <div className="space-y-1">
+//                         <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Project Requirements</label>
+//                         <textarea
+//                             required
+//                             rows={4}
+//                             value={description}
+//                             onChange={(e) => setDescription(e.target.value)}
+//                             placeholder={`Detail your specific requirements for ${serviceName}...`}
+//                             className="w-full border-2 border-gray-100 focus:border-primary rounded-xl p-4 text-sm outline-none transition-all"
+//                         />
+//                     </div>
 
-            </div>
-        </div>
-    );
-};
+//                     <div className="space-y-4">
+//                         <button
+//                             disabled={loading || !description.trim()}
+//                             className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+//                         >
+//                             {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (
+//                                 <><span>Dispatch Request</span><span className="material-symbols-outlined text-sm">send</span></>
+//                             )}
+//                         </button>
+//                         <p className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+//                             {appliedPromos && appliedPromos.length > 0 ? "Campaign ID logged for automatic discounting" : "Standard registry response within 24h"}
+//                         </p>
+//                     </div>
+//                     {error && <p className="mt-4 text-xs font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+
+//                 </form>
+
+//             </div>
+//         </div>
+//     );
+// };
 
 export default function ServiceDetail() {
     const { id } = useParams<{ id: string }>();
@@ -211,7 +212,7 @@ export default function ServiceDetail() {
 
     const [loading, setLoading] = useState<boolean>(!location.state?.service);
     const [error, setError] = useState<string | null>(null);
-    const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+    const [isQuoteReqModalOpen, setIsQuoteReqModalOpen] = useState(false);
     const handleAddPromo = (promoToAdd: Promotion) => {
         setPromos(prev => {
             const exists = prev.find(p => p.id === promoToAdd.id);
@@ -382,7 +383,7 @@ export default function ServiceDetail() {
                                 </div>
 
                                 <button
-                                    onClick={() => setIsQuoteModalOpen(true)}
+                                    onClick={() => setIsQuoteReqModalOpen(true)}
                                     className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
                                 >
                                     Get Technical Quote
@@ -399,14 +400,21 @@ export default function ServiceDetail() {
                 </div>
             </div>
 
-            {isQuoteModalOpen && service && (
+            {isQuoteReqModalOpen && service && (
                 <QuoteRequestModal
                     serviceId={service.id}
                     serviceName={service.name}
                     appliedPromos={promos}
-                    onClose={() => setIsQuoteModalOpen(false)}
+                    onClose={() => setIsQuoteReqModalOpen(false)}
                 />
             )}
+
+            {/* <QuoteRequestModal
+                serviceId={service.id}
+                serviceName={service.name}
+                appliedPromos={activePromos}
+                onClose={() => setIsQuoteReqModalOpen(false)}
+            /> */}
             {error && <p className="mt-4 text-xs font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
 
         </main>

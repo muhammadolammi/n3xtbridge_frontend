@@ -17,8 +17,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [accessToken, setAccessToken] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-
+    const [bootLoading, setBootLoading] = useState(true); // initial auth check
+    const [authLoading, setAuthLoading] = useState(false); // login/logout actions
     // Helper: Fetches user profile using the current session/token
     // const fetchUserProfile = async () => {
     //     try {
@@ -58,14 +58,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(null);
             } finally {
                 // CRITICAL: Only set loading to false AFTER user is fetched or failed
-                setLoading(false);
+                setBootLoading(false);
             }
         };
         initializeAuth();
     }, []);
     // 2. SIGN IN (The "Chain" Method)
     const login = async (email: string, password: string): Promise<boolean> => {
-        setLoading(true);
+        setAuthLoading(true);
         try {
             // Step A: Authenticate (Sets Cookies + Returns Access Token)
             const res = await api.post('/auth/signin', { email, password });
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (err) {
             console.error("Login sequence failed", err);
         } finally {
-            setLoading(false);
+            setAuthLoading(false);
         }
         return false;
     };
@@ -103,9 +103,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, accessToken, login, logout, loading }}>
-            {/* We only render the app once we know if the user is logged in or not */}
-            {!loading && children}
+        <AuthContext.Provider value={{ user, accessToken, login, logout, loading: authLoading }}>
+            {!bootLoading && children}
         </AuthContext.Provider>
     );
 };
