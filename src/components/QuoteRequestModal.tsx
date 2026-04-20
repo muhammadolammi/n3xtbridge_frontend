@@ -470,7 +470,7 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                     {step === 'details' && (
                         <>
                             <textarea
-                                placeholder="Describe your request..."
+                                placeholder="Describe your request in details, you can utilize the video and audio feature for more description..."
                                 className="w-full p-4 bg-[#141414] text-white"
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}

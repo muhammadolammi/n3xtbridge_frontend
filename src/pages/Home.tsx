@@ -146,7 +146,7 @@ const Home: React.FC = () => {
         return <BrandLoader />;
     }
 
-    // console.log(services)
+    // console.log(services)-
     return (
         <div className="bg-[#000] text-[#F5F5F5] font-['Inter'] overflow-x-hidden selection:bg-[#0046FB]/30">
             {/* NAV */}
@@ -352,7 +352,7 @@ const Home: React.FC = () => {
                     <ContactItem
                         label="Office"
                         value="Visit or refer us to us"
-                        detail="11, Paul Amore Blvd 2, Phase 1, Gwagwalada Abuja, Nigeria"
+                        detail="11, Paul Amune Flat 2, Phase 1, Gwagwalada, Abuja, Nigeria"
                         linkText=""
                         linkHref=""
                         icon={<><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></>}
