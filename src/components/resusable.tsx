@@ -106,7 +106,7 @@ export const ServicesSection = ({ services }: { services: Service[] }) => {
                             </p>
 
                             {service.min_price.trim() !== `''` && service.min_price.trim() !== `""` && service.min_price.trim() !== "" && (<div className="mb-6 flex items-center gap-2">
-                                <span className="text-[#838383] text-sm font-['Manrope'] uppercase tracking-wider">Starting from</span>
+                                <span className="text-[#838383] text-sm font-['Manrope'] uppercase tracking-wider">Starting at</span>
                                 <span className="text-white font-bold text-lg font-['Inter']">
                                     ₦{new Intl.NumberFormat('en-NG').format(Number(service.min_price))}
                                 </span>
@@ -139,10 +139,10 @@ export const ServicesSection = ({ services }: { services: Service[] }) => {
                                 </a>
 
                                 {/* Specifications Link */}
-                                <button className="group/btn flex items-center gap-2 text-[#F5F5F5] font-semibold text-sm">
+                                {/* <button className="group/btn flex items-center gap-2 text-[#F5F5F5] font-semibold text-sm">
                                     Full Specifications
                                     <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>

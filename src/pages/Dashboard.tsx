@@ -646,73 +646,18 @@ const CreatePromotionModal = ({ onClose, onSuccess }: { onClose: () => void, onS
     });
 
     const [discounts, setDiscounts] = useState<Discount[]>([
-        { name: '', amount: "", type: 'fixed', description: '', item_name: "" }
+        { name: '', amount: "0", type: 'fixed', description: '', item_name: "" }
     ]);
     const [services, setServices] = useState<Service[]>([]);
-
     const [loading, setLoading] = useState(false);
+    const [files, setFiles] = useState<File[]>([]);
 
-
-    const handleAddDiscount = () => {
-        setDiscounts([...discounts, { name: '', amount: "", type: 'fixed', description: '', item_name: "" }]);
-    };
-
-    const handleRemoveDiscount = (index: number) => {
-        setDiscounts(discounts.filter((_, i) => i !== index));
-    };
-
-
-
-    const updateDiscount = (index: number, field: keyof Discount, value: string | number) => {
-        const updated = [...discounts];
-
-        if (field === "type") {
-            // Reset logic: if switching to service_match, clear amount. 
-            // If switching to fixed/percentage, clear item_name.
-            if (value === "item_match") {
-                updated[index].amount = "0";
-            } else {
-                updated[index].item_name = "";
-            }
-        }
-
-        if (field === "amount") {
-            value = value.toString() || 0;
-        }
-
-        updated[index] = { ...updated[index], [field]: value } as any;
-        setDiscounts(updated);
-    };
-
-    const handleSubmit = async (e: React.SubmitEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const payload = {
-                ...formData,
-                service_id: formData.service_id || "",
-                breakdown: discounts,
-                starts_at: new Date(formData.starts_at).toISOString(),
-                expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null
-            };
-            await api.post('/admin/promotions', payload);
-            alert("Marketing Campaign Registered Successfully.");
-            onSuccess();
-            onClose();
-        } catch (err: any) {
-            alert(err.response?.data?.error || "Failed to sync promotion.");
-        } finally {
-            setLoading(false);
-        }
-    };
     useEffect(() => {
         const fetchServices = async () => {
             try {
                 const res = await api.get('/services?limit=100');
-                const fetchedServices = res.data.services || [];
+                const fetchedServices = res.data.services || res.data || [];
                 setServices(fetchedServices);
-
-                // Fix: If there's no service_id yet and we just got services, pick the first one
                 if (fetchedServices.length > 0 && !formData.service_id) {
                     setFormData(prev => ({ ...prev, service_id: fetchedServices[0].id }));
                 }
@@ -721,151 +666,284 @@ const CreatePromotionModal = ({ onClose, onSuccess }: { onClose: () => void, onS
             }
         };
         fetchServices();
-    }, []); // Empty dependency array is fine here as it's the mount fetch
+    }, []);
+
+    const handleAddDiscount = () => {
+        setDiscounts([...discounts, { name: '', amount: "0", type: 'fixed', description: '', item_name: "" }]);
+    };
+
+    const handleRemoveDiscount = (index: number) => {
+        setDiscounts(discounts.filter((_, i) => i !== index));
+    };
+
+    const updateDiscount = (index: number, field: keyof Discount, value: any) => {
+        const updated = [...discounts];
+        if (field === "type") {
+            if (value === "item_match") {
+                updated[index].amount = "0";
+            } else {
+                updated[index].item_name = "";
+            }
+        }
+        updated[index] = { ...updated[index], [field]: value };
+        setDiscounts(updated);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            let attachmentKeys: string[] = [];
+
+            if (files.length > 0) {
+                attachmentKeys = await Promise.all(files.map(async (file) => {
+                    const ext = file.name.split('.').pop();
+                    const random = crypto.randomUUID();
+
+                    const object_key = `promotions/${formData.code}/${Date.now()}-${random}.${ext}`;
+                    const mime_type = file.type || 'application/octet-stream';
+
+                    const { data } = await api.post('/storage/presign', {
+                        object_key,
+                        mime_type,
+                        visibility: "public"
+                    });
+
+                    await fetch(data.upload_url, {
+                        method: "PUT",
+                        body: file,
+                    });
+
+                    return data.object_key;
+                }));
+            }
+            const payload = {
+                ...formData,
+                breakdown: discounts,
+                starts_at: new Date(formData.starts_at).toISOString(),
+                expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
+                attachments: attachmentKeys
+            };
+            await api.post('/admin/promotions', payload);
+            onSuccess();
+            onClose();
+        } catch (err: any) {
+            alert(err.response?.data?.error || "Failed to sync promotion.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-                <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+            <div className="bg-[#0C0C0C] w-full max-w-3xl rounded-[2.5rem] border border-[#1A1A1A] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+
+                {/* HEADER */}
+                <div className="p-8 border-b border-[#1A1A1A] flex justify-between items-center bg-[#0C0C0C]">
                     <div>
-                        <h3 className="font-black uppercase tracking-tighter text-lg text-gray-900">Configure Campaign Breakdown</h3>
-                        <p className="text-[10px] font-mono text-primary font-bold uppercase tracking-widest">Logic: Targeted Item Matching Enabled</p>
+                        <h3 className="text-white font-black uppercase tracking-tighter text-xl">Campaign Architect</h3>
+                        <p className="text-[10px] font-mono text-primary font-bold uppercase tracking-[0.2em] mt-1">Status: Ready for Deployment</p>
                     </div>
-                    <button onClick={onClose} className="material-symbols-outlined text-gray-400">close</button>
+                    <button onClick={onClose} className="w-10 h-10 rounded-full bg-[#141414] text-gray-500 hover:text-white flex items-center justify-center transition-all">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[85vh] overflow-y-auto">
-                    <div className="p-6 bg-primary/5 border border-primary/10 rounded-2xl space-y-3">
+                <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
+
+                    {/* SERVICE LINK */}
+                    <div className="p-6 bg-primary/5 border border-primary/20 rounded-3xl space-y-4">
                         <label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">link</span>
-                            Link to Service Registry
+                            <span className="material-symbols-outlined text-sm">hub</span>
+                            Target Service Registry
                         </label>
                         <select
-                            className="w-full bg-white border border-primary/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all"
+                            className="w-full bg-[#0C0C0C] border border-[#1A1A1A] text-white rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer"
                             value={formData.service_id}
-                            onChange={(e) => {
-                                setFormData({ ...formData, service_id: e.target.value })
-
-
-                            }}
+                            onChange={(e) => setFormData({ ...formData, service_id: e.target.value })}
                         >
-                            {/* <option value="">Global Promotion (Applies to all/none specifically)</option> */}
                             {services.map(s => (
-                                <option key={s.id} value={s.id}> {s.name} ({s.category})</option>
+                                <option key={s.id} value={s.id}>{s.name} — {s.category}</option>
                             ))}
                         </select>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-relaxed">
-                            Linking a service ensures this promo automatically appears on the service's detail page and grid card.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400">Promo Code</label>
-                            <input required className="w-full border-b border-gray-100 focus:border-primary outline-none py-2 text-sm font-bold uppercase"
-                                placeholder="E.G. VISION-ZERO"
-
-                                value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400">Campaign Name</label>
-
-                            <input required className="w-full border-b border-gray-100 focus:border-primary outline-none py-2 text-sm font-bold"
-                                placeholder="E.G. Free Camera Installation"
-
-                                onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                        </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Stacked Benefits</label>
-                        {discounts.map((d, index) => (
-                            <div key={index} className="p-5 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-4 relative group">
-                                <div className="grid grid-cols-12 gap-x-4 gap-y-2 items-end">
-                                    {/* Label */}
-                                    <div className="col-span-12 md:col-span-4 space-y-1">
-                                        <label className="text-[8px] font-bold text-amber-600 uppercase">Discount Label</label>
-                                        <input required placeholder="e.g. Free Installation" className="w-full bg-transparent border-b border-amber-200 py-1 text-xs font-bold outline-none"
-                                            value={d.name} onChange={e => updateDiscount(index, 'name', e.target.value)} />
+                    {/* BASIC INFO */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Promotion Code</label>
+                            <input
+                                required
+                                placeholder="E.G. ALPHA-2026"
+                                className="w-full bg-[#141414] border border-[#1A1A1A] text-primary rounded-2xl px-5 py-4 text-sm font-mono font-black uppercase outline-none focus:border-primary/50 transition-all"
+                                value={formData.code}
+                                onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Campaign Label</label>
+                            <input
+                                required
+                                placeholder="E.G. Seasonal Infrastructure Rebate"
+                                className="w-full bg-[#141414] border border-[#1A1A1A] text-white rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-primary/50 transition-all"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* DYNAMIC DISCOUNTS */}
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Incentive Breakdown</label>
+                            <span className="text-[9px] font-mono text-primary/60 uppercase">Multiple stacking allowed</span>
+                        </div>
+
+                        <div className="space-y-4">
+                            {discounts.map((d, index) => (
+                                <div key={index} className="p-6 bg-[#111111] border border-[#1A1A1A] rounded-[2rem] space-y-6 relative group animate-in slide-in-from-top-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-bold text-gray-500 uppercase">Label</label>
+                                            <input
+                                                required
+                                                placeholder="e.g. Licensing Fee"
+                                                className="w-full bg-transparent border-b border-[#1A1A1A] py-2 text-sm text-white font-bold outline-none focus:border-primary transition-all"
+                                                value={d.name}
+                                                onChange={e => updateDiscount(index, 'name', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-bold text-gray-500 uppercase">Type</label>
+                                            <select
+                                                className="w-full bg-transparent border-b border-[#1A1A1A] py-2 text-sm text-primary font-bold outline-none cursor-pointer"
+                                                value={d.type}
+                                                onChange={e => updateDiscount(index, 'type', e.target.value)}
+                                            >
+                                                <option value="fixed">Fixed Amount (₦)</option>
+                                                <option value="percentage">Percentage (%)</option>
+                                                <option value="item_match">Free Item/Service</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-bold text-gray-500 uppercase">
+                                                {d.type === 'item_match' ? 'Match Reference' : 'Value'}
+                                            </label>
+                                            <input
+                                                required
+                                                type={d.type === 'item_match' ? 'text' : 'number'}
+                                                placeholder={d.type === 'item_match' ? "e.g. Installation" : "0.00"}
+                                                className="w-full bg-transparent border-b border-[#1A1A1A] py-2 text-sm text-white font-mono font-bold outline-none focus:border-primary transition-all"
+                                                value={d.type === 'item_match' ? d.item_name : d.amount}
+                                                onChange={e => updateDiscount(index, d.type === 'item_match' ? 'item_name' : 'amount', e.target.value)}
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* Type Selector */}
-                                    <div className="col-span-6 md:col-span-3 space-y-1">
-                                        <label className="text-[8px] font-bold text-amber-600 uppercase">Benefit Type</label>
-                                        <select
-                                            className="w-full bg-transparent border-b border-amber-200 py-1 text-xs font-bold outline-none cursor-pointer"
-                                            value={d.type}
-                                            onChange={e => updateDiscount(index, 'type', e.target.value)}
-                                        >
-                                            <option value="fixed">Fixed (₦)</option>
-                                            <option value="percentage">Percentage (%)</option>
-                                            <option value="item_match">Item Match (Free)</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Conditional Value or Service Name Input */}
-                                    <div className="col-span-5 md:col-span-4 space-y-1">
-                                        {d.type === 'item_match' ? (
-                                            <>
-                                                <label className="text-[8px] font-bold text-primary uppercase flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[10px]">target</span>
-                                                    Target Service Name
-                                                </label>
-                                                <input
-                                                    required
-                                                    placeholder="e.g. Camera Install"
-                                                    className="w-full bg-transparent border-b border-primary/30 py-1 text-xs font-bold outline-none text-primary"
-                                                    value={d.item_name}
-                                                    onChange={e => updateDiscount(index, 'item_name', e.target.value)}
-                                                />
-                                            </>
-                                        ) : (
-                                            <>
-                                                <label className="text-[8px] font-bold text-amber-600 uppercase">Discount Value</label>
-                                                <input
-                                                    required
-                                                    type="number"
-                                                    placeholder="0.00"
-                                                    className="w-full bg-transparent border-b border-amber-200 py-1 text-xs font-bold outline-none text-amber-700 font-mono"
-                                                    value={d.amount}
-                                                    onChange={e => updateDiscount(index, 'amount', e.target.value)}
-                                                />
-                                            </>
+                                    <div className="flex justify-between items-center">
+                                        <input
+                                            placeholder="Short description for this specific benefit..."
+                                            className="bg-transparent text-[11px] text-gray-500 outline-none w-full mr-4"
+                                            value={d.description}
+                                            onChange={e => updateDiscount(index, 'description', e.target.value)}
+                                        />
+                                        {discounts.length > 1 && (
+                                            <button type="button" onClick={() => handleRemoveDiscount(index)} className="text-red-500/50 hover:text-red-500 transition-colors">
+                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                            </button>
                                         )}
                                     </div>
+                                </div>
+                            ))}
+                        </div>
 
-                                    {/* Delete Action */}
-                                    <div className="col-span-1 md:col-span-1 flex justify-end pb-1">
-                                        <button type="button" onClick={() => handleRemoveDiscount(index)} className="text-amber-300 hover:text-red-500 transition-colors">
-                                            <span className="material-symbols-outlined text-lg">close</span>
+                        <button
+                            type="button"
+                            onClick={handleAddDiscount}
+                            className="w-full py-4 border-2 border-dashed border-[#1A1A1A] rounded-2xl text-[10px] font-black uppercase text-gray-500 hover:border-primary/50 hover:text-primary transition-all"
+                        >
+                            + Append Incentive Node
+                        </button>
+                    </div>
+
+                    {/* EXPIRY & STATUS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Expiration Date</label>
+                            <input
+                                type="date"
+                                className="w-full bg-[#141414] border border-[#1A1A1A] text-white rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-primary/50"
+                                value={formData.expires_at}
+                                onChange={e => setFormData({ ...formData, expires_at: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex items-center gap-4 bg-[#141414] border border-[#1A1A1A] p-5 rounded-2xl">
+                            <input
+                                type="checkbox"
+                                id="promo-active"
+                                className="w-5 h-5 accent-primary rounded-lg"
+                                checked={formData.is_active}
+                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                            />
+                            <label htmlFor="promo-active" className="text-xs font-black uppercase tracking-widest text-white cursor-pointer">Live Immediately</label>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Public Marketing Description (Markdown Supported)</label>
+                        <textarea
+                            rows={4}
+                            className="w-full bg-[#141414] border border-[#1A1A1A] text-gray-300 rounded-2xl p-5 text-sm outline-none focus:border-primary/50 transition-all leading-relaxed"
+                            placeholder="Detailed technical breakdown of why this promotion matters..."
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                        />
+                    </div>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">
+                            Attachments (Images)
+                        </label>
+
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => {
+                                if (e.target.files) {
+                                    setFiles(Array.from(e.target.files));
+                                }
+                            }}
+                            className="w-full bg-[#141414] border border-[#1A1A1A] text-gray-400 rounded-2xl px-5 py-4 text-sm cursor-pointer"
+                        />
+
+                        {/* Preview */}
+                        {files.length > 0 && (
+                            <div className="flex flex-wrap gap-3">
+                                {files.map((file, i) => (
+                                    <div key={i} className="text-xs bg-[#111] px-3 py-2 rounded-lg border border-[#1A1A1A] flex items-center gap-2">
+                                        📎 {file.name}
+                                        <button
+                                            type="button"
+                                            onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                                            className="text-red-400 ml-2"
+                                        >
+                                            ✕
                                         </button>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                        ))}
-                        <button type="button" onClick={handleAddDiscount} className="w-full py-3 border-2 border-dashed border-amber-200 rounded-2xl text-[10px] font-black uppercase text-amber-500 hover:bg-amber-50 transition-all">+ Add Another Component</button>
+                        )}
                     </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400">Expiration Date</label>
-                            <input type="date" className="w-full border-b border-gray-100 py-2 text-sm font-bold outline-none"
-                                onChange={e => setFormData({ ...formData, expires_at: e.target.value })} />
-                        </div>
-                        <div className="flex items-center gap-3 pt-6">
-                            <input type="checkbox" id="promo-active" className="w-4 h-4 accent-primary" checked={formData.is_active}
-                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })} />
-                            <label htmlFor="promo-active" className="text-xs font-bold uppercase">Active Immediately</label>
-                        </div>
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-gray-400">Public Description</label>
-                        <textarea rows={2} className="w-full border border-gray-100 bg-gray-50 rounded-xl p-3 text-sm outline-none focus:border-primary"
-                            placeholder="..." onChange={e => setFormData({ ...formData, description: e.target.value })} />
-                    </div>
-
-                    <button disabled={loading} className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:opacity-90 shadow-xl shadow-primary/20 flex items-center justify-center gap-3 transition-all">
-                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Deploy Campaign Node"}
+                    <button
+                        disabled={loading}
+                        className="w-full bg-primary text-white py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-xs hover:scale-[1.01] active:scale-95 transition-all shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 disabled:opacity-50"
+                    >
+                        {loading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            <>Deploy Campaign Node <span className="material-symbols-outlined text-sm">rocket_launch</span></>
+                        )}
                     </button>
                 </form>
             </div>

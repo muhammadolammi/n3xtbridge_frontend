@@ -68,6 +68,7 @@ export interface QuoteRequest {
     updated_at: string;
     user_email?: string;
     user_name?: string;
+    vn_key: string;
     service_name?: string;
 }
 
@@ -105,9 +106,12 @@ export interface Quote {
 export interface Promotion {
     id: string;
     code: string;
+    service_id: string;
     name: string;
     description: { String: string; Valid: boolean };
     breakdown: Discount[];
+    attachments: string[];
+
     is_active: boolean;
     starts_at: string;
     expires_at: string;

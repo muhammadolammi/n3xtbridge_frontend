@@ -6,7 +6,7 @@ import Home from './pages/Home';
 import AboutUs from './pages/AboutUs';
 import F404Page from './pages/404';
 import InvoiceCreator from './pages/InvoiceCreator';
-import PromotionalPage from './pages/PromotionalPage';
+import PromotionalPage from './pages/Promotion';
 import { SignUp } from './pages/SignUp';
 import { SignIn } from './pages/SignIn';
 import InvoiceViewer from './pages/InvoiceViewer';
@@ -29,7 +29,7 @@ const App: React.FC = () => {
             <Route index element={<Home />} />
             <Route path="about-us" element={<AboutUs />} />
 
-            <Route path="promotional" element={<PromotionalPage />} />
+            <Route path="promotions/:promo_code" element={<PromotionalPage />} />
 
             {/* These components now have access to useAuth() */}
             <Route path="signup" element={<SignUp />} />
