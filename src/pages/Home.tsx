@@ -154,8 +154,13 @@ const Home: React.FC = () => {
                 className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-between bg-black/85 backdrop-blur-md border-b border-[#111] transition-shadow duration-300 ${isScrolled ? 'shadow-[0_2px_24px_rgba(0,0,0,0.6)]' : ''
                     }`}
             >
-                <div className="px-8 py-5 text-[22px] font-medium tracking-tight">N3xtbridge</div>
-
+                <div className="px-8 py-5 text-[22px] font-medium tracking-tight">
+                    <img
+                        src="https://cdn.n3xtbridge.com/frontenddata/N3xtbridge%20Logo%20PNG.png"
+                        alt="N3xtbridge Logo"
+                        className="h-12 md:h-14 w-auto object-contain"
+                    />
+                </div>
                 <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center">
                     <button onClick={() => scrollToSection('hero', setIsMenuOpen)} className="font-['Manrope'] text-base font-medium hover:opacity-70 transition-opacity">Home</button>
                     {user && (<button onClick={() => navigate("/dashboard")} className="font-['Manrope'] text-base font-medium hover:opacity-70 transition-opacity">Dashboard</button>
