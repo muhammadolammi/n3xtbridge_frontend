@@ -141,13 +141,13 @@ const Services: React.FC = () => {
                                         </p>
 
                                         {/* PRICE TAG */}
-                                        {service.min_price && (
-                                            <div className="mb-8 flex items-center gap-3">
-                                                <span className="text-[#838383] text-xs font-['Manrope'] uppercase tracking-wider">Starting at</span>
-                                                <span className="text-white font-bold text-xl">
-                                                    ₦{Number(service.min_price).toLocaleString('en-NG')}
-                                                </span>
-                                            </div>
+
+                                        {service.min_price.trim() !== `''` && service.min_price.trim() !== `""` && service.min_price.trim() !== "" && (<div className="mb-6 flex items-center gap-2">
+                                            <span className="text-[#838383] text-sm font-['Manrope'] uppercase tracking-wider">Starting at</span>
+                                            <span className="text-white font-bold text-lg font-['Inter']">
+                                                ₦{new Intl.NumberFormat('en-NG').format(Number(service.min_price))}
+                                            </span>
+                                        </div>
                                         )}
 
                                         {/* BUTTON GROUP */}
@@ -173,10 +173,10 @@ const Services: React.FC = () => {
                                             </a>
 
                                             {/* Specifications Link */}
-                                            <button className="group/btn flex items-center gap-2 text-[#F5F5F5] font-semibold text-sm">
+                                            {/* <button className="group/btn flex items-center gap-2 text-[#F5F5F5] font-semibold text-sm">
                                                 Full Specifications
                                                 <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
-                                            </button>
+                                            </button> */}
                                         </div>
                                     </div>
                                 </div>

@@ -16,6 +16,7 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_CLIENT_API_KEY: ${{ secrets.VITE_CLIENT_API_KEY }}
           VITE_ENV: ${{ secrets.VITE_ENV }}
+          VITE_PUBLIC_CDN: ${{ secrets.VITE_PUBLIC_CDN }}
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:

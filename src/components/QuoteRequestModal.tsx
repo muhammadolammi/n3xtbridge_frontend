@@ -4,6 +4,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Promotion } from '../models/model';
 import { NIGERIA_STATES } from '../constants/const';
+import { validateFiles, validateMediaDuration } from '../helpers/helpers';
 
 interface ModalProps {
     serviceId: string;
@@ -36,7 +37,9 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
     });
 
     const [description, setDescription] = useState('');
-    const [files, setFiles] = useState<File[]>([]);
+    const [images, setImages] = useState<File[]>([]);
+    const [video, setVideo] = useState<File | null>();
+
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorder = useRef<MediaRecorder | null>(null);
@@ -91,34 +94,79 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
     };
 
     // 🎤 AUDIO
+    // 🎤 AUDIO
+    const MAX_AUDIO_DURATION = 5 * 60; // 5 minutes
+    const MAX_AUDIO_SIZE = 15 * 1024 * 1024; // 15MB
+
     const startRecording = async () => {
-        if (isRecording) return; // 🚫 prevent double start
+        if (isRecording) return;
 
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        const recorder = new MediaRecorder(stream);
-        mediaRecorder.current = recorder;
+            const recorder = new MediaRecorder(stream);
+            mediaRecorder.current = recorder;
 
-        const chunks: BlobPart[] = [];
+            const chunks: BlobPart[] = [];
 
-        recorder.ondataavailable = (e) => {
-            if (e.data.size > 0) chunks.push(e.data);
-        };
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
 
-        recorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'audio/webm' });
-            setAudioBlob(blob);
-        };
+            recorder.onstop = async () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
 
-        recorder.start();
-        setIsRecording(true);
-        setRecordingTime(0);
+                try {
+                    // ✅ Validate duration using real metadata
+                    const audio = document.createElement("audio");
+                    audio.src = URL.createObjectURL(blob);
 
-        timerRef.current = window.setInterval(() => {
-            setRecordingTime(prev => prev + 1);
-        }, 1000);
+                    await new Promise((resolve) => {
+                        audio.onloadedmetadata = resolve;
+                    });
+
+                    if (audio.duration > MAX_AUDIO_DURATION) {
+                        alert("Voice note too long (max 10 minutes)");
+                        setAudioBlob(null);
+                        return;
+                    }
+
+                    // ✅ Validate size
+                    if (blob.size > MAX_AUDIO_SIZE) {
+                        alert("Audio too large (max 15MB)");
+                        setAudioBlob(null);
+                        return;
+                    }
+
+                    setAudioBlob(blob);
+
+                } catch {
+                    alert("Failed to process audio.");
+                    setAudioBlob(null);
+                }
+            };
+
+            recorder.start();
+            setIsRecording(true);
+            setRecordingTime(0);
+
+            // ✅ Timer with auto-stop
+            timerRef.current = window.setInterval(() => {
+                setRecordingTime(prev => {
+                    const next = prev + 1;
+
+                    if (next >= MAX_AUDIO_DURATION) {
+                        stopRecording(); // 🔥 auto stop at 10 mins
+                    }
+
+                    return next;
+                });
+            }, 1000);
+
+        } catch (err) {
+            alert("Microphone permission is required to record audio.");
+        }
     };
-
 
     const stopRecording = () => {
         if (!mediaRecorder.current) return;
@@ -132,12 +180,12 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
         setIsRecording(false);
         setIsPaused(false);
 
-        // stop timer
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
     };
+
     const pauseRecording = () => {
         if (!mediaRecorder.current) return;
 
@@ -145,7 +193,6 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
             mediaRecorder.current.pause();
             setIsPaused(true);
 
-            // stop timer
             if (timerRef.current) {
                 clearInterval(timerRef.current);
                 timerRef.current = null;
@@ -160,16 +207,25 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
             mediaRecorder.current.resume();
             setIsPaused(false);
 
-            // resume timer
             timerRef.current = window.setInterval(() => {
-                setRecordingTime(prev => prev + 1);
+                setRecordingTime(prev => {
+                    const next = prev + 1;
+
+                    if (next >= MAX_AUDIO_DURATION) {
+                        stopRecording();
+                    }
+
+                    return next;
+                });
             }, 1000);
         }
     };
+
     const clearRecording = () => {
         setAudioBlob(null);
         setRecordingTime(0);
     };
+
     const formatTime = (sec: number) => {
         const m = Math.floor(sec / 60);
         const s = sec % 60;
@@ -211,18 +267,25 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                     return;
                 }
             }
-            const attachmentKeys = await Promise.all(files.map(async (file) => {
+
+
+            const attachmentKeys = await Promise.all(images.map(async (file) => {
                 // configure a random key to generate object key
 
                 const ext = file.name.split('.').pop();
                 const random = crypto.randomUUID(); // ✅ modern + collision-safe
                 const object_key = `qr/attachments/${Date.now()}-${random}.${ext}`
                 const mime_type = file.type || 'application/octet-stream'
-                const { data } = await api.post('/storage/presign', { object_key: object_key, mime_type: mime_type });
+                const { data } = await api.post('/storage/presign', {
+                    object_key,
+                    mime_type,
+                    visibility: "private",
+                });
                 // console.log(data)
                 await fetch(data.upload_url, {
                     method: "PUT",
                     body: file,
+
 
                 });
                 return data.object_key;
@@ -230,16 +293,41 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
 
             let vnKey = "";
             if (audioBlob) {
+
                 const fileExt = 'webm';
                 const random = crypto.randomUUID();
                 const object_key = `qr/vns/${Date.now()}-${random}.${fileExt}`;
-                const { data } = await api.post('/storage/presign', { object_key: object_key, mime_type: 'audio/webm' });
+                const { data } = await api.post('/storage/presign', {
+                    object_key: object_key, mime_type: 'audio/webm', visibility: "private",
+                });
                 await fetch(data.upload_url, {
                     method: "PUT",
                     body: audioBlob,
 
                 });
                 vnKey = data.object_key;
+            }
+            let video_key = "";
+
+            if (video) {
+                const ext = video.name.split('.').pop();
+                const random = crypto.randomUUID(); // ✅ modern + collision-safe
+                const object_key = `qr/videos/${Date.now()}-${random}.${ext}`
+                const mime_type = video.type || 'application/octet-stream'
+                const { data } = await api.post('/storage/presign', {
+                    object_key,
+                    mime_type,
+                    visibility: "private",
+                });
+                // console.log(data)
+                await fetch(data.upload_url, {
+                    method: "PUT",
+                    body: video,
+
+
+                });
+
+                video_key = data.object_key
             }
 
 
@@ -250,6 +338,7 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                 description,
                 service_id: serviceId,
                 vn_key: vnKey,
+                video_key: video_key,
                 attachments: attachmentKeys,
                 promo_ids: appliedPromos?.map(p => p.id) || []
             });
@@ -257,8 +346,15 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
 
             navigate(`/dashboard/qr/${res.data.quote_request.id}`, { state: { qr } });
             onClose();
-        } catch {
-            setError("Submission failed");
+        } catch (err: any) {
+            console.error(err);
+
+            const msg =
+                err?.message ||
+                err?.response?.data?.error ||
+                "Something went wrong. Please try again.";
+
+            setError(msg);
             setStep('details');
         }
     };
@@ -447,8 +543,107 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                     className="w-full mt-2"
                                 />
                             )}
+                            {/* choose images */}
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">
+                                    Images (Max 5)
+                                </p>
 
-                            <input type="file" multiple onChange={e => setFiles(Array.from(e.target.files || []))} />
+                                {images.length < 5 && (
+                                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#1A1A1A] rounded-2xl p-6 cursor-pointer hover:border-primary/50 transition-all">
+                                        <span className="material-symbols-outlined text-2xl text-gray-500 mb-2">image</span>
+                                        <p className="text-xs text-gray-400">Click to upload images</p>
+
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            multiple
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const files = Array.from(e.target.files || []);
+
+                                                try {
+                                                    validateFiles(files);
+                                                    setImages(files.slice(0, 5));
+                                                } catch (err: any) {
+                                                    alert(err.message);
+                                                    e.target.value = "";
+                                                }
+                                            }}
+
+
+                                        />
+                                    </label>
+                                )}
+
+                                {/* Preview */}
+                                <div className="grid grid-cols-3 gap-3">
+                                    {images.map((img, i) => (
+                                        <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-[#1A1A1A]">
+                                            <img
+                                                src={URL.createObjectURL(img)}
+                                                className="w-full h-full object-cover"
+                                            />
+
+                                            <button
+                                                onClick={() => setImages(images.filter((_, idx) => idx !== i))}
+                                                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">close</span>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 mt-6">
+                                <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">
+                                    Video (Max 1)
+                                </p>
+
+                                {!video ? (
+                                    <label className="flex items-center justify-center border-2 border-dashed border-[#1A1A1A] rounded-2xl p-6 cursor-pointer hover:border-primary/50 transition-all">
+                                        <span className="material-symbols-outlined text-xl text-gray-500 mr-2">videocam</span>
+                                        <span className="text-xs text-gray-400">Upload a short video</span>
+
+                                        <input
+                                            type="file"
+                                            accept="video/mp4,video/webm, video/mkv"
+                                            className="hidden"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0] || null;
+
+                                                if (!file) return;
+
+                                                try {
+                                                    await validateMediaDuration([file]);
+                                                    validateFiles([file]);
+
+                                                    setVideo(file);
+                                                } catch (err: any) {
+                                                    alert(err.message); // 🔥 immediate feedback
+                                                    e.target.value = ""; // reset input
+                                                }
+                                            }}
+
+                                        />
+                                    </label>
+                                ) : (
+                                    <div className="flex items-center justify-between bg-[#111111] border border-[#1A1A1A] rounded-xl p-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-primary">videocam</span>
+                                            <p className="text-xs text-white truncate max-w-[180px]">{video.name}</p>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setVideo(null)}
+                                            className="text-red-500 hover:text-red-400"
+                                        >
+                                            <span className="material-symbols-outlined">delete</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
 
                             <button onClick={handleSubmit} className="w-full bg-[#0046FB] p-4 text-white">
                                 Submit Request
