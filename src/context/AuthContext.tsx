@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import api from '../api/axios';
 import type { User } from '../models/model';
+import axios from 'axios';
 
 
 
@@ -38,8 +39,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const initializeAuth = async () => {
             try {
                 // Use a clean axios instance here to avoid the interceptor loop
-                const res = await api.post('/auth/refresh');
-
+                // Inside initializeAuth in AuthProvider.tsx
+                const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`, {}, {
+                    withCredentials: true,
+                    headers: { "client-api-key": import.meta.env.VITE_CLIENT_API_KEY }
+                });
                 if (res.status === 200) {
                     const token = res.data.access_token;
                     setAccessToken(token);

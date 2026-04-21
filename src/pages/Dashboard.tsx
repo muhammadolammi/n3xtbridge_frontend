@@ -953,37 +953,58 @@ const CreatePromotionModal = ({ onClose, onSuccess }: { onClose: () => void, onS
 
 // --- Table Components ---
 
+// --- TABLE COMPONENTS (Batch 1: Services & Menus) ---
+
 const ServicesTable = ({ services, loading, onToggle }: { services: Service[], loading: boolean, onToggle: any }) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-left">
+    <div className="overflow-x-auto scrollbar-hide">
+        <table className="w-full text-left min-w-[700px]">
             <thead>
-                <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                    <th className="px-6 py-4">Service Name</th>
-                    <th className="px-6 py-4">Category</th>
-                    <th className="px-6 py-4">Featured</th>
-                    <th className="px-6 py-4">Visibility</th>
+                <tr className="bg-[#0A0A0A] border-b border-[#1A1A1A]">
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Service Registry</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Category</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Tier</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Operational Status</th>
                 </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#1A1A1A]">
                 {loading ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Accessing Service Registry...</td></tr>
+                    <tr><td colSpan={4} className="p-20 text-center text-gray-600 font-bold italic tracking-widest animate-pulse">ACCESSING SERVICE REGISTRY...</td></tr>
                 ) : services.length === 0 ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400">No matching records found.</td></tr>
+                    <tr><td colSpan={4} className="p-20 text-center text-gray-500 font-medium">No matching records found in registry.</td></tr>
                 ) : services.map((s) => (
-                    <tr key={s.id} className="hover:bg-gray-50/50">
-                        <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                                <span className="material-symbols-outlined text-gray-400 text-lg">{s.icon}</span>
-                                <span className="font-bold text-gray-900 text-sm">{s.name}</span>
+                    <tr key={s.id} className="hover:bg-[#111] transition-colors group">
+                        <td className="px-6 py-5">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-[#1A1A1A] flex items-center justify-center group-hover:bg-[#0046FB]/10 transition-colors">
+                                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#0046FB] transition-colors">{s.icon || 'inventory_2'}</span>
+                                </div>
+                                <span className="font-bold text-white text-sm tracking-tight">{s.name}</span>
                             </div>
                         </td>
-                        <td className="px-6 py-4 text-xs font-medium text-gray-500">{s.category}</td>
-                        <td className="px-6 py-4 text-amber-500">
-                            {s.is_featured ? <span className="material-symbols-outlined text-sm">stars</span> : <span className="text-gray-200 material-symbols-outlined text-sm">stars</span>}
+                        <td className="px-6 py-5">
+                            <span className="text-[11px] font-medium text-gray-400 py-1 px-3 bg-[#1A1A1A] rounded-full border border-[#222]">
+                                {s.category}
+                            </span>
+                        </td>
+                        <td className="px-6 py-5">
+                            {s.is_featured ? (
+                                <div className="flex items-center gap-1 text-amber-500">
+                                    <span className="material-symbols-outlined text-sm">stars</span>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Featured</span>
+                                </div>
+                            ) : (
+                                <span className="text-[10px] font-black uppercase tracking-tighter text-gray-700">Standard</span>
+                            )}
                         </td>
                         <td className="px-6 py-4">
-                            <button onClick={() => onToggle(s.id, s.is_active)} className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter transition-all ${s.is_active ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${s.is_active ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
+                            <button
+                                onClick={() => onToggle(s.id, s.is_active)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${s.is_active
+                                    ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                    : 'bg-gray-500/5 text-gray-500 border-gray-500/10 hover:bg-gray-500/10'
+                                    }`}
+                            >
+                                <span className={`w-1.5 h-1.5 rounded-full ${s.is_active ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)] animate-pulse' : 'bg-gray-600'}`}></span>
                                 {s.is_active ? 'Online' : 'Offline'}
                             </button>
                         </td>
@@ -994,53 +1015,62 @@ const ServicesTable = ({ services, loading, onToggle }: { services: Service[], l
     </div>
 );
 
-const InvoiceActionMenu = ({ inv, navigate, onSendReminder }: { inv: any, navigate: any, onSendReminder: (id: string) => void }) => {
+const InvoiceActionMenu = ({ inv, navigate, onSendReminder, isadmin }: { inv: any, navigate: any, onSendReminder: (id: string) => void, isadmin: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
         <div className="relative inline-block text-left">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${isOpen ? 'bg-[#0046FB] text-white shadow-lg shadow-[#0046FB]/20' : 'bg-[#1A1A1A] text-gray-400 hover:bg-[#252525]'
+                    }`}
             >
-                <span className="material-symbols-outlined text-gray-400">more_vert</span>
+                <span className="material-symbols-outlined text-lg">{isOpen ? 'close' : 'more_horiz'}</span>
             </button>
 
             {isOpen && (
                 <>
-                    {/* Backdrop to close menu */}
-                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
 
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-20 overflow-hidden py-1">
+                    <div className="absolute right-0 mt-3 w-56 bg-[#111] border border-[#1A1A1A] rounded-2xl shadow-2xl z-50 overflow-hidden py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                        {/* <div className="px-4 py-2 border-b border-[#1A1A1A] mb-1">
+                            <p className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em]">Management Actions</p>
+                        </div> */}
+
                         <button
                             onClick={() => navigate(`/dashboard/invoice/${inv.id}`, { state: { invoice: inv } })}
-                            className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-300 hover:bg-[#1A1A1A] hover:text-[#0046FB] flex items-center gap-3 transition-colors"
                         >
-                            <span className="material-symbols-outlined text-sm">visibility</span> View Detail
+                            <span className="material-symbols-outlined text-base">visibility</span> View  Detail
                         </button>
 
-                        {inv.status !== 'paid' && (
+                        {inv.status !== 'paid' && isadmin && (
                             <button
                                 onClick={() => {
                                     onSendReminder(inv.id);
                                     setIsOpen(false);
                                 }}
-                                className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 flex items-center gap-2"
+                                className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-300 hover:bg-[#0046FB]/10 hover:text-[#0046FB] flex items-center gap-3 transition-colors"
                             >
-                                <span className="material-symbols-outlined text-sm">mail</span> Send Reminder
+                                <span className="material-symbols-outlined text-base">outgoing_mail</span> Send Reminder
                             </button>
                         )}
 
-                        <button className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">archive</span> Archive
-                        </button>
+                        {isadmin && (<div className="border-t border-[#1A1A1A] mt-1 pt-1">
+                            <button className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-500/70 hover:bg-red-500/10 hover:text-red-500 flex items-center gap-3 transition-colors">
+                                <span className="material-symbols-outlined text-base">archive</span> Archive Record
+                            </button>
+                        </div>
+                        )}
                     </div>
                 </>
             )}
         </div>
     );
 };
-const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], loading: boolean, navigate: any }) => {
+// --- TABLE COMPONENTS (Batch 2: Invoices & Promotions) ---
+
+const InvoiceTable = ({ invoices, loading, navigate, isadmin }: { invoices: Invoice[], loading: boolean, navigate: any, isadmin: boolean }) => {
     const handleSendReminder = async (id: string) => {
         try {
             await sendInvoiceMail(id);
@@ -1049,169 +1079,155 @@ const InvoiceTable = ({ invoices, loading, navigate }: { invoices: Invoice[], lo
             alert("Failed to send reminder.");
         }
     };
+
     const formatReminderDate = (dateString: string) => {
-        // Check if it's the Go "Zero" time or undefined
         if (!dateString || dateString.startsWith("0001") || dateString.startsWith("1970")) {
-            return <span className="text-gray-300 italic">Never Sent</span>;
+            return <span className="text-gray-600 italic lowercase tracking-tight">never sent</span>;
         }
 
         const date = new Date(dateString);
         return (
-            <div className="flex items-center gap-1 text-primary font-medium">
-                <span className="material-symbols-outlined text-[12px]">history</span>
+            <div className="flex items-center gap-1.5 text-[#0046FB] font-bold">
+                <span className="material-symbols-outlined text-[14px]">history</span>
                 {date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
             </div>
         );
     };
-    return (<div className="overflow-x-auto">
-        <table className="w-full text-left">
-            <thead>
-                <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                    <th className="px-6 py-4">ID / Reference</th>
-                    <th className="px-6 py-4">Quote Ref</th>
 
-                    <th className="px-6 py-4">Customer</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Amount</th>
-                    <th className="px-6 py-4">Last Reminder</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Syncing Ledger...</td></tr>
-                ) : invoices.length === 0 ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400">No matching records found.</td></tr>
-                ) : (
-                    invoices.map((inv) => {
-                        let quoteRef = "Empty"
-                        if (inv.quote_id) {
-                            quoteRef = `Q-${inv.quote_id.slice(0, 8)}`
-                        }
-                        return (
-                            <tr key={inv.id} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="px-6 py-4">
-                                    {inv.invoice_number}
-                                    {inv.deleted_at.Valid && inv.deleted_at.Valid === true && (
-                                        <span className="ml-2 text-[8px] bg-red-100 text-red-600 px-1 rounded font-black uppercase">Archived</span>
-                                    )}
-                                </td>
-                                {/* ... rest of columns ... */}
-                                {/* <td className="px-6 py-4 font-mono text-xs text-gray-600">{inv.invoice_number}</td> */}
-                                <td className="px-6 py-4 font-mono text-xs text-gray-600">{inv.quote_id?.startsWith("00000000") ? "Empty" : quoteRef}</td>
-
-                                <td className="px-6 py-4">
-                                    <p className="text-sm font-bold text-gray-900">{inv.customer_name}</p>
-                                    <p className="text-[10px] text-gray-400 uppercase font-mono">{inv.customer_email}</p>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${STATUS_STYLES[inv.status.toLowerCase()] || STATUS_STYLES.default}`}>
-                                        {inv.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right font-bold text-gray-900">₦{inv.total.toLocaleString()}</td>
-                                <td className="px-6 py-4 text-[10px] uppercase font-bold">
-                                    {formatReminderDate(inv.reminder_sent_at)}
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <InvoiceActionMenu
-                                        inv={inv}
-                                        navigate={navigate}
-                                        onSendReminder={handleSendReminder}
-                                    />
-                                </td>
-                            </tr>
-                        )
-                    }
-
-
-                    )
-                )
-                }
-            </tbody>
-        </table>
-    </div >)
+    return (
+        <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[900px]">
+                <thead>
+                    <tr className="bg-[#0A0A0A] border-b border-[#1A1A1A]">
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Invoice Ref</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Quote Link</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Customer Entity</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Status</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Amount</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Last Signal</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1A1A1A]">
+                    {loading ? (
+                        <tr><td colSpan={7} className="p-20 text-center text-gray-600 font-bold italic tracking-widest animate-pulse">SYNCING FINANCIAL LEDGER...</td></tr>
+                    ) : invoices.length === 0 ? (
+                        <tr><td colSpan={7} className="p-20 text-center text-gray-500 font-medium">No financial records found.</td></tr>
+                    ) : (
+                        invoices.map((inv) => {
+                            const quoteRef = inv.quote_id ? `Q-${inv.quote_id.slice(0, 8).toUpperCase()}` : "UNLINKED";
+                            return (
+                                <tr key={inv.id} className="hover:bg-[#111] transition-colors group">
+                                    <td className="px-6 py-5 font-mono text-xs text-white">
+                                        <div className="flex items-center gap-2">
+                                            #{inv.invoice_number}
+                                            {inv.deleted_at.Valid && (
+                                                <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 text-[8px] font-black uppercase border border-red-500/20">Archived</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-5 font-mono text-[10px] text-gray-500 tracking-tighter">
+                                        {inv.quote_id?.startsWith("00000000") ? "---" : quoteRef}
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <p className="text-sm font-bold text-white tracking-tight">{inv.customer_name}</p>
+                                        <p className="text-[10px] text-gray-500 uppercase font-mono">{inv.customer_email}</p>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[inv.status.toLowerCase()] || STATUS_STYLES.default}`}>
+                                            <span className="w-1 h-1 rounded-full bg-current shadow-[0_0_8px_currentColor]"></span>
+                                            {inv.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-5 text-right font-black text-white text-sm">
+                                        ₦{inv.total.toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-5 text-[10px] font-bold uppercase tracking-tighter">
+                                        {formatReminderDate(inv.reminder_sent_at)}
+                                    </td>
+                                    <td className="px-6 py-5 text-right">
+                                        <InvoiceActionMenu
+                                            inv={inv}
+                                            navigate={navigate}
+                                            isadmin={isadmin}
+                                            onSendReminder={handleSendReminder}
+                                        />
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
 };
 
-const PromotionsTable = ({
-    promos,
-    loading,
-    onToggleStatus
-}: {
-    promos: Promotion[],
-    loading: boolean,
-    onToggleStatus: (id: string, current: boolean) => void
-}) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-left">
+const PromotionsTable = ({ promos, loading, onToggleStatus }: { promos: Promotion[], loading: boolean, onToggleStatus: (id: string, current: boolean) => void }) => (
+    <div className="overflow-x-auto scrollbar-hide">
+        <table className="w-full text-left min-w-[900px]">
             <thead>
-                <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                    <th className="px-6 py-4">Campaign Node</th>
-                    <th className="px-6 py-4">Promo Code</th>
-                    <th className="px-6 py-4">Service Name</th>
-                    <th className="px-6 py-4">Breakdown (Templates)</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Validity</th>
+                <tr className="bg-[#0A0A0A] border-b border-[#1A1A1A]">
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Campaign Node</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Access Code</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Linked Service</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Benefit Matrix</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Status</th>
+                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Validity Window</th>
                 </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#1A1A1A]">
                 {loading ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Accessing Campaign Registry...</td></tr>
+                    <tr><td colSpan={6} className="p-20 text-center text-gray-600 font-bold italic tracking-widest animate-pulse">SYNCING CAMPAIGN REGISTRY...</td></tr>
                 ) : promos.length === 0 ? (
-                    <tr><td colSpan={5} className="p-10 text-center text-gray-400">No active promotions found.</td></tr>
+                    <tr><td colSpan={6} className="p-20 text-center text-gray-500 font-medium">No active campaign nodes found.</td></tr>
                 ) : (
                     promos.map((p) => {
                         const isExpired = p.expires_at && new Date(p.expires_at) < new Date();
-
                         return (
-                            <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <p className="text-sm font-bold text-gray-900">{p.name}</p>
-                                    <p className="text-[10px] text-gray-400 uppercase font-mono truncate max-w-[150px]">
-                                        {p.description.String || "No description set"}
+                            <tr key={p.id} className="hover:bg-[#111] transition-colors group">
+                                <td className="px-6 py-5">
+                                    <p className="text-sm font-bold text-white tracking-tight">{p.name}</p>
+                                    <p className="text-[10px] text-gray-500 font-medium italic truncate max-w-[150px]">
+                                        {p.description.String || "No metadata description"}
                                     </p>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-primary font-black">
+                                <td className="px-6 py-5">
+                                    <span className="font-mono text-xs bg-[#1A1A1A] border border-[#222] px-3 py-1 rounded-lg text-[#0046FB] font-black uppercase">
                                         {p.code}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-primary font-black">
-                                        {/* {p.code} */}
+                                <td className="px-6 py-5">
+                                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">
+                                        {/* Logic preserved as requested */}
                                         COMING SOON
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex flex-wrap gap-1">
-                                        {/* Add (p.breakdown || []) to prevent the crash */}
+                                <td className="px-6 py-5">
+                                    <div className="flex flex-wrap gap-1.5">
                                         {(p.breakdown || []).map((d, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="text-[8px] font-black bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded uppercase"
-                                                title={`Target: ${d.item_name || 'Global'}`}
-                                            >
+                                            <span key={idx} className="text-[9px] font-black bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded uppercase"
+                                                title={`Target: ${d.item_name || 'Global System'}`}>
                                                 {d.type === 'percentage' ? `${d.amount}%` : `₦${(Number(d.amount) || 0).toLocaleString()}`}
-                                                {d.item_name && <span className="ml-1 opacity-50 text-[6px]">({d.item_name})</span>}
                                             </span>
                                         ))}
                                         {(!p.breakdown || p.breakdown.length === 0) && (
-                                            <span className="text-[8px] text-gray-400 italic">No benefits set</span>
+                                            <span className="text-[9px] text-gray-700 font-bold uppercase tracking-tighter">no_benefits_mapped</span>
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-5">
                                     <button
                                         onClick={() => onToggleStatus(p.id, p.is_active)}
-                                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider transition-all ${p.is_active && !isExpired ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}
+                                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${p.is_active && !isExpired ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}
                                     >
-                                        <span className={`w-1 h-1 rounded-full ${p.is_active && !isExpired ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                        {isExpired ? 'Expired' : p.is_active ? 'Active' : 'Disabled'}
+                                        <span className={`w-1 h-1 rounded-full ${p.is_active && !isExpired ? 'bg-green-400 shadow-[0_0_5px_#4ade80]' : 'bg-red-500'}`}></span>
+                                        {isExpired ? 'Expired' : p.is_active ? 'Active' : 'Offline'}
                                     </button>
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <p className="text-[10px] font-bold text-gray-900">{new Date(p.starts_at).toLocaleDateString()}</p>
-                                    <p className="text-[9px] text-gray-400 uppercase">TO {p.expires_at ? new Date(p.expires_at).toLocaleDateString() : 'INF'}</p>
+                                <td className="px-6 py-5 text-right">
+                                    <p className="text-[10px] font-bold text-white tracking-tighter">{new Date(p.starts_at).toLocaleDateString()}</p>
+                                    <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest">TO {p.expires_at ? new Date(p.expires_at).toLocaleDateString() : '∞ INF'}</p>
                                 </td>
                             </tr>
                         );
@@ -1221,7 +1237,7 @@ const PromotionsTable = ({
         </table>
     </div>
 );
-
+// --- TABLE COMPONENTS (Batch 3: Quote Requests & Quotes) ---
 
 const QuoteRequestTable = ({
     qrs,
@@ -1237,102 +1253,98 @@ const QuoteRequestTable = ({
     role: string
 }) => {
     const navigate = useNavigate();
+    const isElevated = role === 'admin' || role === 'staff';
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-left">
+        <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[900px]">
                 <thead>
-                    <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                        {(role === 'admin' || role === 'staff') && (
-                            <th className="px-6 py-4">Client</th>
+                    <tr className="bg-[#0A0A0A] border-b border-[#1A1A1A]">
+                        {isElevated && (
+                            <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Client Entity</th>
                         )}
-                        <th className="px-6 py-4">Service</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4">Description</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Service Profile</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Terminal Status</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Specification Brief</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Protocol Actions</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[#1A1A1A]">
                     {loading ? (
                         <tr>
-                            {/* Dynamic colSpan: 5 for admin/staff, 4 for user */}
-                            <td colSpan={(role === 'admin' || role === 'staff') ? 5 : 4} className="p-10 text-center text-gray-400 italic">
-                                Syncing Request Ledger...
+                            <td colSpan={isElevated ? 5 : 4} className="p-20 text-center text-gray-600 font-bold italic tracking-widest animate-pulse">
+                                SYNCING REQUEST LEDGER...
                             </td>
                         </tr>
                     ) : qrs.length === 0 ? (
                         <tr>
-                            <td colSpan={(role === 'admin' || role === 'staff') ? 5 : 4} className="p-10 text-center text-gray-400 font-mono text-xs uppercase tracking-widest">
-                                No matching requests.
+                            <td colSpan={isElevated ? 5 : 4} className="p-20 text-center text-gray-500 font-medium font-mono text-xs uppercase tracking-widest">
+                                No active requests in queue.
                             </td>
                         </tr>
                     ) : (
                         qrs.map((qr) => {
-                            // 1. Define logic variables inside the map block
-                            const isElevated = role === 'admin' || role === 'staff';
                             const isQuoted = qr.status === 'quoted';
-
-                            // 2. Explicitly return the JSX
                             return (
-                                <tr key={qr.id} className="hover:bg-gray-50/50 transition-colors group">
+                                <tr key={qr.id} className="hover:bg-[#111] transition-colors group">
                                     {isElevated && (
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm font-bold text-gray-900">{qr.user_name}</p>
-                                            <p className="text-[10px] text-gray-400 uppercase font-mono">{qr.user_email}</p>
+                                        <td className="px-6 py-5">
+                                            <p className="text-sm font-bold text-white tracking-tight">{qr.user_name}</p>
+                                            <p className="text-[10px] text-gray-500 uppercase font-mono">{qr.user_email}</p>
                                         </td>
                                     )}
 
-                                    <td className="px-6 py-4 text-xs font-bold text-gray-700">{qr.service_name}</td>
+                                    <td className="px-6 py-5">
+                                        <span className="text-sm font-bold text-white">{qr.service_name}</span>
+                                    </td>
 
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${QUOTE_REQUEST_STATUS_STYLES[qr.status] || QUOTE_REQUEST_STATUS_STYLES.default}`}>
+                                    <td className="px-6 py-5">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${QUOTE_REQUEST_STATUS_STYLES[qr.status] || QUOTE_REQUEST_STATUS_STYLES.default}`}>
+                                            <span className="w-1 h-1 rounded-full bg-current shadow-[0_0_8px_currentColor]"></span>
                                             {qr.status}
                                         </span>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-medium text-gray-600 truncate max-w-[180px] block" title={qr.description}>
-                                                {qr.description}
+                                    <td className="px-6 py-5">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs font-medium text-gray-500 truncate max-w-[220px] italic block" title={qr.description}>
+                                                "{qr.description}"
                                             </span>
                                             {role === 'user' && qr.status === 'pending' && (
-                                                <button onClick={() => onEditDescription?.(qr.id, qr.description)} className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span className="material-symbols-outlined text-sm">edit</span>
+                                                <button onClick={() => onEditDescription?.(qr.id, qr.description)} className="text-[#0046FB] opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
+                                                    <span className="material-symbols-outlined text-base">edit_note</span>
                                                 </button>
                                             )}
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-5 text-right">
                                         <div className="flex justify-end items-center gap-2">
-                                            {/* 1. View Request - Always shows for everyone */}
                                             <button
                                                 onClick={() => navigate(`/dashboard/qr/${qr.id}`, { state: { qr } })}
-                                                className="flex items-center gap-1 px-3 py-1.5 border border-gray-100 rounded-lg text-gray-500 text-[9px] font-black uppercase tracking-tighter hover:bg-gray-50 hover:text-primary transition-all shadow-sm"
+                                                className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1A] rounded-xl text-gray-300 text-[10px] font-black uppercase tracking-widest hover:bg-[#252525] hover:text-white transition-all border border-transparent hover:border-[#333]"
                                             >
-                                                <span className="material-symbols-outlined text-sm">visibility</span>
-                                                Request
+                                                <span className="material-symbols-outlined text-base">visibility</span>
+                                                View Request
                                             </button>
 
-                                            {/* 2. Create Quote - Only Admin/Staff & Only if NOT quoted */}
                                             {!isQuoted && isElevated && (
                                                 <button
                                                     onClick={() => onAddQuote?.(qr)}
-                                                    className="bg-primary text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 flex items-center gap-1 transition-all"
+                                                    className="bg-[#0046FB] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#0046FB]/20 hover:bg-[#003ccf] flex items-center gap-2 transition-all"
                                                 >
-                                                    <span className="material-symbols-outlined text-xs">add</span>
-                                                    Quote
+                                                    <span className="material-symbols-outlined text-base">add_box</span>
+                                                    Build Quote
                                                 </button>
                                             )}
 
-                                            {/* 3. View Quote - Shows for everyone ONLY if status is 'quoted' */}
-                                            {isQuoted && qr && qr.quote_id && (
+                                            {isQuoted && qr.quote_id && (
                                                 <button
                                                     onClick={() => navigate(`/dashboard/quote/${qr.quote_id}`)}
-                                                    className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all"
+                                                    className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500/20 transition-all"
                                                 >
-                                                    <span className="material-symbols-outlined text-sm">visibility</span>
-                                                    Quote
+                                                    <span className="material-symbols-outlined text-base">verified</span>
+                                                    View Quote
                                                 </button>
                                             )}
                                         </div>
@@ -1346,6 +1358,7 @@ const QuoteRequestTable = ({
         </div>
     );
 };
+
 const QuotesTable = ({
     qs,
     loading,
@@ -1360,72 +1373,72 @@ const QuotesTable = ({
     role: string
 }) => {
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
-    var statuses: Quote['status'][] = ['draft', 'sent', 'expired', 'in-review'];
-    if (role === "user") {
-        statuses = ['accepted', 'declined', "paid"];
+    const isAdmin = role === 'admin' || role === 'staff';
 
-    }
+    let statuses: Quote['status'][] = isAdmin
+        ? ['draft', 'sent', 'expired', 'in-review']
+        : ['accepted', 'declined'];
 
     return (
-        <div className="overflow-x-auto min-h-[400px]">
-            <table className="w-full text-left">
+        <div className="overflow-x-auto scrollbar-hide min-h-[450px]">
+            <table className="w-full text-left min-w-[900px]">
                 <thead>
-                    <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                        <th className="px-6 py-4">Quote Ref</th>
-                        <th className="px-6 py-4">Service</th>
-                        <th className="px-6 py-4">Amount</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4">Valid Until</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
+                    <tr className="bg-[#0A0A0A] border-b border-[#1A1A1A]">
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Quote Reference</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Service Profile</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Investment</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Workflow Status</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Validity End</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[#1A1A1A]">
                     {loading ? (
-                        <tr><td colSpan={5} className="p-10 text-center text-gray-400 italic">Syncing Quotes...</td></tr>
+                        <tr><td colSpan={6} className="p-20 text-center text-gray-600 font-bold italic tracking-widest animate-pulse">SYNCING QUOTATION REGISTRY...</td></tr>
                     ) : qs.length === 0 ? (
-                        <tr><td colSpan={5} className="p-10 text-center text-gray-400 font-mono text-xs uppercase tracking-widest">No quotes found.</td></tr>
+                        <tr><td colSpan={6} className="p-20 text-center text-gray-500 font-medium">No quotations found in terminal.</td></tr>
                     ) : qs.map((q) => {
                         const dateValue = (q as any).exire_at || q.expires_at;
                         const formattedDate = dateValue && !isNaN(Date.parse(dateValue))
                             ? new Date(dateValue).toLocaleDateString('en-NG', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : "Invalid Date";
+                            : "Unlimited";
 
                         return (
-                            <tr key={q.id} className="hover:bg-gray-50/50 transition-colors group">
-                                <td className="px-6 py-4 font-mono text-[10px] font-bold text-gray-900 uppercase">
-                                    Q-{q.id.slice(0, 8)}
+                            <tr key={q.id} className="hover:bg-[#111] transition-colors group">
+                                <td className="px-6 py-5 font-mono text-[11px] font-bold text-[#0046FB] uppercase tracking-wider">
+                                    Q-{q.id.slice(0, 8).toUpperCase()}
                                 </td>
-                                <td className="px-6 py-4 text-xs font-bold text-gray-700">{q.service_name}</td>
-
-                                <td className="px-6 py-4 font-black text-gray-900 text-sm">
+                                <td className="px-6 py-5">
+                                    <span className="text-sm font-bold text-white tracking-tight">{q.service_name}</span>
+                                </td>
+                                <td className="px-6 py-5 font-black text-white text-sm">
                                     ₦{parseFloat(q.amount || "0").toLocaleString()}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-5">
                                     <div className="relative inline-block">
-                                        {/* Status Switcher (Disabled for Users) */}
                                         <button
-                                            disabled={role === 'user' || q.status === 'declined' || q.status === 'accepted'}
+                                            disabled={!isAdmin || q.status === 'paid'}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setActiveMenu(activeMenu === q.id ? null : q.id);
                                             }}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-black uppercase tracking-wider transition-all ${role !== 'user' ? 'hover:bg-white active:scale-95' : 'cursor-default'} z-20 ${QUOTE_STATUS_STYLES[q.status] || QUOTE_STATUS_STYLES.default}`}
+                                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all ${isAdmin && q.status !== 'paid' ? 'hover:bg-[#1A1A1A] cursor-pointer' : 'cursor-default'
+                                                } ${QUOTE_STATUS_STYLES[q.status] || QUOTE_STATUS_STYLES.default}`}
                                         >
-                                            <span className="w-1 h-1 rounded-full bg-current"></span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                                             {q.status}
-                                            {role !== 'user' && <span className="material-symbols-outlined text-[14px]">expand_more</span>}
+                                            {isAdmin && q.status !== 'paid' && <span className="material-symbols-outlined text-[16px]">expand_more</span>}
                                         </button>
 
-                                        {/* Dropdown Menu - Restricted to Admin/Staff */}
-                                        {activeMenu === q.id && role !== 'user' && (
+                                        {activeMenu === q.id && (
                                             <>
                                                 <div className="fixed inset-0 z-[80]" onClick={() => setActiveMenu(null)}></div>
-                                                <div className="absolute left-0 mt-2 w-32 bg-white border border-gray-100 rounded-xl shadow-2xl z-[90] py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <div className="absolute left-0 mt-3 w-40 bg-[#111] border border-[#1A1A1A] rounded-2xl shadow-2xl z-[90] py-2 animate-in fade-in slide-in-from-top-2 duration-200">
                                                     {statuses.filter(s => s !== q.status).map(status => (
                                                         <button
                                                             key={status}
                                                             onClick={() => { onUpdateStatus?.(q.id, status); setActiveMenu(null); }}
-                                                            className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-gray-500 hover:bg-gray-50 hover:text-primary transition-colors"
+                                                            className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-[#1A1A1A] hover:text-[#0046FB] transition-colors"
                                                         >
                                                             {status}
                                                         </button>
@@ -1435,12 +1448,12 @@ const QuotesTable = ({
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-xs font-bold text-gray-700">
+                                <td className="px-6 py-5 text-xs font-bold text-gray-500 uppercase">
                                     {formattedDate}
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-5 text-right">
                                     <button
-                                        className="text-gray-400 hover:text-primary transition-all"
+                                        className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1A1A1A] text-gray-400 hover:bg-[#0046FB] hover:text-white transition-all shadow-sm"
                                         onClick={() => navigate(`/dashboard/quote/${q.id}`, { state: { quote: q } })}
                                     >
                                         <span className="material-symbols-outlined text-lg">visibility</span>
@@ -1456,25 +1469,72 @@ const QuotesTable = ({
 };
 
 // --- Admin Terminal ---
-
 const AdminConsole = ({ user }: { user: User }) => {
-
     const navigate = useNavigate();
-    const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+
+    // --- State Management ---
     const [currentTab, setCurrentTab] = useState<'invoices' | 'services' | 'quote-requests' | 'quotes' | 'promotions'>('invoices');
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Modals
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+    const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+    const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
+
+    // Data Collections
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [services, setServices] = useState<Service[]>([]);
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
     const [qs, setQs] = useState<Quote[]>([]);
-    const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
     const [promos, setPromos] = useState<Promotion[]>([]);
 
+    // ✅ LOGIC UPDATE: Global Stats for the Command Center
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        pendingRequests: 0,
+        activeQuotes: 0,
+        totalServices: 0,
+        activePromos: 0
+    });
+
+    // Pagination
     const LIMIT = 10;
     const [offset, setOffset] = useState(0);
     const [total, setTotal] = useState(0);
+
+    // ✅ LOGIC UPDATE: Fetch Global Analytics once on mount
+    useEffect(() => {
+        const fetchSystemStats = async () => {
+            try {
+                const [invRes, qrRes, qRes, sRes, pRes] = await Promise.all([
+                    api.get('/worker/invoices?limit=1000'),
+                    api.get('/admin/quote-requests?limit=1000'),
+                    api.get('/admin/quotes?limit=1000'),
+                    api.get('/admin/services?limit=1000'),
+                    api.get('/admin/promotions?limit=1000')
+                ]);
+
+                const invs: Invoice[] = invRes.data.invoices || [];
+                const requests: QuoteRequest[] = qrRes.data.quote_requests || [];
+                const quotes: Quote[] = qRes.data.quotes || [];
+                const svcs: Service[] = sRes.data.services || [];
+                const prms: Promotion[] = pRes.data.promotions || [];
+
+                setStats({
+                    totalRevenue: invs.reduce((acc, inv) => inv.status === 'paid' ? acc + inv.total : acc, 0),
+                    pendingRequests: requests.filter(r => r.status === 'pending').length,
+                    activeQuotes: quotes.filter(q => q.status === 'sent').length,
+                    totalServices: svcs.length,
+                    activePromos: prms.filter(p => p.is_active).length
+                });
+            } catch (err) {
+                console.error("Command Stats Sync Error:", err);
+            }
+        };
+        fetchSystemStats();
+    }, []);
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -1491,114 +1551,167 @@ const AdminConsole = ({ user }: { user: User }) => {
             else if (currentTab === 'services') setServices(res.data.services || []);
             else if (currentTab === 'quote-requests') setQrs(res.data.quote_requests || []);
             else if (currentTab === 'quotes') setQs(res.data.quotes || []);
-            else if (currentTab === 'promotions') {
-                setPromos(res.data.promotions || [])
-            };
+            else if (currentTab === 'promotions') setPromos(res.data.promotions || []);
 
             setTotal(res.data.total || 0);
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+        } catch (err) {
+            console.error("Registry Sync Error:", err);
+        } finally {
+            setLoading(false);
+        }
     };
-    useEffect(() => {
 
+    useEffect(() => {
         fetchData();
     }, [currentTab, offset]);
+
+    // HANDLERS
     const handleTogglePromoStatus = async (id: string, current: boolean) => {
         try {
             await api.patch(`/admin/promotions/${id}/status`, { is_active: !current });
             setPromos(prev => prev.map(p => p.id === id ? { ...p, is_active: !current } : p));
-        } catch (err) {
-            alert("Failed to toggle campaign status.");
-        }
+        } catch (err) { alert("Status sync failed."); }
     };
-    const filteredInvoices = useMemo(() => invoices.filter(inv => inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())), [invoices, searchQuery]);
-    const filteredServices = useMemo(() => services.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.category.toLowerCase().includes(searchQuery.toLowerCase())), [services, searchQuery]);
 
     const handleToggleActive = async (id: string, status: boolean) => {
         try {
             await api.patch(`/admin/services/${id}/status`, { is_active: !status });
             setServices(prev => prev.map(s => s.id === id ? { ...s, is_active: !status } : s));
-        } catch (err) { alert("Status update failed"); }
+        } catch (err) { alert("Visibility sync failed."); }
     };
+
     const handleUpdateQuoteStatus = async (id: string, newStatus: string) => {
         try {
             await api.patch(`/admin/quotes/${id}/status`, { status: newStatus });
             setQs(prev => prev.map(q => q.id === id ? { ...q, status: newStatus as any } : q));
-        } catch (err) { alert(`Quote update failed`); }
+        } catch (err) { alert(`Status update failed`); }
     };
+
+    // Memoized Filters
+    const filteredInvoices = useMemo(() => invoices.filter(inv =>
+        inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [invoices, searchQuery]);
+
+    const filteredServices = useMemo(() => services.filter(s =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.category.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [services, searchQuery]);
+
     const TabContent = {
-        "invoices": (
-            <InvoiceTable
-                invoices={filteredInvoices}
-                loading={loading}
-                navigate={navigate}
-            />
-        ),
-        "services": (
-            <ServicesTable
-                services={filteredServices}
-                loading={loading}
-                onToggle={handleToggleActive}
-            />
-        ),
-        'quote-requests': <QuoteRequestTable qrs={qrs} loading={loading} onAddQuote={(qr) => setSelectedQuote(qr)} role={user.role} />,
-        quotes: <QuotesTable qs={qs} loading={loading} onUpdateStatus={handleUpdateQuoteStatus} navigate={navigate} role={user.role} />,
-        'promotions': (
-            <PromotionsTable
-                promos={promos}
-                loading={loading}
-                onToggleStatus={handleTogglePromoStatus}
-            />
-        )
+        "invoices": <InvoiceTable invoices={filteredInvoices} loading={loading} navigate={navigate} isadmin={user.role === "admin"} />,
+        "services": <ServicesTable services={filteredServices} loading={loading} onToggle={handleToggleActive} />,
+        "quote-requests": <QuoteRequestTable qrs={qrs} loading={loading} onAddQuote={setSelectedQuote} role={user.role} />,
+        "quotes": <QuotesTable qs={qs} loading={loading} onUpdateStatus={handleUpdateQuoteStatus} navigate={navigate} role={user.role} />,
+        "promotions": <PromotionsTable promos={promos} loading={loading} onToggleStatus={handleTogglePromoStatus} />
     };
+
     return (
-        <div className="max-w-6xl mx-auto">
-            <header className="mb-10 flex justify-between items-end">
-                <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Admin</span>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Enterprise Console</h1>
+        <div className="max-w-7xl mx-auto space-y-10 pb-20">
+            {/* Header Section */}
+            <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 px-4 sm:px-0">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <span className="h-1 w-12 bg-[#0046FB] rounded-full"></span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500">Root Administrator</span>
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">Enterprise Console</h1>
                 </div>
-                <div className="flex gap-4">
-                    <button onClick={() => setIsServiceModalOpen(true)} className="bg-secondary-dark text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-xl hover:bg-black transition-all">
-                        <span className="material-symbols-outlined text-sm">inventory_2</span> New Service
+
+                {/* Global Actions */}
+                <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                    <button onClick={() => setIsServiceModalOpen(true)} className="flex-1 lg:flex-none bg-[#111] border border-[#1A1A1A] text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1A1A1A] transition-all flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-sm">inventory_2</span> Deploy Service
                     </button>
-                    <button onClick={() => setIsPromoModalOpen(true)} className="bg-amber-500 text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all">
-                        <span className="material-symbols-outlined text-sm">campaign</span> Create Promotion
+                    <button onClick={() => setIsPromoModalOpen(true)} className="flex-1 lg:flex-none bg-amber-500/10 border border-amber-500/20 text-amber-500 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-sm">campaign</span> Campaign Architect
                     </button>
-                    <button onClick={() => navigate('/dashboard/create-invoice')} className="bg-primary text-white px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
-                        <span className="material-symbols-outlined text-sm">add</span> Create Invoice
+                    <button onClick={() => navigate('/dashboard/create-invoice')} className="flex-1 lg:flex-none bg-[#0046FB] text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#003ccf] transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#0046FB]/20">
+                        <span className="material-symbols-outlined text-sm">add</span> New Invoice
                     </button>
                 </div>
             </header>
 
-            <div className="flex justify-between items-center mb-6 border-b border-gray-200">
-                <div className="flex gap-8">
-                    <button onClick={() => { setCurrentTab('invoices'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'invoices' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Invoices</button>
-                    <button onClick={() => { setCurrentTab('services'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'services' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Services</button>
-                    <button onClick={() => { setCurrentTab('quote-requests'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'quote-requests' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Quote Requests</button>
-                    <button onClick={() => { setCurrentTab('quotes'); setOffset(0) }} className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'quotes' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}>Quotes</button>
-                    <button
-                        onClick={() => { setCurrentTab('promotions'); setOffset(0) }}
-                        className={`pb-4 text-xs font-black uppercase tracking-widest ${currentTab === 'promotions' ? 'text-primary border-b-2 border-primary' : 'text-gray-400'}`}
-                    >
-                        Promotions
-                    </button>
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 px-4 sm:px-0">
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A] group">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-green-400">Total Yield</p>
+                    <h3 className="text-2xl font-black text-white tracking-tighter">₦{stats.totalRevenue.toLocaleString()}</h3>
                 </div>
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
-                        <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search ..." className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 w-64" />
-                    </div>
-                    <div className="flex gap-1">
-                        <button disabled={offset === 0} onClick={() => setOffset(prev => prev - LIMIT)} className="p-2 border rounded-lg bg-white disabled:opacity-30"><span className="material-symbols-outlined">chevron_left</span></button>
-                        <button disabled={offset + LIMIT >= total} onClick={() => setOffset(prev => prev + LIMIT)} className="p-2 border rounded-lg bg-white disabled:opacity-30"><span className="material-symbols-outlined">chevron_right</span></button>
-                    </div>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Queue Size</p>
+                    <h3 className="text-2xl font-black text-[#0046FB] tracking-tighter">{stats.pendingRequests}</h3>
+                </div>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Active Quotes</p>
+                    <h3 className="text-2xl font-black text-white tracking-tighter">{stats.activeQuotes}</h3>
+                </div>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Node Registry</p>
+                    <h3 className="text-2xl font-black text-white tracking-tighter">{stats.totalServices}</h3>
+                </div>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Live Promos</p>
+                    <h3 className="text-2xl font-black text-amber-500 tracking-tighter">{stats.activePromos}</h3>
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[400px]">
-                {TabContent[currentTab]}
+            {/* Sub-Navigation & Filters */}
+            <div className="space-y-6">
+                <div className="flex flex-col xl:flex-row justify-between items-center gap-6 border-b border-[#1A1A1A] px-4 sm:px-0">
+                    {/* Tabs */}
+                    <div className="flex gap-8 overflow-x-auto w-full scrollbar-hide">
+                        {['invoices', 'services', 'quote-requests', 'quotes', 'promotions'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => { setCurrentTab(tab as any); setOffset(0); }}
+                                className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap relative ${currentTab === tab ? 'text-[#0046FB]' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                {tab.replace('-', ' ')}
+                                {currentTab === tab && (
+                                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0046FB] rounded-full"></span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Search & Pagination Strip */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto pb-6 xl:pb-4">
+                        <div className="relative w-full sm:w-64 group">
+                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#0046FB] transition-colors text-sm">search</span>
+                            <input
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Search Registry..."
+                                className="w-full pl-12 pr-4 py-3 bg-[#111] border border-[#1A1A1A] rounded-2xl text-xs font-bold text-white outline-none focus:border-[#0046FB] transition-all"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                disabled={offset === 0 || loading}
+                                onClick={() => setOffset(prev => prev - LIMIT)}
+                                className="p-3 border border-[#1A1A1A] rounded-xl bg-[#111] text-white disabled:opacity-20 hover:bg-[#1A1A1A] transition-all"
+                            >
+                                <span className="material-symbols-outlined text-sm">chevron_left</span>
+                            </button>
+                            <button
+                                disabled={offset + LIMIT >= total || loading}
+                                onClick={() => setOffset(prev => prev + LIMIT)}
+                                className="p-3 border border-[#1A1A1A] rounded-xl bg-[#111] text-white disabled:opacity-20 hover:bg-[#1A1A1A] transition-all"
+                            >
+                                <span className="material-symbols-outlined text-sm">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Main Content Terminal */}
+                <div className="bg-[#0C0C0C] border border-[#1A1A1A] rounded-[2.5rem] min-h-[500px] overflow-hidden shadow-2xl mx-4 sm:mx-0 transition-all">
+                    {TabContent[currentTab]}
+                </div>
             </div>
+
+            {/* Modals Container */}
             {isServiceModalOpen && <CreateServiceModal onClose={() => setIsServiceModalOpen(false)} />}
             {selectedQuote && <CreateQuoteModal qr={selectedQuote} onClose={() => setSelectedQuote(null)} onSuccess={fetchData} adminID={user.id} />}
             {isPromoModalOpen && <CreatePromotionModal onClose={() => setIsPromoModalOpen(false)} onSuccess={fetchData} />}
@@ -1608,7 +1721,7 @@ const AdminConsole = ({ user }: { user: User }) => {
 
 // --- Staff Terminal ---
 
-const StaffTerminal = () => {
+const StaffTerminal = ({ user }: { user: User }) => {
 
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -1650,7 +1763,7 @@ const StaffTerminal = () => {
                         <button disabled={offset + LIMIT >= total} onClick={() => setOffset(prev => prev + LIMIT)} className="p-1 border rounded bg-white disabled:opacity-20"><span className="material-symbols-outlined text-sm">chevron_right</span></button>
                     </div>
                 </div>
-                <InvoiceTable invoices={invoices} loading={loading} navigate={navigate} />
+                <InvoiceTable invoices={invoices} loading={loading} navigate={navigate} isadmin={user.role === "admin"} />
             </div>
         </div>
     );
@@ -1661,11 +1774,22 @@ const ClientPortal = ({ user }: { user: User }) => {
     const navigate = useNavigate();
 
     // --- State Management ---
-    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers' | 'paid-offers' | 'paid-offers'>('billing');
+    const [currentTab, setCurrentTab] = useState<'billing' | 'requests' | 'active-offers' | 'declined-offers' | 'paid-offers'>('billing');
     const [loading, setLoading] = useState(true);
+
+    // List Data
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [qrs, setQrs] = useState<QuoteRequest[]>([]);
     const [qs, setQs] = useState<Quote[]>([]);
+
+    // ✅ LOGIC UPDATE: Analytics state to hold counts and totals independently of tab switching
+    const [analytics, setAnalytics] = useState({
+        unpaidBalance: 0,
+        pendingRequests: 0,
+        paidOffers: 0,
+        activeOffers: 0,
+        declinedOffers: 0
+    });
 
     // Pagination
     const LIMIT = 10;
@@ -1674,6 +1798,37 @@ const ClientPortal = ({ user }: { user: User }) => {
 
     // Modal State
     const [editTarget, setEditTarget] = useState<{ id: string, desc: string } | null>(null);
+
+    // ✅ LOGIC UPDATE: Fetch initial analytics once on mount
+    // This ensures numbers are visible immediately regardless of which tab is active
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                // Fetching large sets or specialized count endpoints to populate the stats cards
+                // TODO have an enpoint in backend that return the number of these in the backend instead of fetching the endpoints 
+                const [invRes, qrRes, qRes] = await Promise.all([
+                    api.get(`/customer/invoices?limit=1000`),
+                    api.get(`/customer/quotes/my-requests?limit=1000`),
+                    api.get(`/customer/quotes?limit=1000`)
+                ]);
+
+                const invs: Invoice[] = invRes.data.invoices || [];
+                const requests: QuoteRequest[] = qrRes.data.quote_requests || [];
+                const quotes: Quote[] = qRes.data.quotes || [];
+
+                setAnalytics({
+                    unpaidBalance: invs.reduce((acc, inv) => inv.status.toLowerCase() !== 'paid' ? acc + inv.total : acc, 0),
+                    pendingRequests: requests.filter(r => r.status === 'pending').length,
+                    paidOffers: quotes.filter(q => q.status === 'paid').length,
+                    activeOffers: quotes.filter(q => q.status === 'sent' || q.status === 'accepted').length,
+                    declinedOffers: quotes.filter(q => q.status === 'declined' || q.status === 'expired').length
+                });
+            } catch (err) {
+                console.error("Analytics Sync Error:", err);
+            }
+        };
+        fetchAnalytics();
+    }, []);
 
     const fetchData = async () => {
         setLoading(true);
@@ -1691,7 +1846,7 @@ const ClientPortal = ({ user }: { user: User }) => {
                 setInvoices(res.data.invoices || []);
             } else if (currentTab === 'requests') {
                 setQrs(res.data.quote_requests || []);
-            } else if (currentTab === 'active-offers' || currentTab === 'declined-offers' || currentTab === 'paid-offers') {
+            } else {
                 setQs(res.data.quotes || []);
             }
 
@@ -1709,17 +1864,10 @@ const ClientPortal = ({ user }: { user: User }) => {
 
     // --- Tab Content Mapping ---
     const TabContent = {
-        billing: (
-            <InvoiceTable
-                invoices={invoices}
-                loading={loading}
-                navigate={navigate}
-            />
-        ),
+        billing: <InvoiceTable invoices={invoices} loading={loading} navigate={navigate} isadmin={user.role === "admin"} />,
         "active-offers": (
             <QuotesTable
-                // Filter: Only show quotes the user can still act on or has accepted
-                qs={qs.filter(q => q.status === 'sent' || q.status === 'accepted' || q.status === 'in-review')}
+                qs={qs.filter(q => ['sent', 'accepted', 'in-review'].includes(q.status))}
                 loading={loading}
                 role={user.role}
                 navigate={navigate}
@@ -1728,8 +1876,7 @@ const ClientPortal = ({ user }: { user: User }) => {
         ),
         "declined-offers": (
             <QuotesTable
-                // Filter: Only show quotes that were rejected or have expired
-                qs={qs.filter(q => q.status === 'declined' || q.status === 'expired')}
+                qs={qs.filter(q => ['declined', 'expired'].includes(q.status))}
                 loading={loading}
                 role={user.role}
                 navigate={navigate}
@@ -1738,7 +1885,6 @@ const ClientPortal = ({ user }: { user: User }) => {
         ),
         "paid-offers": (
             <QuotesTable
-                // Filter: Only show quotes that were rejected or have expired
                 qs={qs.filter(q => q.status === 'paid')}
                 loading={loading}
                 role={user.role}
@@ -1746,7 +1892,6 @@ const ClientPortal = ({ user }: { user: User }) => {
                 onUpdateStatus={() => { }}
             />
         ),
-
         requests: (
             <QuoteRequestTable
                 qrs={qrs}
@@ -1756,89 +1901,88 @@ const ClientPortal = ({ user }: { user: User }) => {
             />
         ),
     };
+
     return (
-        <div className="max-w-6xl mx-auto">
-            <header className="mb-12">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary underline underline-offset-4">
-                    Authorized Session: {user.first_name}
-                </span>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter mt-2">My Account</h1>
+        <div className="max-w-7xl mx-auto space-y-10 pb-20">
+            {/* Header Section */}
+            <header className="px-4 sm:px-0 space-y-2">
+                <div className="flex items-center gap-2">
+                    <span className="h-1 w-8 bg-[#0046FB] rounded-full"></span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
+                        Authorized Session: {user.first_name}
+                    </span>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">Control Center</h1>
             </header>
 
-            {/* Quick Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Unpaid Balance</p>
-                    <h3 className="text-3xl font-black text-amber-500 tracking-tighter">
-                        ₦{invoices.reduce((acc, inv) => inv.status.toLowerCase() !== 'paid' ? acc + inv.total : acc, 0).toLocaleString()}
+            {/* Stats Grid - Updated to Dark Design */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 px-4 sm:px-0">
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A] hover:border-[#0046FB]/50 transition-all group">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 group-hover:text-[#0046FB]">Unpaid Balance</p>
+                    <h3 className="text-2xl font-black text-amber-500 tracking-tighter">
+                        ₦{analytics.unpaidBalance.toLocaleString()}
                     </h3>
                 </div>
-                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pending Requests</p>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
-                        {qrs.filter(r => r.status === 'pending').length}
-                    </h3>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Pending</p>
+                    <h3 className="text-2xl font-black text-white tracking-tighter">{analytics.pendingRequests}</h3>
                 </div>
-                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Paid Offers</p>
-                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.reduce((acc, q) => {
-                        const isActive = q.status === 'paid';
-                        return isActive ? acc + 1 : acc;
-                    }, 0)}</h3>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Paid</p>
+                    <h3 className="text-2xl font-black text-[#0046FB] tracking-tighter">{analytics.paidOffers}</h3>
                 </div>
-                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Offers</p>
-                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.reduce((acc, q) => {
-                        const isActive = q.status === 'sent' || q.status === 'accepted';
-                        return isActive ? acc + 1 : acc;
-                    }, 0)}</h3>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Active</p>
+                    <h3 className="text-2xl font-black text-green-500 tracking-tighter">{analytics.activeOffers}</h3>
                 </div>
-                <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-lg">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Declined Offers</p>
-                    <h3 className="text-3xl font-black text-primary tracking-tighter">{qs.reduce((acc, q) => {
-                        const isActive = q.status === 'declined';
-                        return isActive ? acc + 1 : acc;
-                    }, 0)}</h3>
+                <div className="p-6 bg-[#111] rounded-3xl border border-[#1A1A1A]">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Expired</p>
+                    <h3 className="text-2xl font-black text-red-500 tracking-tighter">{analytics.declinedOffers}</h3>
                 </div>
-
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex justify-between items-center mb-6 border-b border-gray-200">
-                <div className="flex gap-8">
-                    {['billing', 'requests', 'active-offers', 'declined-offers', 'paid-offers'].map((tab) => (
+            {/* Navigation & Controls Wrapper */}
+            <div className="space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-[#1A1A1A] px-4 sm:px-0">
+                    {/* Tabs with custom scroll for mobile */}
+                    <div className="flex gap-6 overflow-x-auto w-full scrollbar-hide pb-0">
+                        {(['billing', 'requests', 'active-offers', 'paid-offers', 'declined-offers'] as const).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => { setCurrentTab(tab); setOffset(0); }}
+                                className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap relative ${currentTab === tab ? 'text-[#0046FB]' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                {tab.replace('-', ' ')}
+                                {currentTab === tab && (
+                                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0046FB] rounded-full animate-in fade-in zoom-in duration-300"></span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="flex gap-2 pb-4 md:pb-4">
                         <button
-                            key={tab}
-                            onClick={() => { setCurrentTab(tab as any); setOffset(0); }}
-                            className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all ${currentTab === tab ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
+                            disabled={offset === 0 || loading}
+                            onClick={() => setOffset(prev => Math.max(0, prev - LIMIT))}
+                            className="p-2 border border-[#1A1A1A] rounded-xl bg-[#111] text-white hover:bg-[#1A1A1A] disabled:opacity-20 transition-all"
                         >
-                            {tab === 'billing' ? 'Invoices' : tab === 'requests' ? 'My Requests' : tab === 'active-offers' ? 'Active Quotes' : tab === 'paid-offers' ? 'Paid Quotes' : 'Declined Quotes'}
+                            <span className="material-symbols-outlined text-sm">chevron_left</span>
                         </button>
-                    ))}
+                        <button
+                            disabled={offset + LIMIT >= total || loading}
+                            onClick={() => setOffset(prev => prev + LIMIT)}
+                            className="p-2 border border-[#1A1A1A] rounded-xl bg-[#111] text-white hover:bg-[#1A1A1A] disabled:opacity-20 transition-all"
+                        >
+                            <span className="material-symbols-outlined text-sm">chevron_right</span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Pagination Controls */}
-                <div className="flex gap-2 mb-4">
-                    <button
-                        disabled={offset === 0 || loading}
-                        onClick={() => setOffset(prev => Math.max(0, prev - LIMIT))}
-                        className="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm"
-                    >
-                        <span className="material-symbols-outlined text-sm">chevron_left</span>
-                    </button>
-                    <button
-                        disabled={offset + LIMIT >= total || loading}
-                        onClick={() => setOffset(prev => prev + LIMIT)}
-                        className="p-2 border rounded-xl bg-white hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm"
-                    >
-                        <span className="material-symbols-outlined text-sm">chevron_right</span>
-                    </button>
+                {/* Content Container - Glassmorphic Dark Style */}
+                <div className="bg-[#0C0C0C] border border-[#1A1A1A] rounded-[2.5rem] min-h-[450px] overflow-hidden shadow-2xl mx-4 sm:mx-0">
+                    {TabContent[currentTab]}
                 </div>
-            </div>
-
-            {/* Content Container */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[400px] overflow-hidden transition-all">
-                {TabContent[currentTab]}
             </div>
 
             {/* Modals */}
@@ -1860,15 +2004,16 @@ const Dashboard = () => {
     const { user } = useAuth();
 
     if (user) {
-        return (<div className="min-h-screen bg-gray-50 p-8 pt-24">
-            {user.role === 'admin' ? (
-                <AdminConsole user={user} />
-            ) : user.role === 'staff' ? (
-                <StaffTerminal />
-            ) : (
-                <ClientPortal user={user} />
-            )}
-        </div>
+        return (
+            <div className="min-h-screen bg-[#0C0C0C] p-8 pt-24 ">
+                {user.role === 'admin' ? (
+                    <AdminConsole user={user} />
+                ) : user.role === 'staff' ? (
+                    <StaffTerminal user={user} />
+                ) : (
+                    <ClientPortal user={user} />
+                )}
+            </div>
         )
     }
 };

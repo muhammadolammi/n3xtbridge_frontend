@@ -19,3 +19,6 @@ export
         "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto",
         "Taraba", "Yobe", "Zamfara"
     ];
+
+
+export const ENV = import.meta.env.VITE_ENV
