@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Promotion, QuoteRequest } from '../models/model';
-import { QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
+import { ENV, QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
 import { fetchSignedUrl } from '../api/presign';
 
 export default function QuoteRequestViewer() {
@@ -149,6 +149,14 @@ export default function QuoteRequestViewer() {
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">
                         <span className="material-symbols-outlined text-sm">arrow_back</span> Back
                     </button>
+                    {user?.role === "admin" && ENV == "developmet" && (
+                        <button
+                            onClick={() => {
+                                console.log(qr)
+                            }}>
+                            Test log
+                        </button>
+                    )}
 
                     <div>
                         <h1 className="text-3xl md:text-5xl font-semibold mb-2">
@@ -229,7 +237,7 @@ export default function QuoteRequestViewer() {
                 {/* Description */}
                 <div className="mb-12">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Project Details</h3>
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Request Details</h3>
 
                         {user?.id === qr.user_id && qr.status === 'pending' && !isEditing && (
                             <button

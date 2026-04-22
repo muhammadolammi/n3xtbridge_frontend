@@ -36,13 +36,15 @@ const Navbar: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
 
                     {/* LOGO */}
-                    <Link to="/" className="shrink-0">
+
+                    <Link to="/" className="flex items-center">
                         <img
                             src="https://cdn.n3xtbridge.com/frontenddata/N3xtbridge%20Logo%20PNG.png"
-                            alt="N3xtbridge Logo"
+                            alt="N3xtbridge"
                             className="h-10 md:h-12 w-auto object-contain"
                         />
                     </Link>
+
 
                     {/* CENTER NAVIGATION (Desktop) */}
                     <div className="hidden md:flex items-center space-x-10">
