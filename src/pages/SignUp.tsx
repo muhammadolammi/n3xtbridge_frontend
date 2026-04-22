@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { NIGERIA_STATES } from '../constants/const';
 
-
 const ValidationItem = ({ label, fulfilled }: { label: string; fulfilled: boolean }) => (
-    <div className={`flex items-center space-x-2 transition-colors ${fulfilled ? 'text-green-600' : 'text-gray-400'}`}>
-        <span className="material-symbols-outlined text-xs">
+    <div className={`flex items-center space-x-2 transition-colors ${fulfilled ? 'text-green-400' : 'text-gray-600'}`}>
+        <span className="material-symbols-outlined text-[14px]">
             {fulfilled ? 'check_circle' : 'circle'}
         </span>
-        <span>{label}</span>
+        <span className="text-[11px] font-medium tracking-wide">{label}</span>
     </div>
 );
 
@@ -18,7 +17,6 @@ export const SignUp: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    // 1. Setup Form State
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -29,17 +27,18 @@ export const SignUp: React.FC = () => {
         state: '',
         password: '',
     });
+
     const passwordRequirements = {
         length: formData.password.length >= 10,
         hasUpper: /[A-Z]/.test(formData.password),
         hasLower: /[a-z]/.test(formData.password),
         hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password),
     };
+
     const [showPassword, setShowPassword] = useState(false);
     const isPasswordValid = Object.values(passwordRequirements).every(Boolean);
     const isFormValid = isPasswordValid && formData.email && formData.first_name && formData.state;
 
-    // Handle input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({
             ...formData,
@@ -47,33 +46,22 @@ export const SignUp: React.FC = () => {
         });
     };
 
-    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError("");
 
-        // if (!formData.email || !formData.password || !formData.first_name) {
-        //     setError("Please fill in all required fields.");
-        //     return;
-        // }
         if (!isFormValid) {
-            setError("Ensure password meets all requirements.");
+            setError("Ensure all required fields are filled and password meets requirements.");
             return;
         }
 
-
-
         try {
             setLoading(true);
-
-            // 3. Call Backend (matching your Go SignupInput struct)
             const response = await api.post('/auth/signup', formData);
-
             if (response.status === 200) {
-                alert("Signup successful! Redirecting...");
                 navigate("/signin");
             }
         } catch (err: any) {
-            // Handle backend errors (e.g., 409 Conflict or 400 Bad Request)
             const message = err.response?.data?.error || "An error occurred during signup.";
             setError(message);
         } finally {
@@ -82,84 +70,95 @@ export const SignUp: React.FC = () => {
     };
 
     return (
-        <main className="flex min-h-screen pt-20 bg-gray-50">
-            <div className="flex-grow flex flex-col items-center justify-center p-6 md:p-12 lg:p-20 overflow-y-auto">
-                <div className="w-full max-w-2xl bg-white p-8 md:p-12 rounded-xl shadow-sm border border-gray-100">
-                    <div className="mb-10">
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">Create Account</h2>
-                        <p className="text-gray-500">Complete your profile to begin.</p>
-                    </div>
+        <main className="min-h-screen bg-[#0C0C0C] text-white pt-24 pb-12 px-6 flex flex-col items-center">
+            <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-                    <form className="space-y-8" onSubmit={handleSubmit}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Header Area */}
+                <div className="text-center mb-10">
+                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Get Started</h2>
+                    <p className="text-gray-500">Create your account to request quotes and track projects.</p>
+                </div>
+
+                {/* Form Card */}
+                <div className="bg-[#111] border border-[#1A1A1A] rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-sm flex items-center gap-3">
+                            <span className="material-symbols-outlined text-base">error</span>
+                            {error}
+                        </div>
+                    )}
+
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+
+                        {/* Identity Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400">First Name</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">First Name</label>
                                 <input
                                     name="first_name"
                                     value={formData.first_name}
                                     onChange={handleChange}
-                                    className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 transition-all"
+                                    className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white focus:border-[#0046FB] outline-none transition-all placeholder:text-gray-700"
                                     placeholder="Julian"
-                                    type="text"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Last Name</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Last Name</label>
                                 <input
                                     name="last_name"
                                     value={formData.last_name}
                                     onChange={handleChange}
-                                    className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 transition-all"
+                                    className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white focus:border-[#0046FB] outline-none transition-all placeholder:text-gray-700"
                                     placeholder="Vance"
-                                    type="text"
                                     required
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Contact Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Email Address</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Email</label>
                                 <input
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 transition-all"
+                                    className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white focus:border-[#0046FB] outline-none transition-all placeholder:text-gray-700"
                                     placeholder="julian@example.com"
                                     type="email"
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Phone Number</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Phone</label>
                                 <input
                                     name="phone_number"
                                     value={formData.phone_number}
                                     onChange={handleChange}
-                                    className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 transition-all"
-                                    placeholder="+234 ..."
+                                    className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white focus:border-[#0046FB] outline-none transition-all placeholder:text-gray-700"
+                                    placeholder="+234..."
                                     type="tel"
                                 />
                             </div>
                         </div>
 
-                        {/* Password Field  */}
-                        <div className="space-y-2 relative">
-                            <label className="text-xs font-bold uppercase text-gray-400">Password</label>
+                        {/* Password Section */}
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Security</label>
                             <div className="relative">
                                 <input
                                     name="password"
                                     type={showPassword ? "text" : "password"}
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full bg-transparent border-b border-gray-200 py-3 pr-10 focus:ring-0 focus:border-primary"
-                                    placeholder="••••••••"
+                                    className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 pr-12 text-white focus:border-[#0046FB] outline-none transition-all placeholder:text-gray-700"
+                                    placeholder="Create password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-0 top-3 text-gray-400 hover:text-primary"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
                                 >
                                     <span className="material-symbols-outlined">
                                         {showPassword ? 'visibility_off' : 'visibility'}
@@ -167,8 +166,7 @@ export const SignUp: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* Validation Checklist UI */}
-                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                            <div className="mt-4 p-4 bg-[#0a0a0a] rounded-2xl border border-[#1A1A1A] grid grid-cols-2 gap-y-2">
                                 <ValidationItem label="10+ Characters" fulfilled={passwordRequirements.length} />
                                 <ValidationItem label="Uppercase" fulfilled={passwordRequirements.hasUpper} />
                                 <ValidationItem label="Lowercase" fulfilled={passwordRequirements.hasLower} />
@@ -176,61 +174,70 @@ export const SignUp: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="pt-6 border-t border-gray-50">
-                            <div className="flex items-center space-x-3 mb-6">
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-primary font-mono">Regional Information</h3>
-                            </div>
+                        {/* Location Section */}
+                        <div className="pt-6 border-t border-[#1A1A1A]">
+                            <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-6">Regional Details</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="md:col-span-2 space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Street Address</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Street Address</label>
                                     <input
                                         name="address"
                                         value={formData.address}
                                         onChange={handleChange}
-                                        className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3"
+                                        className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white focus:border-[#0046FB] outline-none transition-all"
                                         type="text"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Country</label>
-                                    <select
-                                        name="country"
-                                        value={formData.country}
-                                        className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 appearance-none"
-                                        disabled
-                                    >
-                                        <option value="Nigeria">Nigeria</option>
-                                    </select>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">Country</label>
+                                    <div className="relative">
+                                        <select
+                                            name="country"
+                                            value={formData.country}
+                                            className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white appearance-none outline-none opacity-60"
+                                            disabled
+                                        >
+                                            <option value="Nigeria">Nigeria</option>
+                                        </select>
+                                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600">lock</span>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">State</label>
-                                    <select
-                                        name="state"
-                                        value={formData.state}
-                                        onChange={handleChange}
-                                        className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary px-0 py-3 appearance-none"
-                                        required
-                                    >
-                                        <option value="">Select State</option>
-                                        {NIGERIA_STATES.map(state => <option key={state} value={state}>{state}</option>)}
-                                    </select>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-1">State</label>
+                                    <div className="relative">
+                                        <select
+                                            name="state"
+                                            value={formData.state}
+                                            onChange={handleChange}
+                                            className="w-full bg-[#141414] border border-[#1A1A1A] rounded-2xl px-5 py-4 text-white appearance-none focus:border-[#0046FB] outline-none transition-all"
+                                            required
+                                        >
+                                            <option value="">Select State</option>
+                                            {NIGERIA_STATES.map(state => <option key={state} value={state}>{state}</option>)}
+                                        </select>
+                                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">expand_more</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                        {/* Footer Actions */}
+                        <div className="pt-8 flex flex-col items-center gap-6">
                             <button
+                                type="submit"
                                 disabled={loading || !isFormValid}
-                                className="w-full md:w-auto px-10 py-4 bg-primary text-white font-bold rounded-lg shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                                className="w-full bg-[#0046FB] hover:bg-[#003ccf] text-white font-bold py-5 rounded-2xl shadow-xl shadow-blue-900/10 transition-all flex items-center justify-center space-x-2 disabled:opacity-30"
                             >
-                                <span>{loading ? "Creating..." : "Create Account"}</span>
-                                {!loading && isFormValid && <span className="material-symbols-outlined text-sm">arrow_forward</span>}
+                                <span>{loading ? "Initializing..." : "Create Account"}</span>
+                                {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
                             </button>
-                            {error && <p className="text-red-500 text-sm mt-2 font-medium">{error}</p>}
 
+                            <p className="text-gray-500 text-sm">
+                                Already have an account? <Link to="/signin" className="text-[#0046FB] font-bold hover:underline">Sign In</Link>
+                            </p>
                         </div>
                     </form>
                 </div>

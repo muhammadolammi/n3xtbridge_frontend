@@ -112,11 +112,30 @@ const HeroCameraSvg = () => (
 
 const Home: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
+    // const [isScrolled, setIsScrolled] = useState(false);
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, logout } = useAuth();
     const navigate = useNavigate()
+
+    // const [testStatus, setTestStatus] = useState<string>('');
+    // 
+    // const testRateLimit = async () => {
+    //     setTestStatus('Firing 70 requests...');
+    //     for (let i = 0; i < 70; i++) {
+    //         try {
+    //             // We hit a "Standard" tier endpoint (60/min limit)
+    //             await api.get('/services?limit=1');
+    //             console.log(`Request ${i + 1}: Success`);
+    //         } catch (err: any) {
+    //             if (err.response?.status === 429) {
+    //                 setTestStatus(`Blocked at request ${i + 1}: Too Many Requests!`);
+    //                 return;
+    //             }
+    //         }
+    //     }
+    //     setTestStatus('Finished 70 requests without being blocked.');
+    // };
 
 
 
@@ -134,13 +153,13 @@ const Home: React.FC = () => {
         fetchServices();
     }, []);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    // useEffect(() => {
+    //     const handleScroll = () => {
+    //         setIsScrolled(window.scrollY > 10);
+    //     };
+    //     window.addEventListener('scroll', handleScroll);
+    //     return () => window.removeEventListener('scroll', handleScroll);
+    // }, []);
 
     if (loading) {
         return <BrandLoader />;
@@ -150,10 +169,12 @@ const Home: React.FC = () => {
     return (
         <div className="bg-[#000] text-[#F5F5F5] font-['Inter'] overflow-x-hidden selection:bg-[#0046FB]/30">
             {/* NAV */}
-            <nav
+            {/* <nav
                 className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-between bg-black/85 backdrop-blur-md border-b border-[#111] transition-shadow duration-300 ${isScrolled ? 'shadow-[0_2px_24px_rgba(0,0,0,0.6)]' : ''
                     }`}
             >
+
+
                 <div className="px-8 py-5 text-[22px] font-medium tracking-tight">
                     <img
                         src="https://cdn.n3xtbridge.com/frontenddata/N3xtbridge%20Logo%20PNG.png"
@@ -167,7 +188,17 @@ const Home: React.FC = () => {
                     )}
                     <button onClick={() => scrollToSection('why', setIsMenuOpen)} className="font-['Manrope'] text-base font-medium hover:opacity-70 transition-opacity">About Us</button>
                     <button onClick={() => scrollToSection('services', setIsMenuOpen)} className="font-['Manrope'] text-base font-medium hover:opacity-70 transition-opacity">Services</button>
-
+                    {ENV == "development" && (
+                        <div className="mt-10 p-4 border border-blue-900 bg-blue-900/10 rounded-lg">
+                            <p className="text-sm mb-2">Rate Limit Tester: {testStatus}</p>
+                            <button
+                                onClick={testRateLimit}
+                                className="bg-red-600 px-4 py-2 text-xs font-bold rounded hover:bg-red-700"
+                            >
+                                TRIGGER SPAM TEST
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <div className='flex gap-1'>
                     {user && (< button
@@ -183,6 +214,7 @@ const Home: React.FC = () => {
                     >
                         Contact Us
                     </button>
+
                 </div>
 
                 <button
@@ -193,7 +225,7 @@ const Home: React.FC = () => {
                     <span className={`block w-[22px] h-[2px] bg-white transition-opacity ${isMenuOpen ? 'opacity-0' : ''}`}></span>
                     <span className={`block w-[22px] h-[2px] bg-white transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
                 </button>
-            </nav>
+            </nav> */}
 
             {/* MOBILE MENU */}
             <div className={`${isMenuOpen ? 'flex' : 'hidden'} flex-col bg-[#0a0a0a] border-t border-[#222] fixed top-16 left-0 right-0 z-[99] py-4`}>

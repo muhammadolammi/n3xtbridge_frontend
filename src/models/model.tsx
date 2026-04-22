@@ -69,6 +69,8 @@ export interface QuoteRequest {
     user_email?: string;
     user_name?: string;
     vn_key: string;
+    video_key: string;
+
     service_name?: string;
 }
 

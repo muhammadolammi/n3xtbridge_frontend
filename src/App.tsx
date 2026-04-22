@@ -18,6 +18,8 @@ import QuoteRequestViewer from './pages/QuoteRequestViewer';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ServiceDetail from './pages/Service';
 import PublicInvoiceViewer from './pages/PublicInvoiceViewer';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 
 const App: React.FC = () => {
   return (
@@ -28,6 +30,10 @@ const App: React.FC = () => {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="about-us" element={<AboutUs />} />
+
+            <Route path="forgot-password" element={<ForgotPassword />} />
+            <Route path="reset-password/:token" element={<ResetPassword />} />
+
 
             <Route path="promotions/:promo_code" element={<PromotionalPage />} />
 
