@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import type { Service } from '../models/model';
 import { Link } from 'react-router-dom';
 import { QuoteRequestModal } from './QuoteRequestModal';
+import {
+    Wifi,
+    Shield,
+    Camera,
+    Code2,
+    Globe,
+    Server,
+    MonitorSmartphone,
+    Network,
+    Lock,
+    Radio,
+    Briefcase
+} from 'lucide-react';
 
 export const scrollToSection = (id: string, setIsMenuOpen?: React.Dispatch<React.SetStateAction<boolean>>) => {
     const element = document.getElementById(id);
@@ -197,4 +210,19 @@ export const uploadFileToR2 = async (
         xhr.onerror = () => reject(new Error("Network error"));
         xhr.send(file);
     });
+};
+
+
+export const ICON_MAP: Record<string, React.ElementType> = {
+    Wifi,
+    Shield,
+    Camera,
+    Code2,
+    Globe,
+    Server,
+    MonitorSmartphone,
+    Network,
+    Lock,
+    Radio,
+    Briefcase,
 };
