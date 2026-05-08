@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { useAuth } from '../context/AuthContext';
+import myLogo from '../assets/logo.png';
+
 // import { MENUSECTIONTOHASH } from './resusable';
 
 const Navbar: React.FC = () => {
@@ -26,42 +28,48 @@ const Navbar: React.FC = () => {
         <>
             <nav
                 className={`fixed top-0 left-0 right-0 z-[100] border-b transition-all duration-300 ${isScrolled
-                    ? 'bg-white/80 backdrop-blur-md border-[#E2E8F0] py-3'
+                    ? 'bg-white/80 backdrop-blur-md border-primary/10 py-3'
                     : 'bg-transparent border-transparent py-5'
                     }`}
             >
-                <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
 
-                    {/* LOGO */}
-                    <Link to="/" className="flex items-center">
-                        <img
-                            src="https://cdn.n3xtbridge.com/frontenddata/N3xtbridge%20Logo%20PNG.png"
-                            alt="N3xtbridge"
-                            className="h-25 md:h-25 w-auto object-contain"
-                        />
-                    </Link>
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
 
-                    {/* DESKTOP NAV */}
-                    <div className="hidden md:flex items-center space-x-10">
-                        <Link to="/" className={getLinkClass('/')}>Home</Link>
+                    <div className="absolute left-5 md:left-10 top-1/2 -translate-y-1/2">
+                        <Link to="/" className="flex items-center">
+                            <img
+                                src={myLogo}
+                                alt="N3xtbridge"
+                                className="h-[50px] w-auto object-contain"
+                            />
+                        </Link>
+                    </div>
 
-                        <HashLink to="/#services" className={getLinkClass('/services')}>
-                            Services
-                        </HashLink>
 
-                        <HashLink to="/#why" className={getLinkClass('/#why')}>
-                            About
-                        </HashLink>
+                    <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-end">
 
-                        {user && (
-                            <Link to="/dashboard" className={getLinkClass('/dashboard')}>
-                                Dashboard
-                            </Link>
-                        )}
+                        <div className="hidden md:flex items-center space-x-10">
+                            <Link to="/" className={getLinkClass('/')}>Home</Link>
+
+                            <HashLink to="/#services" className={getLinkClass('/services')}>
+                                Services
+                            </HashLink>
+
+                            <HashLink to="/#why" className={getLinkClass('/#why')}>
+                                About
+                            </HashLink>
+
+                            {user && (
+                                <Link to="/dashboard" className={getLinkClass('/dashboard')}>
+                                    Dashboard
+                                </Link>
+                            )}
+                        </div>
+
                     </div>
 
                     {/* RIGHT ACTIONS */}
-                    <div className="hidden md:flex items-center gap-3">
+                    <div className="hidden md:flex items-center gap-3 ml-10">
 
                         {!user ? (
                             <>
@@ -82,7 +90,7 @@ const Navbar: React.FC = () => {
                         ) : (
                             <button
                                 onClick={logout}
-                                className="text-sm font-semibold text-secondary/70 hover:text-red-500 transition-colors"
+                                className="text-sm font-semibold text-primary hover:text-red-500 transition-colors "
                             >
                                 Sign Out
                             </button>

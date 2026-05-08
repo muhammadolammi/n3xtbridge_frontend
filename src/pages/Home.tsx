@@ -8,11 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 
-// const featureRows = [
-//     "Our Seamless IT solutions are customized to match specific requirements.",
-//     "Our successful projects and satisfied clients speak to our competence and reliability.",
-//     "We offer end-to-end Seamless IT services for a holistic experience."
-// ];
 
 const WhyCard: React.FC<{
     title: string;
@@ -118,37 +113,6 @@ const HeroCameraSvg = () => (
 
 
 
-// const servicesData = [
-//     {
-//         id: 'security',
-//         title: 'Security & Access Control',
-//         desc: 'Advanced CCTV surveillance and premises access control solutions integrated with AI-driven monitoring for 24/7 protection.',
-//         tag: 'SECURITY',
-//         image: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=2000&auto=format&fit=crop'
-//     },
-//     {
-//         id: 'solar',
-//         title: 'Solar Power Solutions',
-//         desc: 'Clean, sustainable energy installations designed to provide 100% uptime for your critical IT infrastructure and office operations.',
-//         tag: 'RENEWABLES',
-//         image: 'https://images.unsplash.com/photo-1668097613572-40b7c11c8727?q=80&w=1170&auto=format&fit=crop',
-//         minPrice: '120,000'
-//     },
-//     {
-//         id: 'web',
-//         title: 'Web & App Development',
-//         desc: 'High-performance, scalable web platforms and mobile applications built with modern stacks like React, Go, and .NET Core.',
-//         tag: 'DEVELOPMENT',
-//         image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop'
-//     },
-//     {
-//         id: 'general',
-//         title: 'General IT & Infrastructure',
-//         desc: 'From fiber optic cabling to data center management, we build the physical and digital backbone of your enterprise.',
-//         tag: 'INFRASTRUCTURE',
-//         image: 'https://images.unsplash.com/photo-1528845922818-cc5462be9a63?q=80&w=1074&auto=format&fit=crop'
-//     }
-// ];
 
 
 
@@ -160,24 +124,6 @@ const Home: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate()
 
-    // const [testStatus, setTestStatus] = useState<string>('');
-    // 
-    // const testRateLimit = async () => {
-    //     setTestStatus('Firing 70 requests...');
-    //     for (let i = 0; i < 70; i++) {
-    //         try {
-    //             // We hit a "Standard" tier endpoint (60/min limit)
-    //             await api.get('/services?limit=1');
-    //             console.log(`Request ${i + 1}: Success`);
-    //         } catch (err: any) {
-    //             if (err.response?.status === 429) {
-    //                 setTestStatus(`Blocked at request ${i + 1}: Too Many Requests!`);
-    //                 return;
-    //             }
-    //         }
-    //     }
-    //     setTestStatus('Finished 70 requests without being blocked.');
-    // };
 
 
 
@@ -195,13 +141,7 @@ const Home: React.FC = () => {
         fetchServices();
     }, []);
 
-    // useEffect(() => {
-    //     const handleScroll = () => {
-    //         setIsScrolled(window.scrollY > 10);
-    //     };
-    //     window.addEventListener('scroll', handleScroll);
-    //     return () => window.removeEventListener('scroll', handleScroll);
-    // }, []);
+
 
     if (loading) {
         return <BrandLoader />;
@@ -248,10 +188,10 @@ const Home: React.FC = () => {
                 <div className="absolute w-[300px] h-[140px] bg-[#0046FB] blur-[180px] rounded-full opacity-25 top-[30%] right-[5%] pointer-events-none"></div>
 
                 <div className="relative z-[2] flex flex-col items-center lg:items-start text-center lg:text-left">
-                    <h1 className=" font-medium text-[40px] md:text-[5.5vw] lg:text-[90px] leading-[1.15] mb-6 text-primary">
+                    <h1 className=" font-medium text-[52px] md:text-[72px] leading-[1.15] mb-6 text-primary">
                         Innovative Tech Solutions for Your Business
                     </h1>
-                    <p className=" text-[15px] md:text-[1.4vw] lg:text-[18px] text-[#1f2937] leading-relaxed max-w-[520px] mb-10 font-bold">
+                    <p className=" text-[15px] md:text-[1.4vw] lg:text-[18px] text-[#1f2937] leading-relaxed max-w-[520px] mb-10 font-medium">
                         From state-of-the-art security systems to cutting-edge web development, we empower your digital transformation with high-precision architectural solutions.
                     </p>
                     {/* <button onClick={() => scrollToSection('contact', setIsMenuOpen)} className="inline-flex items-center gap-2.5 bg-[#0046FB] text-white font-['Manrope'] font-semibold px-7 py-5 hover:opacity-85 transition-opacity">
@@ -272,19 +212,7 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* CLIENTS */}
-            {/* <section className="px-6 md:px-20 py-15 border-t border-[#111]">
-                <p className="font-['Manrope'] text-[15px] md:text-[1.8vw] lg:text-[22px] text-[#7E7E7E] mb-8 max-w-[320px] leading-snug">
-                    Renowned Companies that we've delivered our service to
-                </p>
-                <div className="flex items-center gap-6 md:gap-16 flex-wrap">
-                    {['IPSUM', 'LOCDO', '◈', '⊜'].map((logo, i) => (
-                        <div key={i} className="font-['Manrope'] font-bold text-2xl md:text-[2vw] lg:text-[26px] text-[#3B4158] whitespace-nowrap">
-                            {logo}
-                        </div>
-                    ))}
-                </div>
-            </section> */}
+
 
             {/* WHY CHOOSE */}
             <section id="why" className="px-6 md:px-20 py-24 text-center">
@@ -308,43 +236,7 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* SERVICES */}
-            {/* <section id="services" className="px-6 md:px-20 py-20">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-5">
-                    <h2 className="font-['Manrope'] font-medium text-[24px] md:text-[3vw] lg:text-[52px] leading-tight max-w-[700px]">Core Infrastructure & Digital Services</h2>
-                    <Link to={"/services"} className="inline-flex items-center gap-2 bg-[#0046FB] text-white font-['Manrope'] font-semibold px-7 py-5 whitespace-nowrap hover:opacity-85">
-                        Browse All Services &nbsp;↗
-                    </Link>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#0C0C0C] rounded-xl overflow-hidden mb-6">
-                    <div className="p-12">
-                        <div className="font-['Manrope'] font-semibold text-2xl lg:text-4xl mb-4 leading-tight">Security Camera Installation</div>
-                        <p className="font-['Manrope'] text-sm lg:text-xl text-[#B5B5B5] leading-relaxed mb-8">
-                            Advanced surveillance systems integrated with AI-driven monitoring for 24/7 commercial security.
-                        </p>
-                        <button className="inline-flex items-center gap-2 font-['Manrope'] font-semibold text-[#B5B5B5] hover:text-white transition-colors">
-                            View Specifications &nbsp;↓
-                        </button>
-                    </div>
-                    <div className="bg-[#141414] h-[380px] flex items-center justify-center relative overflow-hidden">
-                        <div className="w-full h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#0d1117] flex items-center justify-center">
-                            <ServiceCameraSvg />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                    {featureRows.map((text, i) => (
-                        <div key={i} className="flex items-center justify-between bg-[#0C0C0C] rounded-xl px-12 py-10 gap-5 cursor-pointer hover:bg-[#111] transition-colors">
-                            <div className="font-['Manrope'] font-medium text-sm lg:text-[22px] leading-tight">{text}</div>
-                            <svg className="w-9 h-9 opacity-70 shrink-0" viewBox="0 0 36 36" fill="none">
-                                <path d="M10 10 L26 26 M26 26 L26 14 M26 26 L14 26" stroke="#B5B5B5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-                    ))}
-                </div>
-            </section> */}
 
             <ServicesSection services={services} />
 

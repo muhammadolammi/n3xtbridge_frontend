@@ -13,19 +13,19 @@ export const scrollToSection = (id: string, setIsMenuOpen?: React.Dispatch<React
 
 export const BrandLoader = () => {
     return (
-        <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center">
+        <div className="fixed inset-0 z-[200] bg-background flex flex-col items-center justify-center">
             <div className="relative">
                 {/* Pulsing Background Glow */}
                 <div className="absolute inset-0 bg-[#0046FB] blur-[40px] rounded-full opacity-20 animate-pulse"></div>
 
                 {/* Brand Text */}
-                <div className="relative font-['Inter'] font-semibold text-3xl tracking-tighter text-white animate-bounce">
+                <div className="relative  font-semibold text-3xl tracking-tighter text-text animate-bounce">
                     N3xtbridge
                 </div>
             </div>
 
             {/* Subtle Loading Line */}
-            <div className="mt-8 w-48 h-[1px] bg-[#1A1A1A] overflow-hidden">
+            <div className="mt-8 w-48 h-[1px] bg-[#22D3EE] overflow-hidden">
                 <div className="h-full bg-[#0046FB] w-1/3 animate-[loading_1.5s_infinite_ease-in-out]"></div>
             </div>
 
@@ -51,10 +51,10 @@ export const ServicesSection = ({ services }: { services: Service[] }) => {
     const [qrservice, setQrService] = useState<Service | null>(null);
 
     return (
-        <section id="services" className="px-6 md:px-20 py-24 bg-white">
+        <section id="services" className="px-6 md:px-20 py-24 bg-background text-text ">
 
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+            <div className=" flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
 
                 <div>
                     <span className="text-primary font-semibold tracking-[0.25em] text-xs uppercase mb-4 block">
@@ -87,7 +87,7 @@ export const ServicesSection = ({ services }: { services: Service[] }) => {
                         {/* IMAGE */}
                         <div className="relative min-h-[320px] lg:min-h-[420px] overflow-hidden order-first lg:order-none">
 
-                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 to-transparent z-10 lg:hidden" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 lg:hidden" />
 
                             <img
                                 src={service.image}

@@ -1,7 +1,8 @@
 import React from 'react';
-// import { Link } from 'react-router-dom'; 
-// import { HashLink } from 'react-router-hash-link';
+
 import { scrollToSection } from './resusable';
+import myLogo from '../assets/logo.png';
+
 
 
 const Footer: React.FC = () => {
@@ -9,24 +10,60 @@ const Footer: React.FC = () => {
 
     return (
         <div className="bg-background text-text overflow-x-hidden selection:bg-[#0046FB]/30">
-            <footer className="border-t border-[#22D3EE] px-6 md:px-20 py-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-6">
-                    <div className="flex items-center">
-                        <img
+            <footer className="border-t border-primary/20 py-8">
 
-                            src="https://cdn.n3xtbridge.com/frontenddata/N3xtbridge%20Logo%20PNG.png"
-                            alt="N3xtbridge Logo"
-                            className="h-7 w-auto object-contain opacity-90"
-                        />
-                    </div>                    <div className="flex gap-7 flex-wrap">
-                        <button onClick={() => scrollToSection('services')} className="text-[13px]  hover:text-[#22D3EE] transition-colors">Services</button>
-                        <button onClick={() => scrollToSection('why')} className="text-[13px]  hover:text-[#22D3EE] transition-colors">About Us</button>
-                        <button onClick={() => scrollToSection('contact')} className="text-[13px]  hover:text-[#22D3EE] transition-colors">Contact Us</button>
+                <div className="max-w-7xl mx-auto px-5 md:px-10">
+
+                    <div className="flex items-start justify-between gap-6">
+
+                        {/* LOGO */}
+                        <div className="shrink-0">
+                            <img
+                                src={myLogo}
+                                alt="N3xtbridge Logo"
+                                className="h-[45px] md:h-[50px] w-auto object-contain"
+                            />
+                        </div>
+
+                        {/* LINKS */}
+                        <div className="flex flex-wrap justify-end gap-x-5 gap-y-2 text-sm max-w-[70%]">
+
+                            <button
+                                onClick={() => scrollToSection('services')}
+                                className="text-secondary/70 hover:text-primary transition-colors"
+                            >
+                                Services
+                            </button>
+
+                            <button
+                                onClick={() => scrollToSection('why')}
+                                className="text-secondary/70 hover:text-primary transition-colors"
+                            >
+                                About Us
+                            </button>
+
+                            <button
+                                onClick={() => scrollToSection('contact')}
+                                className="text-secondary/70 hover:text-primary transition-colors"
+                            >
+                                Contact Us
+                            </button>
+
+                        </div>
+
                     </div>
+
+                    {/* BOTTOM */}
+                    <div className="mt-6 pt-5 border-t border-primary/10">
+
+                        <div className="text-xs text-secondary/60">
+                            © {currentYear} N3xtbridge Holdings. All rights reserved.
+                        </div>
+
+                    </div>
+
                 </div>
-                <div className="border-t border-[#22D3EE] pt-5">
-                    <div className="text-[12px] t">© {currentYear} N3xtbridge Holdings. All rights reserved.</div>
-                </div>
+
             </footer>
         </div>
     );
