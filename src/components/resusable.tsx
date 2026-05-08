@@ -118,7 +118,7 @@ export const ServicesSection = ({ services }: { services: Service[] }) => {
                             </p>
 
                             {/* PRICE */}
-                            {service.min_price.trim() && (
+                            {service.min_price.trim() !== `''` && service.min_price.trim() !== `""` && service.min_price.trim() !== "" && (
                                 <div className="mb-8 flex items-center gap-2">
                                     <span className="text-[#94A3B8] text-sm uppercase tracking-wide">
                                         Starting at
