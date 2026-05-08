@@ -119,3 +119,13 @@ export interface Promotion {
     expires_at: string;
     created_at: string;
 }
+
+export interface ServiceCategory {
+    id: string;
+    slug: string;
+    name: string;
+    icon: string;
+    description: string;
+    service_count: number;
+
+}
