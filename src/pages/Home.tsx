@@ -1,12 +1,38 @@
 import React, { useEffect, useState } from 'react';
 // import { SITE_CONFIG } from '../constants/content';
 // import { Link, useNavigate } from 'react-router-dom';
-import type { Service } from '../models/model';
 import api from '../api/axios';
-import { BrandLoader, MENUSECTIONTOHASH, scrollToSection, ServicesSection } from '../components/resusable';
-import { useNavigate } from 'react-router-dom';
+import { BrandLoader, MENUSECTIONTOHASH, scrollToSection } from '../components/resusable';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+    Wifi,
+    Shield,
+    Camera,
+    Code2,
+    Globe,
+    Server,
+    MonitorSmartphone,
+    Network,
+    Lock,
+    Radio,
+    Briefcase
+} from 'lucide-react';
+import type { ServiceCategory } from '../models/model';
 
+const ICON_MAP: Record<string, React.ElementType> = {
+    Wifi,
+    Shield,
+    Camera,
+    Code2,
+    Globe,
+    Server,
+    MonitorSmartphone,
+    Network,
+    Lock,
+    Radio,
+    Briefcase,
+};
 
 
 const WhyCard: React.FC<{
@@ -119,7 +145,9 @@ const HeroCameraSvg = () => (
 const Home: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     // const [isScrolled, setIsScrolled] = useState(false);
-    const [services, setServices] = useState<Service[]>([]);
+    // const [services, setServices] = useState<Service[]>([]);
+    const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
+
     const [loading, setLoading] = useState(true);
     const { user, logout } = useAuth();
     const navigate = useNavigate()
@@ -130,10 +158,11 @@ const Home: React.FC = () => {
     useEffect(() => {
         const fetchServices = async () => {
             try {
-                const res = await api.get('/services?limit=5&offset=0');
-                setServices(res.data.services || []);
+                // TODO fetch all categories here instead
+                const res = await api.get('/categories/services');
+                setServiceCategories(res.data.service_categories || []);
             } catch (err) {
-                console.error('Failed to fetch landing services', err);
+                console.error('Failed to fetch landing categories', err);
             } finally {
                 setLoading(false);
             }
@@ -191,7 +220,7 @@ const Home: React.FC = () => {
                     <h1 className=" font-medium text-[52px] md:text-[72px] leading-[1.15] mb-6 text-primary">
                         Innovative Tech Solutions for Your Business
                     </h1>
-                    <p className=" text-[15px] md:text-[1.4vw] lg:text-[18px] text-[#1f2937] leading-relaxed max-w-[520px] mb-10 font-medium">
+                    <p className=" text-[15px] md:text-[1.4vw] lg:text-[18px] text-[#1f2937] leading-relaxed max-w-[520px] mb-10 ">
                         From state-of-the-art security systems to cutting-edge web development, we empower your digital transformation with high-precision architectural solutions.
                     </p>
                     {/* <button onClick={() => scrollToSection('contact', setIsMenuOpen)} className="inline-flex items-center gap-2.5 bg-[#0046FB] text-white font-['Manrope'] font-semibold px-7 py-5 hover:opacity-85 transition-opacity">
@@ -203,6 +232,9 @@ const Home: React.FC = () => {
                         <div className="hidden sm:block h-[3px] bg-[#202020] w-[120px] rounded-sm"></div>
                         <div className="border border-[#767676] rounded-full px-5 py-2 font-['Manrope'] text-2xl font-medium min-w-[56px] text-center">2</div>
                     </div> */}
+                    <button onClick={() => scrollToSection('contact', setIsMenuOpen)} className=" items-center  bg-primary text-white  px-7 py-5 hover:opacity-85 rounded-full">
+                        Get a Free Consultation
+                    </button>
                 </div>
 
                 <div className="hidden lg:flex relative z-[2] justify-center items-center">
@@ -238,10 +270,76 @@ const Home: React.FC = () => {
 
 
 
-            <ServicesSection services={services} />
+            {/* <ServicesSection services={services} /> */}
+            <section id="services" className="px-6 md:px-20 py-24">
+
+                {/* HEADER */}
+                <div className="mb-16">
+                    {/* <span className="text-primary font-semibold tracking-[0.25em] text-xs uppercase mb-4 block">
+                        Categories
+                    </span> */}
+
+                    <h2 className="font-medium text-[36px] md:text-[5vw] lg:text-[52px] leading-[1.1] text-secondary">
+                        Explore Our <span className="text-primary">Solutions</span>
+                    </h2>
+                </div>
+
+                {/* CATEGORY GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                    {serviceCategories.map((category) => {
+
+                        const Icon =
+                            ICON_MAP[category.icon] || Briefcase;
+
+                        return (
+                            <Link
+                                key={category.id}
+                                to={`/services?category=${category.slug}`}
+                                className="group bg-white border border-slate-200 rounded-3xl p-8 hover:border-primary/20 hover:shadow-xl transition-all duration-300"
+                            >
+
+                                {/* TOP */}
+                                <div className="flex items-start justify-between mb-8">
+
+                                    <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                                        <Icon className="w-7 h-7" />
+                                    </div>
+
+                                    <div className="text-primary group-hover:translate-x-1 transition-transform">
+                                        ↗
+                                    </div>
+                                </div>
+
+                                {/* TITLE */}
+                                <h3 className="text-2xl font-semibold text-secondary mb-3">
+                                    {category.name}
+                                </h3>
+
+                                {/* DESC */}
+                                <p className="text-[#64748B] leading-relaxed mb-6">
+                                    {category.description}
+                                </p>
+
+                                {/* FOOTER */}
+                                <div className="flex items-center justify-between">
+
+                                    <span className="text-sm text-primary font-medium">
+                                        {category.service_count} services
+                                    </span>
+
+                                    <span className="text-sm text-secondary/60 group-hover:text-primary transition-colors">
+                                        Explore category
+                                    </span>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </section>
 
             {/* CTA SECTION */}
-            <section className="px-6 md:px-20 py-30 text-center relative overflow-hidden">
+            {/* <section className="px-6 md:px-20 py-30 text-center relative overflow-hidden">
                 <div className="absolute w-[300px] h-[140px] bg-[#0046FB] blur-[200px] rounded-full opacity-30 top-1/2 -right-[5%] pointer-events-none"></div>
                 <div className="absolute w-[300px] h-[140px] bg-[#0046FB] blur-[200px] rounded-full opacity-30 bottom-1/4 -left-[5%] pointer-events-none"></div>
                 <h2 className=" font-medium text-[28px] md:text-[4vw] lg:text-[64px] max-w-[700px] mx-auto mb-10 leading-tight relative z-[2] text-primary">
@@ -250,7 +348,7 @@ const Home: React.FC = () => {
                 <button onClick={() => scrollToSection('contact', setIsMenuOpen)} className="relative z-[2] inline-flex items-center gap-2.5 bg-primary text-white font-semibold px-7 py-5 hover:opacity-85 rounded-full">
                     Get a Free Consultation
                 </button>
-            </section>
+            </section> */}
 
             {/* CONTACT */}
             <section id="contact" className="px-6 md:px-20 py-20 ">
