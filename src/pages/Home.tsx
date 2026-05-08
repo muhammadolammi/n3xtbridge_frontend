@@ -2,37 +2,14 @@ import React, { useEffect, useState } from 'react';
 // import { SITE_CONFIG } from '../constants/content';
 // import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { BrandLoader, MENUSECTIONTOHASH, scrollToSection } from '../components/resusable';
-import { Link, useNavigate } from 'react-router-dom';
+import { BrandLoader, ICON_MAP, MENUSECTIONTOHASH, scrollToSection } from '../components/resusable';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-    Wifi,
-    Shield,
-    Camera,
-    Code2,
-    Globe,
-    Server,
-    MonitorSmartphone,
-    Network,
-    Lock,
-    Radio,
-    Briefcase
-} from 'lucide-react';
-import type { ServiceCategory } from '../models/model';
 
-const ICON_MAP: Record<string, React.ElementType> = {
-    Wifi,
-    Shield,
-    Camera,
-    Code2,
-    Globe,
-    Server,
-    MonitorSmartphone,
-    Network,
-    Lock,
-    Radio,
-    Briefcase,
-};
+import type { ServiceCategory } from '../models/model';
+import { Briefcase } from 'lucide-react';
+
+
 
 
 const WhyCard: React.FC<{
@@ -293,14 +270,20 @@ const Home: React.FC = () => {
                             ICON_MAP[category.icon] || Briefcase;
 
                         return (
-                            <Link
+                            <div
                                 key={category.id}
-                                to={`/services?category=${category.slug}`}
+                                onClick={
+                                    () => navigate(`/services?category=${category.slug}`, {
+                                        state: { category_id: category.id }
+                                    })
+                                }
+
+
                                 className="group bg-white border border-slate-200 rounded-3xl p-8 hover:border-primary/20 hover:shadow-xl transition-all duration-300"
                             >
 
                                 {/* TOP */}
-                                <div className="flex items-start justify-between mb-8">
+                                < div className="flex items-start justify-between mb-8" >
 
                                     <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                                         <Icon className="w-7 h-7" />
@@ -332,11 +315,11 @@ const Home: React.FC = () => {
                                         Explore category
                                     </span>
                                 </div>
-                            </Link>
+                            </div>
                         );
                     })}
-                </div>
-            </section>
+                </div >
+            </section >
 
             {/* CTA SECTION */}
             {/* <section className="px-6 md:px-20 py-30 text-center relative overflow-hidden">
@@ -384,7 +367,7 @@ const Home: React.FC = () => {
             </section>
 
 
-        </div>
+        </div >
     );
 };
 

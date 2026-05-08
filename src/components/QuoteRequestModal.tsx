@@ -248,18 +248,18 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
     };
 
     return (
-        <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md sm:p-4">
-            <div className="bg-[#0C0C0C] w-full max-w-2xl h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col rounded-t-[2rem] sm:rounded-[2rem] border-t sm:border border-[#1A1A1A] overflow-hidden">
+        <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-background/80 backdrop-blur-md sm:p-4">
+            <div className="bg-background w-full max-w-2xl h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col rounded-t-[2rem] sm:rounded-[2rem] border-t sm:border border-[#22D3EE] overflow-hidden">
 
                 {/* FIXED HEADER */}
-                <div className="shrink-0 p-6 sm:p-8 border-b border-[#1A1A1A] flex justify-between items-center bg-[#0C0C0C]">
+                <div className="shrink-0 p-6 sm:p-8 border-b border-[#22D3EE] flex justify-between items-center ">
                     <div>
-                        <h3 className="text-white font-bold text-lg leading-tight">Request a Quote</h3>
-                        <p className="text-gray-400 text-sm">{serviceName}</p>
+                        <h3 className="text-primary font-bold text-lg leading-tight">Request a Quote</h3>
+                        <p className="text-text text-sm">{serviceName}</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1A1A1A] text-white hover:bg-[#252525] transition-colors"
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary text-white hover:bg-[#22D3EE] transition-colors"
                     >
                         ✕
                     </button>
@@ -277,16 +277,16 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                     {step === 'identity' && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Work Email</label>
+                                <label className="text-xs font-semibold text-secondary uppercase tracking-wider ml-1">Work Email</label>
                                 <input
                                     type="email"
                                     placeholder="your@email.com"
-                                    className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none transition-all"
+                                    className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#22D3EE] outline-none transition-all"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
                             </div>
-                            <button onClick={checkIdentity} className="w-full bg-[#0046FB] hover:bg-[#003ccf] p-4 rounded-2xl text-white font-bold transition-all flex justify-center">
+                            <button onClick={checkIdentity} className="w-full bg-primary hover:bg-[#22D3EE] p-4 rounded-2xl text-white font-bold transition-all flex justify-center">
                                 {loading ? <span className="animate-pulse">Checking...</span> : "Continue"}
                             </button>
                         </div>
@@ -295,19 +295,19 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                     {step === 'login' && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                             <div className="relative space-y-2">
-                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Password</label>
+                                <label className="text-xs font-semibold text-primary uppercase tracking-wider ml-1">Password</label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Enter your password"
-                                        className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none transition-all"
+                                        className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#22D3EE] outline-none transition-all"
                                         value={formData.password}
                                         onChange={e => setFormData({ ...formData, password: e.target.value })}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#22D3EE]"
                                     >
                                         <span className="material-symbols-outlined">
                                             {showPassword ? 'visibility_off' : 'visibility'}
@@ -315,7 +315,7 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                     </button>
                                 </div>
                             </div>
-                            <button onClick={handleLogin} className="w-full bg-[#0046FB] hover:bg-[#003ccf] p-4 rounded-2xl text-white font-bold">
+                            <button onClick={handleLogin} className="w-full bg-primary hover:bg-[#22D3EE] p-4 rounded-2xl text-white font-bold">
                                 {loading ? "Verifying..." : "Sign In & Continue"}
                             </button>
                         </div>
@@ -325,12 +325,12 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <input placeholder="First Name" className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none"
+                                    <input placeholder="First Name" className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#0046FB] outline-none"
                                         onChange={e => setFormData({ ...formData, first_name: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <input placeholder="Last Name" className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none"
+                                    <input placeholder="Last Name" className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#0046FB] outline-none"
                                         onChange={e => setFormData({ ...formData, last_name: e.target.value })}
                                     />
                                 </div>
@@ -340,30 +340,30 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                 <input
                                     type="password"
                                     placeholder="Create Password"
-                                    className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none"
+                                    className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#0046FB] outline-none"
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                 />
                             </div>
 
-                            <div className="p-4 bg-[#111111] rounded-2xl space-y-2 border border-[#1A1A1A]">
-                                <p className="text-[10px] font-bold text-gray-500 uppercase mb-2">Security Requirements</p>
+                            <div className="p-4  rounded-2xl space-y-2 border border-[#22D3EE]">
+                                <p className="text-[10px] font-bold text-primary uppercase mb-2">Security Requirements</p>
                                 <div className="grid grid-cols-2 gap-2 text-[11px]">
-                                    <div className={`flex items-center gap-2 ${passwordRequirements.length ? "text-green-400" : "text-gray-500"}`}>
+                                    <div className={`flex items-center gap-2 ${passwordRequirements.length ? "text-green-400" : "text-text"}`}>
                                         <span className="material-symbols-outlined text-xs">{passwordRequirements.length ? 'check_circle' : 'circle'}</span> 10+ Characters
                                     </div>
-                                    <div className={`flex items-center gap-2 ${passwordRequirements.hasUpper ? "text-green-400" : "text-gray-500"}`}>
+                                    <div className={`flex items-center gap-2 ${passwordRequirements.hasUpper ? "text-green-400" : "text-text"}`}>
                                         <span className="material-symbols-outlined text-xs">{passwordRequirements.hasUpper ? 'check_circle' : 'circle'}</span> Uppercase
                                     </div>
-                                    <div className={`flex items-center gap-2 ${passwordRequirements.hasLower ? "text-green-400" : "text-gray-500"}`}>
+                                    <div className={`flex items-center gap-2 ${passwordRequirements.hasLower ? "text-green-400" : "text-text"}`}>
                                         <span className="material-symbols-outlined text-xs">{passwordRequirements.hasLower ? 'check_circle' : 'circle'}</span> Lowercase
                                     </div>
-                                    <div className={`flex items-center gap-2 ${passwordRequirements.hasSymbol ? "text-green-400" : "text-gray-500"}`}>
+                                    <div className={`flex items-center gap-2 ${passwordRequirements.hasSymbol ? "text-green-400" : "text-text"}`}>
                                         <span className="material-symbols-outlined text-xs">{passwordRequirements.hasSymbol ? 'check_circle' : 'circle'}</span> Symbol
                                     </div>
                                 </div>
                             </div>
 
-                            <select className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none appearance-none"
+                            <select className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#0046FB] outline-none appearance-none"
                                 onChange={e => setFormData({ ...formData, state: e.target.value })}
                             >
                                 <option value="">Select State</option>
@@ -373,7 +373,7 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                             <button
                                 disabled={!isPasswordValid}
                                 onClick={() => setStep('details')}
-                                className="w-full bg-[#0046FB] p-4 rounded-2xl text-white font-bold disabled:opacity-50 transition-all"
+                                className="w-full bg-primary p-4 rounded-2xl text-white font-bold  transition-all"
                             >
                                 Continue
                             </button>
@@ -383,10 +383,10 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                     {step === 'details' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Project Description</label>
+                                <label className="text-xs font-semibold text-primary uppercase tracking-wider ml-1">Project Description</label>
                                 <textarea
                                     placeholder="Tell us what you need. Be as detailed as possible..."
-                                    className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white focus:border-[#0046FB] outline-none min-h-[120px] resize-none"
+                                    className="w-full p-4  border border-[#22D3EE] rounded-2xl text-text focus:border-[#0046FB] outline-none min-h-[120px] resize-none"
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
                                 />
@@ -394,10 +394,10 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
 
                             {/* AUDIO SECTION */}
                             <div className="space-y-3">
-                                <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Voice Brief</p>
+                                <p className="text-[10px] font-black uppercase text-primary tracking-widest ml-1">Voice Brief</p>
                                 {!isRecording && !audioBlob && (
-                                    <button onClick={startRecording} className="w-full p-4 bg-[#141414] border border-[#1A1A1A] rounded-2xl text-white flex items-center justify-center gap-2 hover:bg-[#1A1A1A] transition-colors">
-                                        <span className="material-symbols-outlined text-primary">mic</span> Add a voice note
+                                    <button onClick={startRecording} className="w-full p-4 bg-primary border border-[#22D3EE] rounded-2xl text-white flex items-center justify-center gap-2 hover:bg-[#22D3EE] transition-colors">
+                                        <span className="material-symbols-outlined text-text">mic</span> Add a voice note
                                     </button>
                                 )}
 
@@ -408,7 +408,7 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                             <span className="text-red-400 font-mono">{formatTime(recordingTime)}</span>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={isPaused ? resumeRecording : pauseRecording} className="p-2 bg-[#1A1A1A] rounded-full text-white">
+                                            <button onClick={isPaused ? resumeRecording : pauseRecording} className="p-2 bg-[#22D3EE] rounded-full text-white">
                                                 <span className="material-symbols-outlined text-sm">{isPaused ? 'play_arrow' : 'pause'}</span>
                                             </button>
                                             <button onClick={stopRecording} className="p-2 bg-red-500 rounded-full text-white">
@@ -419,9 +419,9 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                 )}
 
                                 {audioBlob && (
-                                    <div className="space-y-3 bg-[#111111] p-4 rounded-2xl border border-[#1A1A1A]">
+                                    <div className="space-y-3  p-4 rounded-2xl border border-[#22D3EE]">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-xs text-green-400 flex items-center gap-1">
+                                            <span className="text-xs text-[#22D3EE] flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-sm">check_circle</span> Recorded
                                             </span>
                                             <button onClick={() => setAudioBlob(null)} className="text-red-400 text-xs font-bold">Delete</button>
@@ -434,17 +434,17 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                             {/* MEDIA SECTION */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-3">
-                                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Images ({images.length}/5)</p>
+                                    <p className="text-[10px] font-black uppercase text-primary tracking-widest ml-1">Images ({images.length}/5)</p>
                                     <div className="grid grid-cols-3 gap-2">
                                         {images.map((img, i) => (
-                                            <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-[#1A1A1A]">
+                                            <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-[#22D3EE]">
                                                 <img src={URL.createObjectURL(img)} className="w-full h-full object-cover" alt="" />
                                                 <button onClick={() => setImages(images.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-black/60 rounded-full p-1"><span className="material-symbols-outlined text-[12px] text-white">close</span></button>
                                             </div>
                                         ))}
                                         {images.length < 5 && (
-                                            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-[#1A1A1A] rounded-xl cursor-pointer hover:bg-[#141414] transition-colors">
-                                                <span className="material-symbols-outlined text-gray-500">add_a_photo</span>
+                                            <label className="aspect-square  flex flex-col items-center justify-center border-2 border-dashed border-[#22D3EE] rounded-xl cursor-pointer hover:bg-[#22D3EE] transition-colors">
+                                                <span className="material-symbols-outlined text-primary">add_a_photo</span>
                                                 <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
                                                     const files = Array.from(e.target.files || []);
                                                     try { validateFiles(files); setImages(prev => [...prev, ...files].slice(0, 5)); } catch (err: any) { alert(err.message); }
@@ -455,11 +455,11 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                 </div>
 
                                 <div className="space-y-3">
-                                    <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Video (Max 1)</p>
+                                    <p className="text-[10px] font-black uppercase text-primary tracking-widest ml-1">Video (Max 1)</p>
                                     {!video ? (
-                                        <label className="flex h-[80px] items-center justify-center border-2 border-dashed border-[#1A1A1A] rounded-xl cursor-pointer hover:bg-[#141414] transition-colors">
-                                            <span className="material-symbols-outlined text-gray-500 mr-2">videocam</span>
-                                            <span className="text-xs text-gray-400">Upload video</span>
+                                        <label className="flex h-[80px] items-center justify-center border-2 border-dashed border-[#22D3EE] rounded-xl cursor-pointer hover:bg-[#22D3EE] transition-colors">
+                                            <span className="material-symbols-outlined text-primary mr-2">videocam</span>
+                                            <span className="text-xs text-primary">Upload video</span>
                                             <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
                                                 const file = e.target.files?.[0] || null;
                                                 if (!file) return;
@@ -467,10 +467,10 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
                                             }} />
                                         </label>
                                     ) : (
-                                        <div className="flex items-center justify-between bg-[#111111] border border-[#1A1A1A] rounded-xl p-4 h-[80px]">
+                                        <div className="flex items-center justify-between  border border-[#22D3EE] rounded-xl p-4 h-[80px]">
                                             <div className="flex items-center gap-3 overflow-hidden">
-                                                <span className="material-symbols-outlined text-[#0046FB]">movie</span>
-                                                <p className="text-xs text-white truncate">{video.name}</p>
+                                                <span className="material-symbols-outlined text-text">movie</span>
+                                                <p className="text-xs text-text truncate">{video.name}</p>
                                             </div>
                                             <button onClick={() => setVideo(null)} className="text-red-500"><span className="material-symbols-outlined">delete</span></button>
                                         </div>
@@ -482,19 +482,19 @@ export const QuoteRequestModal: React.FC<ModalProps> = ({ serviceId, serviceName
 
                     {step === 'uploading' && (
                         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                            <div className="w-12 h-12 border-4 border-[#0046FB] border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-gray-400 animate-pulse">Processing your request...</p>
+                            <div className="w-12 h-12 border-4 border-[#22D3EE] border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-primary animate-pulse">Processing your request...</p>
                         </div>
                     )}
                 </div>
 
                 {/* FIXED FOOTER (Desktop & Mobile) */}
                 {step === 'details' && (
-                    <div className="shrink-0 p-6 sm:p-8 border-t border-[#1A1A1A] bg-[#0C0C0C]">
+                    <div className="shrink-0 p-6 sm:p-8 border-t border-[#22D3EE] ">
                         <button
                             onClick={handleSubmit}
                             disabled={!description}
-                            className="w-full bg-[#0046FB] hover:bg-[#003ccf] p-4 rounded-2xl text-white font-bold transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                            className="w-full bg-primary hover:bg-[#22D3EE] p-4 rounded-2xl text-white font-bold transition-all shadow-lg shadow-blue-900/20 "
                         >
                             Submit Quote Request
                         </button>
