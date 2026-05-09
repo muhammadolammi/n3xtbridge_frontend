@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
 import type { Service, ServiceCategory } from '../models/model';
 import { QuoteRequestModal } from '../components/QuoteRequestModal';
-import { ICON_MAP } from '../components/resusable';
+import { BrandLoader, ICON_MAP } from '../components/resusable';
 import { Briefcase } from 'lucide-react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
@@ -77,19 +77,7 @@ const Services: React.FC = () => {
     };
 
     if (loading && offset === 0) {
-        return (
-            <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-[#0046FB] blur-[40px] rounded-full opacity-20 animate-pulse"></div>
-                    <div className="relative font-['Inter'] font-semibold text-3xl tracking-tighter text-white animate-bounce">
-                        N3xtbridge
-                    </div>
-                </div>
-                <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.3em] text-[#838383]">
-                    Fetching...
-                </p>
-            </div>
-        );
+        return <BrandLoader />;
     }
 
     return (
