@@ -282,7 +282,7 @@ export const SignUp: React.FC = () => {
 
                                 {/* Button Text */}
                                 <span className="flex-grow overflow-hidden text-ellipsis whitespace-nowrap font-medium group-disabled:opacity-40">
-                                    Join  with Email
+                                    Join  with Email & Password
 
                                 </span>
                             </div>
