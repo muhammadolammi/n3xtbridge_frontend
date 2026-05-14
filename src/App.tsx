@@ -20,6 +20,7 @@ import ServiceDetail from './pages/Service';
 import PublicInvoiceViewer from './pages/PublicInvoiceViewer';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { AuthCallback } from './pages/AuthCallback';
 
 const App: React.FC = () => {
   return (
@@ -33,6 +34,7 @@ const App: React.FC = () => {
 
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password/:token" element={<ResetPassword />} />
+            <Route path="auth/callback" element={<AuthCallback />} />
 
 
             <Route path="promotions/:promo_code" element={<PromotionalPage />} />

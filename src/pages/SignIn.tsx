@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GoogleButton, handleGoogleLogin } from '../components/resusable';
 
 export const SignIn = () => {
     const navigate = useNavigate();
@@ -250,6 +251,9 @@ export const SignIn = () => {
                                 )}
                             </button>
                         </form>
+                        <div className='flex items-center justify-center pt-5'>
+                            <GoogleButton onClick={handleGoogleLogin} text={'Sign In with Google'} />
+                        </div>
 
                         {/* Divider */}
                         <div className="relative my-10">
@@ -260,8 +264,10 @@ export const SignIn = () => {
 
                         </div>
 
+
                         {/* Footer */}
                         <div className="text-center">
+
                             <p className="text-text text-sm">
                                 New user?
                                 <Link

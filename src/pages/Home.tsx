@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 // import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { BrandLoader, ICON_MAP, MENUSECTIONTOHASH, scrollToSection } from '../components/resusable';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 import type { ServiceCategory } from '../models/model';
@@ -155,7 +155,7 @@ const Home: React.FC = () => {
 
     // console.log(services)-
     return (
-        <div className="bg-background text-text font-['Inter'] overflow-x-hidden selection:bg-[#0046FB]/30">
+        <div className="bg-background  md:pl-25 text-text font-['Inter'] overflow-x-hidden selection:bg-[#0046FB]/30">
 
 
             {/* MOBILE MENU */}
@@ -193,25 +193,17 @@ const Home: React.FC = () => {
                 <div className="absolute w-[300px] h-[140px] bg-[#0046FB] blur-[180px] rounded-full opacity-35 top-[55%] -left-[8%] pointer-events-none"></div>
                 <div className="absolute w-[300px] h-[140px] bg-[#0046FB] blur-[180px] rounded-full opacity-25 top-[30%] right-[5%] pointer-events-none"></div>
 
-                <div className="relative z-[2] flex flex-col items-center lg:items-start text-center lg:text-left">
+                <div className=" md:pl-25 relative z-[2] flex flex-col items-center lg:items-start text-center lg:text-left">
                     <h1 className=" font-medium text-[52px] md:text-[72px] leading-[1.15] mb-6 text-primary">
                         Innovative Tech Solutions for Your Business
                     </h1>
                     <p className=" text-[15px] md:text-[1.4vw] lg:text-[18px] text-[#1f2937] leading-relaxed max-w-[520px] mb-10 ">
                         From state-of-the-art security systems to cutting-edge web development, we empower your digital transformation with high-precision architectural solutions.
                     </p>
-                    {/* <button onClick={() => scrollToSection('contact', setIsMenuOpen)} className="inline-flex items-center gap-2.5 bg-[#0046FB] text-white font-['Manrope'] font-semibold px-7 py-5 hover:opacity-85 transition-opacity">
-                        Get a Free Consultation
-                    </button>
 
-                    <div className="flex items-center gap-5 mt-12">
-                        <div className="border border-[#767676] rounded-full px-5 py-2 font-['Manrope'] text-2xl font-medium min-w-[56px] text-center">1</div>
-                        <div className="hidden sm:block h-[3px] bg-[#202020] w-[120px] rounded-sm"></div>
-                        <div className="border border-[#767676] rounded-full px-5 py-2 font-['Manrope'] text-2xl font-medium min-w-[56px] text-center">2</div>
-                    </div> */}
-                    <button onClick={() => scrollToSection('contact', setIsMenuOpen)} className=" items-center  bg-primary text-white  px-7 py-5 hover:opacity-85 rounded-full">
-                        Get a Free Consultation
-                    </button>
+                    <Link to="/signup" className=" items-center  bg-primary text-white  px-7 py-5 hover:opacity-85 rounded-full">
+                        Get Started
+                    </Link>
                 </div>
 
                 <div className="hidden lg:flex relative z-[2] justify-center items-center">
@@ -224,7 +216,7 @@ const Home: React.FC = () => {
 
 
             {/* WHY CHOOSE */}
-            <section id="why" className="px-6 md:px-20 py-24 text-center">
+            <section id="why" className=" text-center">
                 <h2 className=" font-bold text-[28px] md:text-[3.5vw] lg:text-[56px] mb-12 leading-tight text-primary " >Why Choose N3xtbridge Holdings</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[1100px] mx-auto">
                     <WhyCard
@@ -248,7 +240,7 @@ const Home: React.FC = () => {
 
 
             {/* <ServicesSection services={services} /> */}
-            <section id="services" className="px-6 md:px-20 py-24">
+            <section id="services" className="px-6 md:px-20 py-24 ">
 
                 {/* HEADER */}
                 <div className="mb-16">

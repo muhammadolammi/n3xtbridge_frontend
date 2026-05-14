@@ -9,6 +9,7 @@ interface AuthContextType {
     user: User | null;
     accessToken: string | null;
     login: (email: string, password: string) => Promise<boolean>;
+    googleLoginSuccess: (token: string) => Promise<void>; // <--- Add this
     logout: () => Promise<void>;
     loading: boolean;
 }
@@ -20,19 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [bootLoading, setBootLoading] = useState(true); // initial auth check
     const [authLoading, setAuthLoading] = useState(false); // login/logout actions
-    // Helper: Fetches user profile using the current session/token
-    // const fetchUserProfile = async () => {
-    //     try {
-    //         const res = await api.get('/auth/user');
-    //         if (res.status === 200) {
-    //             setUser(res.data);
 
-    //         }
-    //     } catch (err) {
-    //         console.error("Could not fetch user profile", err);
-    //         setUser(null);
-    //     }
-    // };
 
     // 1. INITIAL REHYDRATION (Silent Login)
     useEffect(() => {
@@ -105,9 +94,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(null);
         }
     };
+    const googleLoginSuccess = async (token: string) => {
+        setAuthLoading(true);
+        try {
+            setAccessToken(token);
+            // Fetch user details immediately using the redirected token
+            const userRes = await api.get('/auth/user', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (userRes.status === 200) {
+                setUser(userRes.data);
+            }
+        } catch (err) {
+            console.error("Failed to sync Google user", err);
+        } finally {
+            setAuthLoading(false);
+        }
+    };
 
     return (
-        <AuthContext.Provider value={{ user, accessToken, login, logout, loading: authLoading }}>
+        <AuthContext.Provider value={{ user, accessToken, login, logout, loading: authLoading, googleLoginSuccess }}>
             {!bootLoading && children}
         </AuthContext.Provider>
     );
