@@ -107,7 +107,6 @@ const AdminDashboard = ({ user }: { user: User }) => {
     useEffect(() => {
         fetchData();
     }, [currentTab, offset]);
-
     // HANDLERS
     const handleTogglePromoStatus = async (id: string, current: boolean) => {
         try {
@@ -221,24 +220,50 @@ const AdminDashboard = ({ user }: { user: User }) => {
 
             {/* Sub-Navigation & Filters */}
             <div className="space-y-6">
-                <div className="flex flex-col xl:flex-row justify-between items-center gap-6 border-b border-[#1A1A1A] px-4 sm:px-0">
-                    {/* Tabs */}
-                    <div className="flex gap-8 overflow-x-auto w-full scrollbar-hide">
-                        {['invoices', 'services', 'quote-requests', 'quotes', 'promotions'].map((tab) => (
+
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-primary px-4 sm:px-0 pb-4 md:pb-0">
+
+                    {/* MOBILE: Dropdown (Visible only on small screens) */}
+                    <div className="md:hidden w-full relative">
+                        <div>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-primary">
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                        <select
+                            value={currentTab}
+                            onChange={(e) => { setCurrentTab(e.target.value as any); setOffset(0); }}
+                            className="appearance-none w-full  border border-primary text-[#22D3EE] rounded-xl px-4 py-3 font-black uppercase tracking-widest text-[11px] focus:outline-none"
+                        >
+
+                            {['invoices', 'services', 'quote-requests', 'quotes', 'promotions'].map((tab) => (
+                                <option key={tab} value={tab} className="bg-neutral-900 text-white">
+                                    {tab.replace('-', ' ')}
+                                </option>
+                            ))}
+                        </select>
+
+                    </div>
+
+                    {/* DESKTOP: Tabs (Hidden on small screens) */}
+                    <div className="hidden md:flex gap-6 overflow-x-auto w-full scrollbar-hide pb-0">
+                        {(['invoices', 'services', 'quote-requests', 'quotes', 'promotions'] as const).map((tab) => (
                             <button
                                 key={tab}
-                                onClick={() => { setCurrentTab(tab as any); setOffset(0); }}
-                                className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap relative ${currentTab === tab ? 'text-[#0046FB]' : 'text-gray-500 hover:text-gray-300'}`}
+                                onClick={() => { setCurrentTab(tab); setOffset(0); }}
+                                className={`pb-4 text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap relative ${currentTab === tab ? 'text-[#22D3EE] ' : 'text-primary hover:text-[#22D3EE]'}`}
                             >
                                 {tab.replace('-', ' ')}
                                 {currentTab === tab && (
-                                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0046FB] rounded-full"></span>
+                                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#22D3EE] rounded-full animate-in fade-in zoom-in duration-300"></span>
                                 )}
                             </button>
                         ))}
                     </div>
 
-                    {/* Search & Pagination Strip */}
+                    {/* Pagination Controls */}
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto pb-6 xl:pb-4">
                         <div className="relative w-full sm:w-64 group">
                             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#22D3EE] transition-colors text-sm">search</span>
@@ -267,7 +292,6 @@ const AdminDashboard = ({ user }: { user: User }) => {
                         </div>
                     </div>
                 </div>
-
                 {/* Main Content Terminal */}
                 <div className=" md:min-h-[540px] min-h-[540px] overflow-hidden shadow-2xl mx-4 sm:mx-0">
                     {TabContent[currentTab]}

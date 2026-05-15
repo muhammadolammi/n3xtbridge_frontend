@@ -198,7 +198,6 @@ const ClientDashboard = ({ user }: { user: User }) => {
                 </div>
             </header>
 
-            {/* Stats Grid - Updated to Dark Design */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 px-4 sm:px-0">
 
 
@@ -226,7 +225,7 @@ const ClientDashboard = ({ user }: { user: User }) => {
                 </div>
             </div>
 
-            {/* Navigation & Controls Wrapper */}
+
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-primary px-4 sm:px-0 pb-4 md:pb-0">
 
