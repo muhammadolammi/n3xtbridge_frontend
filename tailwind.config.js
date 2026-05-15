@@ -9,7 +9,7 @@ export default {
                 'background': '#ffffff',
                 'primary': '#4b84af',
                 'secondary': '#0f2a43',
-                'caccent': '#22D3EE',
+                'accent': '#22D3EE',
             },
             fontFamily: {
                 headline: ["Inter", "sans-serif"],
