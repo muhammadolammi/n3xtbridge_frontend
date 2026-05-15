@@ -140,7 +140,11 @@ const Services: React.FC = () => {
                                         : "border-[#2F2F2F] text-[#838383] hover:border-primary"
                                         }`}
                                 >
-                                    <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                                    <div
+                                        className={`w-14 h-14 rounded-2xl bg-primary/10  flex items-center justify-center ${activeCategoryID === cat.id
+                                            ? " text-white "
+                                            : "text-primary"
+                                            }`}>
                                         <Icon className="w-7 h-7" />
                                     </div>
                                     <span className="truncate">{cat.name}</span>

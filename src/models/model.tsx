@@ -34,7 +34,9 @@ export interface Service {
     id: string;
     name: string;
     description: string;
+    category_id: string;
     category: string;
+
     icon: string;
     image: string;
     is_featured: boolean;

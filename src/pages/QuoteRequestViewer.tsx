@@ -3,8 +3,10 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Promotion, QuoteRequest } from '../models/model';
-import { ENV, QUOTE_REQUEST_STATUS_STYLES } from '../constants/const';
+import { ENV } from '../constants/const';
 import { fetchSignedUrl } from '../api/presign';
+import { STATUS_STYLES } from '../components/QuoteRequestTable';
+
 
 export default function QuoteRequestViewer() {
     const { id } = useParams<{ id: string }>();
@@ -167,7 +169,7 @@ export default function QuoteRequestViewer() {
                         </p>
                     </div>
 
-                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${QUOTE_REQUEST_STATUS_STYLES[qr.status]}`}>
+                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${STATUS_STYLES[qr.status]}`}>
                         {qr.status}
                     </span>
                 </div>
