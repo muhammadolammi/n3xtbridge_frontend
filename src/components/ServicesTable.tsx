@@ -19,19 +19,16 @@ const ServicesTable = ({ services, loading, onToggle }: { services: Service[], l
                 ) : services.length === 0 ? (
                     <tr><td colSpan={4} className="p-20 text-center text-text font-medium">No services found.</td></tr>
                 ) : services.map((s) => (
-                    <tr key={s.id} className="hover:bg-[#22D3EE]/5 transition-colors group relative">
+                    <tr key={s.id} className="hover:bg-[#22D3EE]/10 transition-colors group relative">
                         <td className="px-6 py-5">
                             <div className="flex items-center gap-4">
-                                {/* 
-                                   UPDATE: Swapped old blue [#0046FB] color accent 
-                                   for your designated cyan theme token [#22D3EE].
-                                */}
-                                <div className="w-10 h-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center group-hover:bg-[#22D3EE]/10 group-hover:border-[#22D3EE]/30 transition-all">
-                                    <span className="material-symbols-outlined text-primary/70 group-hover:text-[#22D3EE] transition-colors">
+
+                                <div className="w-10 h-10 rounded-xl bg-secondary border border-secondary flex items-center justify-center  transition-all">
+                                    <span className="material-symbols-outlined text-primary/70  transition-colors">
                                         {s.icon || 'inventory_2'}
                                     </span>
                                 </div>
-                                <span className="font-bold text-text text-sm tracking-tight transition-colors group-hover:text-white">
+                                <span className="font-bold text-text text-sm tracking-tight transition-colors ">
                                     {s.name}
                                 </span>
                             </div>

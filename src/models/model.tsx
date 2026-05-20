@@ -69,7 +69,8 @@ export interface QuoteRequest {
     created_at: string; // Dates come as ISO strings from the Go JSON encoder
     updated_at: string;
     user_email?: string;
-    user_name?: string;
+    user_first_name?: string;
+    user_last_name?: string;
     vn_key: string;
     video_key: string;
 
@@ -130,4 +131,22 @@ export interface ServiceCategory {
     description: string;
     service_count: number;
 
+}
+
+
+
+export interface AdminAnalytics {
+    totalRevenue: number;
+    pendingRequests: number;
+    activeQuotes: number;
+    totalServices: number;
+    activePromos: number;
+}
+export interface CustomerAnalytics {
+    unpaidBalance: number;
+    pendingRequests: number;
+    paidOffers: number;
+    activeOffers: number;
+    declinedOffers: number;
+    expiredOffers: number;
 }

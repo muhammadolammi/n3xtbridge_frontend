@@ -17,7 +17,7 @@ const InvoiceActionMenu = ({
     isadmin,
     openUpward = false
 }: {
-    inv: any,
+    inv: Invoice,
     navigate: any,
     onSendReminder: (id: string) => void,
     isadmin: boolean,
@@ -62,7 +62,7 @@ const InvoiceActionMenu = ({
         overflow-hidden
         rounded-2xl
         border border-accent/10
-        bg-[#22D3EE]/95
+        bg-secondary
         backdrop-blur-xl
         shadow-[0_20px_60px_rgba(0,0,0,0.45)]
         animate-in fade-in zoom-in-95 duration-200
@@ -84,14 +84,7 @@ const InvoiceActionMenu = ({
                                 });
                                 setIsOpen(false);
                             }}
-                            className="
-                                w-full
-                                flex items-center gap-3
-                                px-4 py-3
-                                text-left
-                                transition-all
-                                group
-                            "
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all group hover:bg-[#22D3EE]/95"
                         >
                             <span className="material-symbols-outlined text-[18px] text-accent">
                                 visibility
@@ -121,6 +114,7 @@ const InvoiceActionMenu = ({
                                     text-left
                                     transition-all
                                     group
+                                    hover:bg-[#22D3EE]/95
                                 "
                             >
                                 <span className="material-symbols-outlined text-[18px] text-text">
@@ -221,7 +215,7 @@ const InvoiceTable = ({ invoices, loading, navigate, isadmin }: { invoices: Invo
                             return (
                                 <tr key={inv.id}
                                     className="hover:bg-[#22D3EE]/10 transition-colors group relative">
-                                    <td className="px-6 py-5 font-mono text-xs text-text">
+                                    <td className="px-6 py-5  text-xs text-text">
                                         <div className="flex items-center gap-2">
                                             #{inv.invoice_number}
                                             {inv.deleted_at.Valid && (
@@ -229,7 +223,7 @@ const InvoiceTable = ({ invoices, loading, navigate, isadmin }: { invoices: Invo
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5 font-mono text-[10px] text-text tracking-tighter">
+                                    <td className="px-6 py-5  text-[10px] text-text tracking-tighter">
                                         {inv.quote_id?.startsWith("00000000") ? "---" : quoteRef}
                                     </td>
                                     <td className="px-6 py-5">
@@ -238,7 +232,7 @@ const InvoiceTable = ({ invoices, loading, navigate, isadmin }: { invoices: Invo
                                     </td>
                                     <td className="px-6 py-5">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[inv.status.toLowerCase()] || STATUS_STYLES.default}`}>
-                                            <span className="w-1 h-1 rounded-full bg-current shadow-[0_0_8px_currentColor]"></span>
+                                            <span className="w-1 h-1 rounded-full  shadow-[0_0_8px_currentColor]"></span>
                                             {inv.status}
                                         </span>
                                     </td>

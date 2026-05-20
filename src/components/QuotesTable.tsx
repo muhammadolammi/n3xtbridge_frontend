@@ -36,7 +36,7 @@ const QuotesTable = ({
         <div className="overflow-x-auto scrollbar-hide min-h-[450px]">
             <table className="w-full text-left min-w-[900px]">
                 <thead>
-                    <tr className="bg-[#0A0A0A] border-b border-[#1A1A1A]">
+                    <tr className="bg-gray-300 ">
                         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Quote ID</th>
                         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Service</th>
                         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Amount</th>
@@ -45,11 +45,11 @@ const QuotesTable = ({
                         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1A1A1A]">
+                <tbody className="divide-y divide-[#22D3EE]">
                     {loading ? (
-                        <tr><td colSpan={6} className="p-20 text-center text-gray-600 font-bold italic tracking-widest animate-pulse">Loading quotes...</td></tr>
+                        <tr><td colSpan={6} className="p-20 text-center text-text font-bold italic tracking-widest animate-pulse">Loading quotes...</td></tr>
                     ) : qs.length === 0 ? (
-                        <tr><td colSpan={6} className="p-20 text-center text-gray-500 font-medium">No quotes available.</td></tr>
+                        <tr><td colSpan={6} className="p-20 text-center text-text font-medium">No quotes available.</td></tr>
                     ) : qs.map((q) => {
                         const dateValue = (q as any).exire_at || q.expires_at;
                         const formattedDate = dateValue && !isNaN(Date.parse(dateValue))
@@ -57,14 +57,14 @@ const QuotesTable = ({
                             : "No expiry";
 
                         return (
-                            <tr key={q.id} className="hover:bg-[#111] transition-colors group">
-                                <td className="px-6 py-5 font-mono text-[11px] font-bold text-[#0046FB] uppercase tracking-wider">
+                            <tr key={q.id} className="hover:bg-[#22D3EE]/10 transition-colors group">
+                                <td className="px-6 py-5  text-xs text-text">
                                     Q-{q.id.slice(0, 8).toUpperCase()}
                                 </td>
                                 <td className="px-6 py-5">
-                                    <span className="text-sm font-bold text-white tracking-tight">{q.service_name}</span>
+                                    <span className="text-sm font-bold text-text tracking-tight">{q.service_name}</span>
                                 </td>
-                                <td className="px-6 py-5 font-black text-white text-sm">
+                                <td className="px-6 py-5 font-black text-text text-sm">
                                     ₦{parseFloat(q.amount || "0").toLocaleString()}
                                 </td>
                                 <td className="px-6 py-5">
