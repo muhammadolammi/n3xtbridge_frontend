@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { AdminAnalytics, Invoice, Promotion, Quote, QuoteRequest, Service, User } from "../models/model";
 import { useEffect, useState, useCallback } from "react";
 import api from "../api/axios";
@@ -17,10 +17,10 @@ const AdminDashboard = ({ user }: { user: User }) => {
     const navigate = useNavigate();
 
     // --- State Management ---
-    const [currentTab, setCurrentTab] = useState<TabType>('invoices');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentTab = (searchParams.get('tab') as TabType) || 'invoices';
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-
+    const searchQuery = searchParams.get('search') || '';
     // Modals
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
     const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
@@ -44,7 +44,7 @@ const AdminDashboard = ({ user }: { user: User }) => {
 
     // Server-side Pagination
     const LIMIT = 10;
-    const [offset, setOffset] = useState(0);
+    const offset = Number(searchParams.get('offset') || 0);
     const [total, setTotal] = useState(0);
 
     // --- 1. Fetch Global System Analytics (Once on Mount) ---
@@ -138,17 +138,34 @@ const AdminDashboard = ({ user }: { user: User }) => {
             console.error(err);
         }
     };
+    const updateOffset = (value: number) => {
+        const params = new URLSearchParams(searchParams);
+
+        params.set('offset', value.toString());
+
+        setSearchParams(params);
+    };
 
     const handleTabChange = (tab: TabType) => {
-        setCurrentTab(tab);
-        setSearchQuery('');
-        setOffset(0);
+        const params = new URLSearchParams(searchParams);
+
+        params.set('tab', tab);
+        params.set('offset', '0');
+        params.set('search', '');
+        setSearchParams(params);
+
+
+
         setTotal(0);
     };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
-        setOffset(0); // Jump back to first page when filtering results
+        const params = new URLSearchParams(searchParams);
+
+        params.set('search', e.target.value);
+        params.set('offset', '0');
+
+        setSearchParams(params);
     };
 
     // --- 4. Content Dynamic Mapping ---
@@ -268,14 +285,14 @@ const AdminDashboard = ({ user }: { user: User }) => {
                         <div className="flex gap-2">
                             <button
                                 disabled={offset === 0 || loading}
-                                onClick={() => setOffset(prev => prev - LIMIT)}
+                                onClick={() => updateOffset(offset - LIMIT)}
                                 className="p-3 rounded-xl bg-secondary text-white disabled:opacity-20 hover:bg-[#22D3EE] transition-all"
                             >
                                 <span className="material-symbols-outlined text-sm">chevron_left</span>
                             </button>
                             <button
                                 disabled={offset + LIMIT >= total || loading}
-                                onClick={() => setOffset(prev => prev + LIMIT)}
+                                onClick={() => updateOffset(offset + LIMIT)}
                                 className="p-3 border rounded-xl bg-secondary text-white disabled:opacity-20 hover:bg-[#22D3EE] transition-all"
                             >
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -285,7 +302,7 @@ const AdminDashboard = ({ user }: { user: User }) => {
                 </div>
 
                 {/* Main Content Terminal */}
-                <div className="md:min-h-[540px] min-h-[540px] overflow-hidden shadow-2xl mx-4 sm:mx-0">
+                <div className="md:min-h-[540px] min-h-[540px] shadow-2xl mx-4 sm:mx-0 relative">
                     {renderTabContent()}
                 </div>
             </div>

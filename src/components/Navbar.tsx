@@ -11,6 +11,7 @@ const Navbar: React.FC = () => {
     const location = useLocation();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const isDashboard = location.pathname.startsWith('/dashboard');
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -54,16 +55,17 @@ const Navbar: React.FC = () => {
                             <HashLink to="/#services" className={getLinkClass('/services')}>
                                 Services
                             </HashLink>
-
                             <HashLink to="/#why" className={getLinkClass('/#why')}>
                                 About
                             </HashLink>
+
 
                             {user && (
                                 <Link to="/dashboard" className={getLinkClass('/dashboard')}>
                                     Dashboard
                                 </Link>
                             )}
+
                         </div>
 
                     </div>

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { CustomerAnalytics, Invoice, Quote, QuoteRequest, User } from "../models/model";
 import { useEffect, useState, useCallback } from "react";
 import api from "../api/axios";
@@ -14,14 +14,25 @@ const ClientDashboard = ({ user }: { user: User }) => {
     const navigate = useNavigate();
 
     // --- State Management ---
-    const [currentTab, setCurrentTab] = useState<TabType>('billing');
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
 
+    const currentTab = (searchParams.get('tab') as TabType) || 'billing';
+    const [loading, setLoading] = useState(true);
+    const searchQuery = searchParams.get('search') || '';
     // Table Data
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
     const [quotes, setQuotes] = useState<Quote[]>([]);
+
+
+
+
+
+    // Server-side Pagination
+    const LIMIT = 10;
+    const offset = Number(searchParams.get('offset') || 0);
+    const [total, setTotal] = useState(0);
+
 
     // Analytics Counter Stats
     const [analytics, setAnalytics] = useState<CustomerAnalytics>({
@@ -32,11 +43,6 @@ const ClientDashboard = ({ user }: { user: User }) => {
         declinedOffers: 0,
         expiredOffers: 0
     });
-
-    // Server-side Pagination
-    const LIMIT = 10;
-    const [offset, setOffset] = useState(0);
-    const [total, setTotal] = useState(0);
 
     // Modal State
     const [editTarget, setEditTarget] = useState<{ id: string, desc: string } | null>(null);
@@ -105,20 +111,35 @@ const ClientDashboard = ({ user }: { user: User }) => {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+    const updateOffset = (value: number) => {
+        const params = new URLSearchParams(searchParams);
 
+        params.set('offset', value.toString());
+
+        setSearchParams(params);
+    };
     // Handle searching cleanly (resets page back to 0)
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
-        setOffset(0);
+        const params = new URLSearchParams(searchParams);
+
+        params.set('search', e.target.value);
+        params.set('offset', '0');
+
+        setSearchParams(params);
     };
 
-    // Handle tab switching cleanly
     const handleTabChange = (tab: TabType) => {
-        setCurrentTab(tab);
-        setSearchQuery('');
-        setOffset(0);
-    };
+        const params = new URLSearchParams(searchParams);
 
+        params.set('tab', tab);
+        params.set('offset', '0');
+        params.set('search', '');
+        setSearchParams(params);
+
+
+
+        setTotal(0);
+    };
     // --- 3. Dynamic Render Mapping ---
     const renderTabContent = () => {
         switch (currentTab) {
@@ -220,14 +241,14 @@ const ClientDashboard = ({ user }: { user: User }) => {
                         <div className="flex gap-2">
                             <button
                                 disabled={offset === 0 || loading}
-                                onClick={() => setOffset(prev => prev - LIMIT)}
+                                onClick={() => updateOffset(offset - LIMIT)}
                                 className="p-3 rounded-xl bg-secondary text-white disabled:opacity-20 hover:bg-[#22D3EE] transition-all"
                             >
                                 <span className="material-symbols-outlined text-sm">chevron_left</span>
                             </button>
                             <button
                                 disabled={offset + LIMIT >= total || loading}
-                                onClick={() => setOffset(prev => prev + LIMIT)}
+                                onClick={() => updateOffset(offset + LIMIT)}
                                 className="p-3 border rounded-xl bg-secondary text-white disabled:opacity-20 hover:bg-[#22D3EE] transition-all"
                             >
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -237,7 +258,7 @@ const ClientDashboard = ({ user }: { user: User }) => {
                 </div>
 
                 {/* Table Layout Render */}
-                <div className="md:min-h-[540px] min-h-[540px] overflow-hidden shadow-2xl mx-4 sm:mx-0">
+                <div className="md:min-h-[540px] min-h-[540px] shadow-2xl mx-4 sm:mx-0 relative">
                     {renderTabContent()}
                 </div>
             </div>

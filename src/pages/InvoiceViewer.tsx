@@ -4,6 +4,7 @@ import api from '../api/axios';
 import type { Invoice } from '../models/model';
 import { useAuth } from '../context/AuthContext';
 import { makePayment } from '../api/payment';
+import myLogo from '../assets/logo.png';
 
 const getStatusStyles = (status: string) => {
     const s = status?.toLowerCase();
@@ -77,7 +78,7 @@ export default function InvoiceViewer() {
     // 5. Show a clean loader while the Auth is initializing
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#000]">
+            <div className="min-h-screen flex items-center justify-center ">
                 <div className="flex flex-col items-center gap-2">
                     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Authenticating Terminal...</p>
@@ -86,14 +87,14 @@ export default function InvoiceViewer() {
         );
     }
     if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#000]">
+        <div className="flex flex-col items-center justify-center min-h-screen ">
             <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-xs font-bold tracking-widest text-gray-400 uppercase animate-pulse">Syncing Ledger...</p>
         </div>
     );
 
     if (error || !invoice) return (
-        <div className="min-h-screen flex items-center justify-center bg-[#000] px-6">
+        <div className="min-h-screen flex items-center justify-center  px-6">
             <div className="text-center p-12 bg-white border border-gray-200 rounded-xl shadow-sm max-w-md">
                 <span className="material-symbols-outlined text-red-500 text-5xl mb-4">cloud_off</span>
                 <h3 className="text-xl font-bold mb-2">Record Not Found</h3>
@@ -133,12 +134,12 @@ export default function InvoiceViewer() {
     };
 
     return (
-        <div className="flex-grow pt-24 pb-12 px-4 md:px-6 bg-[#0C0C0C] min-h-screen print:bg-white print:pt-0">
+        <div className="flex-grow pt-24 pb-12 px-4 md:px-6  min-h-screen print:bg-white print:pt-0">
             <div className="max-w-5xl mx-auto">
 
                 {/* ACTION BAR */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 print:hidden">
-                    <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-white">
+                    <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-[#22D3EE]">
                         ← Back
                     </button>
 
@@ -147,14 +148,14 @@ export default function InvoiceViewer() {
                             <button
                                 disabled={loading}
                                 onClick={() => handlePay(invoice.id)}
-                                className="bg-green-600 text-white px-5 py-2 rounded-lg text-xs font-bold"
+                                className="bg-primary hover:bg-[#22D3EE] text-white px-5 py-2 rounded-lg text-xs font-bold"
                             >
                                 {loading ? "Redirecting..." : "Pay Now"}
                             </button>
                         )}
                         <button
                             onClick={handlePrint}
-                            className="bg-[#1A1A1A] text-white px-5 py-2 rounded-lg text-sm border border-[#2A2A2A]"
+                            className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/80 text-white px-5 py-2 rounded-lg text-sm border border-[#2A2A2A]"
                         >
                             Print PDF
                         </button>
@@ -177,12 +178,20 @@ export default function InvoiceViewer() {
                                     {/* <h1 className="text-2xl md:text-3xl font-black uppercase text-gray-900">
                                         N3XTBRIDGE
                                     </h1> */}
-                                    <div className="h-16 md:h-20 flex items-center">
+                                    {/* <div className="h-16 md:h-20 flex items-center">
                                         <img
                                             src="https://cdn.n3xtbridge.com/frontenddata/N3xtbridge%20Logo%20PNG.png"
                                             alt="N3xtbridge Logo"
                                             className="h-full w-auto object-contain"
                                         />
+                                    </div> */}
+                                    <div className=" ">
+                                        <img
+                                            src={myLogo}
+                                            alt="N3xtbridge"
+                                            className="flex items-center h-[50px] w-auto object-contain"
+                                        />
+
                                     </div>
                                     <p className="text-[11px] text-gray-500 leading-relaxed">
                                         Innovative Tech Solutions <br />
