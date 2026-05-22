@@ -123,7 +123,7 @@ export default function QuoteRequestViewer() {
 
     if (authLoading || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0C0C0C]">
+            <div className="min-h-screen flex items-center justify-center ">
                 <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -131,7 +131,7 @@ export default function QuoteRequestViewer() {
 
     if (error || !qr) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0C0C0C] text-white">
+            <div className="min-h-screen flex items-center justify-center  text-text">
                 <div className="text-center">
                     <h2 className="text-xl mb-2">Request not found</h2>
                     <button onClick={() => navigate('/dashboard')} className="text-primary hover:underline">
@@ -143,194 +143,354 @@ export default function QuoteRequestViewer() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0C0C0C] text-white pt-24 pb-16">
-            <div className="max-w-5xl mx-auto px-6">
-                <div className='h-10'></div>
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start mb-10 gap-4">
-                    <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors">
-                        <span className="material-symbols-outlined text-sm">arrow_back</span> Back
+        <main className="min-h-screen bg-background text-text pt-24 pb-20">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                {/* TOP NAV */}
+                <div className="mb-8 flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">
+                            arrow_back
+                        </span>
+                        Back
                     </button>
-                    {user?.role === "admin" && ENV == "developmet" && (
-                        <button
-                            onClick={() => {
-                                console.log(qr)
-                            }}>
-                            Test log
-                        </button>
-                    )}
 
-                    <div>
-                        <h1 className="text-3xl md:text-5xl font-semibold mb-2">
-                            {qr.service_name}
-                        </h1>
-                        <p className="text-gray-500 text-sm">
-                            Created {new Date(qr.created_at).toLocaleDateString()} • ID: {qr.id.slice(-6).toUpperCase()}
-                        </p>
-                    </div>
-
-                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${STATUS_STYLES[qr.status]}`}>
+                    <span
+                        className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide ${STATUS_STYLES[qr.status]}`}
+                    >
                         {qr.status}
                     </span>
                 </div>
 
-                {/* IMAGE CAROUSEL SECTION */}
-                {attachmentUrls.length > 0 && (
-                    <div className="mb-12">
-                        <h3 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-widest">Images</h3>
-                        <div className="relative group">
-                            <div className="w-full h-[300px] md:h-[500px] rounded-3xl overflow-hidden bg-[#111] border border-[#1A1A1A] flex items-center justify-center">
-                                <img
-                                    src={attachmentUrls[currentIndex]}
-                                    onClick={() => setFullscreenImg(attachmentUrls[currentIndex])}
-                                    className="w-full h-full object-cover cursor-zoom-in transition-transform duration-500 hover:scale-[1.02]"
-                                    alt={`Attachment ${currentIndex + 1}`}
-                                />
+                {/* HERO */}
+                <section className="bg-gradient-to-br from-secondary to-[#13385a] rounded-[32px] overflow-hidden relative shadow-2xl">
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,#22D3EE,transparent_30%)]"></div>
+
+                    <div className="relative p-8 md:p-12">
+                        {user?.role === "admin" && (
+                            <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm">
+                                <span className="material-symbols-outlined text-[18px]">
+                                    person
+                                </span>
+                                {qr.user_first_name} {qr.user_last_name} • {qr.user_email}
+                            </div>
+                        )}
+
+                        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+                            <div className="max-w-3xl">
+                                <p className="text-accent uppercase tracking-[0.2em] text-xs font-semibold mb-4">
+                                    Quote Request
+                                </p>
+
+                                <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight mb-5">
+                                    {qr.service_name}
+                                </h1>
+
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">
+                                            calendar_today
+                                        </span>
+                                        {new Date(qr.created_at).toLocaleDateString()}
+                                    </div>
+
+                                    <div className="w-1 h-1 rounded-full bg-white/40"></div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px]">
+                                            tag
+                                        </span>
+                                        {qr.id.slice(-6).toUpperCase()}
+                                    </div>
+                                </div>
                             </div>
 
-                            {attachmentUrls.length > 1 && (
-                                <>
-                                    <button
-                                        onClick={() => setCurrentIndex(prev => prev === 0 ? attachmentUrls.length - 1 : prev - 1)}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-primary p-3 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <span className="material-symbols-outlined">chevron_left</span>
-                                    </button>
+                            <div className="grid grid-cols-2 gap-4 min-w-[260px]">
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                                    <p className="text-white/60 text-xs uppercase tracking-wider mb-2">
+                                        Attachments
+                                    </p>
+                                    <h3 className="text-3xl font-bold text-white">
+                                        {attachmentUrls.length}
+                                    </h3>
+                                </div>
 
-                                    <button
-                                        onClick={() => setCurrentIndex(prev => prev === attachmentUrls.length - 1 ? 0 : prev + 1)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-primary p-3 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <span className="material-symbols-outlined">chevron_right</span>
-                                    </button>
-                                </>
-                            )}
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                                    <p className="text-white/60 text-xs uppercase tracking-wider mb-2">
+                                        Promotions
+                                    </p>
+                                    <h3 className="text-3xl font-bold text-white">
+                                        {claimedPromos.length}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-                            <div className="flex justify-center gap-2 mt-4">
+                {/* IMAGE SECTION */}
+                {attachmentUrls.length > 0 && (
+                    <section className="mt-12">
+                        <div className="flex items-center justify-between mb-5">
+                            <div>
+                                <h2 className="text-xl font-semibold text-secondary">
+                                    Attachments
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Uploaded reference images
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
                                 {attachmentUrls.map((_, i) => (
                                     <button
                                         key={i}
                                         onClick={() => setCurrentIndex(i)}
-                                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentIndex ? "bg-primary w-8" : "bg-gray-700 w-2"}`}
+                                        className={`transition-all duration-300 rounded-full ${i === currentIndex
+                                                ? "w-8 h-2 bg-primary"
+                                                : "w-2 h-2 bg-gray-300"
+                                            }`}
                                     />
                                 ))}
                             </div>
                         </div>
-                    </div>
-                )}
 
-                {/* VIDEO SECTION */}
-                {videoUrl && (
-                    <div className="mb-12">
-                        <h3 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-widest">Video Overview</h3>
-                        <div className="rounded-3xl overflow-hidden border border-[#1A1A1A] bg-black aspect-video max-h-[500px]">
-                            <video
-                                controls
-                                className="w-full h-full"
-                                preload="metadata"
-                            >
-                                <source src={videoUrl} type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
+                        <div className="relative group rounded-[30px] overflow-hidden bg-gray-100 shadow-xl">
+                            <img
+                                src={attachmentUrls[currentIndex]}
+                                alt=""
+                                onClick={() =>
+                                    setFullscreenImg(
+                                        attachmentUrls[currentIndex]
+                                    )
+                                }
+                                className="w-full h-[320px] md:h-[580px] object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02]"
+                            />
+
+                            {attachmentUrls.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={() =>
+                                            setCurrentIndex((prev) =>
+                                                prev === 0
+                                                    ? attachmentUrls.length - 1
+                                                    : prev - 1
+                                            )
+                                        }
+                                        className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-secondary">
+                                            chevron_left
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            setCurrentIndex((prev) =>
+                                                prev === attachmentUrls.length - 1
+                                                    ? 0
+                                                    : prev + 1
+                                            )
+                                        }
+                                        className="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-secondary">
+                                            chevron_right
+                                        </span>
+                                    </button>
+                                </>
+                            )}
                         </div>
-                    </div>
+                    </section>
                 )}
 
-                {/* Description */}
-                <div className="mb-12">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Request Details</h3>
+                {/* CONTENT GRID */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mt-12">
 
-                        {user?.id === qr.user_id && qr.status === 'pending' && !isEditing && (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-2 text-primary text-sm font-bold hover:opacity-80"
-                            >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                                Edit Details
-                            </button>
+                    {/* MAIN */}
+                    <div className="xl:col-span-2 space-y-8">
+
+                        {/* DESCRIPTION */}
+                        <section className="bg-white rounded-[28px] p-8 shadow-sm border border-gray-100">
+                            <div className="flex items-start justify-between gap-4 mb-8">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-secondary">
+                                        Project Details
+                                    </h2>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Full customer request information
+                                    </p>
+                                </div>
+
+                                {user?.id === qr.user_id &&
+                                    qr.status === "pending" &&
+                                    !isEditing && (
+                                        <button
+                                            onClick={() =>
+                                                setIsEditing(true)
+                                            }
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">
+                                                edit
+                                            </span>
+                                            Edit
+                                        </button>
+                                    )}
+                            </div>
+
+                            {isEditing ? (
+                                <div className="space-y-4">
+                                    <textarea
+                                        value={editValue}
+                                        onChange={(e) =>
+                                            setEditValue(e.target.value)
+                                        }
+                                        className="w-full min-h-[220px] rounded-2xl border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none p-5 transition-all"
+                                    />
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={
+                                                handleUpdateDescription
+                                            }
+                                            className="px-6 py-3 rounded-xl bg-primary text-white font-medium hover:opacity-90 transition-all"
+                                        >
+                                            Save Changes
+                                        </button>
+
+                                        <button
+                                            onClick={() =>
+                                                setIsEditing(false)
+                                            }
+                                            className="px-6 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="prose prose-gray max-w-none">
+                                    <p className="leading-8 whitespace-pre-wrap text-[15px] text-gray-700">
+                                        {qr.description}
+                                    </p>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* VIDEO */}
+                        {videoUrl && (
+                            <section className="bg-white rounded-[28px] p-6 shadow-sm border border-gray-100">
+                                <div className="mb-5">
+                                    <h2 className="text-xl font-semibold text-secondary">
+                                        Video Overview
+                                    </h2>
+                                </div>
+
+                                <div className="overflow-hidden rounded-2xl bg-black aspect-video">
+                                    <video
+                                        controls
+                                        className="w-full h-full"
+                                    >
+                                        <source
+                                            src={videoUrl}
+                                            type="video/mp4"
+                                        />
+                                    </video>
+                                </div>
+                            </section>
                         )}
                     </div>
 
-                    {isEditing ? (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                            <textarea
-                                className="w-full bg-[#111] border border-[#1A1A1A] rounded-2xl p-6 text-white focus:border-primary outline-none transition-all min-h-[150px]"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                            />
-                            <div className="flex gap-3">
-                                <button onClick={handleUpdateDescription} className="bg-primary hover:bg-primary/90 px-6 py-2.5 rounded-xl font-bold transition-all">
-                                    Save Changes
-                                </button>
-                                <button onClick={() => setIsEditing(false)} className="text-gray-500 font-bold hover:text-white transition-all">
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-[#111] p-8 rounded-3xl border border-[#1A1A1A] relative group">
-                            <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                                {qr.description}
-                            </p>
-                        </div>
-                    )}
-                </div>
+                    {/* SIDEBAR */}
+                    <div className="space-y-8">
 
-                {/* VOICE NOTE */}
-                {vnUrl && (
-                    <div className="mb-12">
-                        <h3 className="text-sm font-semibold mb-3 text-gray-400 uppercase tracking-widest">
-                            Voice Brief
-                        </h3>
-                        <div className="bg-[#111] rounded-2xl p-6 border border-[#1A1A1A] flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <span className="material-symbols-outlined text-primary text-3xl">
-                                    graphic_eq
-                                </span>
-                            </div>
-                            <div className="flex-1">
-                                <audio controls className="w-full h-10">
+                        {/* VOICE NOTE */}
+                        {vnUrl && (
+                            <section className="bg-white rounded-[28px] p-6 shadow-sm border border-gray-100">
+                                <div className="flex items-center gap-3 mb-5">
+                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-primary">
+                                            graphic_eq
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-secondary">
+                                            Voice Brief
+                                        </h3>
+                                        <p className="text-sm text-gray-500">
+                                            Audio explanation
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <audio controls className="w-full">
                                     <source src={vnUrl} />
                                 </audio>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                            </section>
+                        )}
 
-                {/* Applied Promotions */}
-                {claimedPromos.length > 0 && (
-                    <div className="mb-12">
-                        <h3 className="text-sm font-semibold mb-4 text-gray-400 uppercase tracking-widest">Applied Offers</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {claimedPromos.map(p => (
-                                <div key={p.id} className="bg-primary/5 px-6 py-4 rounded-2xl border border-primary/20 flex justify-between items-center">
-                                    <div>
-                                        <p className="font-bold text-primary">{p.name}</p>
-                                        <p className="text-xs text-primary/60">{p.code}</p>
-                                    </div>
-                                    <span className="material-symbols-outlined text-primary">sell</span>
+                        {/* PROMOTIONS */}
+                        {claimedPromos.length > 0 && (
+                            <section className="bg-white rounded-[28px] p-6 shadow-sm border border-gray-100">
+                                <div className="mb-6">
+                                    <h2 className="text-xl font-semibold text-secondary">
+                                        Applied Offers
+                                    </h2>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
-                {/* Fullscreen Overlay */}
+                                <div className="space-y-4">
+                                    {claimedPromos.map((p) => (
+                                        <div
+                                            key={p.id}
+                                            className="rounded-2xl bg-primary/5 border border-primary/10 p-5"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <h4 className="font-semibold text-primary">
+                                                        {p.name}
+                                                    </h4>
+
+                                                    <p className="text-sm text-primary/60 mt-1">
+                                                        {p.code}
+                                                    </p>
+                                                </div>
+
+                                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-primary text-[20px]">
+                                                        sell
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                    </div>
+                </div>
+
+                {/* FULLSCREEN */}
                 {fullscreenImg && (
                     <div
                         onClick={() => setFullscreenImg(null)}
-                        className="fixed inset-0 bg-black/95 flex items-center justify-center z-[999] backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center p-6"
                     >
-                        <button className="absolute top-8 right-8 text-white text-4xl">&times;</button>
+                        <button className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white text-2xl">
+                            ×
+                        </button>
+
                         <img
                             src={fullscreenImg}
-                            className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in zoom-in-95"
-                            alt="Fullscreen view"
+                            alt=""
+                            className="max-w-[92vw] max-h-[92vh] object-contain rounded-2xl shadow-2xl"
                         />
                     </div>
                 )}
-
             </div>
         </main>
     );

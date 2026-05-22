@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import type { QuoteRequest } from "../models/model";
-import { useState } from "react";
+
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 const QRActionMenu = ({
     qr,
@@ -8,125 +10,131 @@ const QRActionMenu = ({
     isElevated,
     openUpward = false,
     onAddQuote
-
 }: {
-    qr: QuoteRequest,
-    navigate: any,
-    isElevated: boolean,
-    openUpward?: boolean,
-    onAddQuote?: (qr: QuoteRequest) => void,
-
+    qr: any;
+    navigate: any;
+    isElevated: boolean;
+    openUpward?: boolean;
+    onAddQuote?: (qr: any) => void;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const isQuoted = qr.status === 'quoted';
+    const [pos, setPos] = useState({ top: 0, left: 0 });
+    const btnRef = useRef<HTMLButtonElement | null>(null);
 
+    const isQuoted = qr.status === "quoted";
+
+    const updatePosition = () => {
+        if (!btnRef.current) return;
+        const rect = btnRef.current.getBoundingClientRect();
+
+        setPos({
+            top: rect.bottom + window.scrollY,
+            left: rect.right + window.scrollX - 240 // menu width offset
+        });
+    };
+
+    useEffect(() => {
+        if (isOpen) updatePosition();
+    }, [isOpen]);
+
+    const menu = isOpen ? createPortal(
+        <>
+            {/* backdrop */}
+            <div
+                className="fixed inset-0 z-[9998]"
+                onClick={() => setIsOpen(false)}
+            />
+
+            {/* menu */}
+            <div
+                style={{
+                    position: "absolute",
+                    top: openUpward ? undefined : pos.top,
+                    left: pos.left,
+                    bottom: openUpward ? window.innerHeight - pos.top + 10 : undefined,
+                }}
+                className="
+                    w-60
+                    z-[9999]
+                    rounded-2xl
+                    border border-accent/10
+                    bg-secondary
+                    backdrop-blur-xl
+                    shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+                    overflow-hidden
+                "
+            >
+                <button
+                    onClick={() => navigate(`/dashboard/qr/${qr.id}`, { state: { qr } })}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#22D3EE]/90"
+                >
+                    <span className="material-symbols-outlined text-[18px] text-accent">
+                        visibility
+                    </span>
+                    <div>
+                        <p className="text-[11px] font-black uppercase text-text">View Details</p>
+                        <p className="text-[10px] text-text/50">Open request</p>
+                    </div>
+                </button>
+
+                {!isQuoted && isElevated && (
+                    <button
+                        onClick={() => onAddQuote?.(qr)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#22D3EE]/90"
+                    >
+                        <span className="material-symbols-outlined text-[18px] text-accent">
+                            add_box
+                        </span>
+                        <div>
+                            <p className="text-[11px] font-black uppercase text-text">Create Quote</p>
+                            <p className="text-[10px] text-text/50">Make offer</p>
+                        </div>
+                    </button>
+                )}
+
+                {isQuoted && qr.quote_id && (
+                    <button
+                        onClick={() => navigate(`/dashboard/quote/${qr.quote_id}`)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#22D3EE]/90"
+                    >
+                        <span className="material-symbols-outlined text-[18px] text-accent">
+                            verified
+                        </span>
+                        <div>
+                            <p className="text-[11px] font-black uppercase text-text">Open Quote</p>
+                            <p className="text-[10px] text-text/50">View offer</p>
+                        </div>
+                    </button>
+                )}
+            </div>
+        </>,
+        document.body
+    ) : null;
 
     return (
         <div className="relative inline-block">
             <button
+                ref={btnRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
-                    w-10 h-10
-                    flex items-center justify-center
-                    rounded-xl
-                    border
+                    w-10 h-10 flex items-center justify-center rounded-xl border
                     transition-all duration-200
                     ${isOpen
-                        ? 'bg-accent border-accent text-secondary shadow-lg shadow-accent/30 scale-105'
-                        : 'bg-secondary border-secondary text-white hover:border-accent/40 hover:bg-accent/10 hover:text-accent'
+                        ? "bg-accent border-accent text-secondary"
+                        : "bg-secondary border-secondary text-white"
                     }
                 `}
             >
                 <span className="material-symbols-outlined text-[20px]">
-                    {isOpen ? 'close' : 'more_horiz'}
+                    {isOpen ? "close" : "more_horiz"}
                 </span>
             </button>
 
-            {isOpen && (
-                <>
-                    <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsOpen(false)}
-                    />
-
-                    <div
-                        className={`
-        absolute
-        right-0
-        w-60
-        z-50
-        overflow-hidden
-        rounded-2xl
-        border border-accent/10
-        bg-secondary
-        backdrop-blur-xl
-        shadow-[0_20px_60px_rgba(0,0,0,0.45)]
-        animate-in fade-in zoom-in-95 duration-200
-        ${openUpward ? 'bottom-full mb-3' : 'top-full mt-3'}
-    `}
-                    >
-
-                        <button
-                            onClick={() => navigate(`/dashboard/qr/${qr.id}`, { state: { qr } })}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all group hover:bg-[#22D3EE]/95"
-                        >
-                            <span className="material-symbols-outlined text-[18px] text-accent">
-                                visibility
-                            </span>
-
-                            <div>
-                                <p className="text-[11px] font-black uppercase tracking-wider text-text">
-                                    View Details
-                                </p>
-                                <p className="text-[10px] text-text/50">
-                                    Open Quote Request information
-                                </p>
-                            </div>
-                        </button>
-                        {!isQuoted && isElevated && (
-                            <button
-                                onClick={() => onAddQuote?.(qr)}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all group hover:bg-[#22D3EE]/95"
-                            >
-                                <span className="material-symbols-outlined text-[18px] text-accent">add_box</span>
-                                <div>
-                                    <p className="text-[11px] font-black uppercase tracking-wider text-text"> Create Quote</p>
-                                    <p className="text-[10px] text-text/50">
-                                        Create Quote for the request
-                                    </p>
-                                </div>
-
-
-                            </button>
-                        )}
-
-                        {isQuoted && qr.quote_id && (
-                            <button
-                                onClick={() => navigate(`/dashboard/quote/${qr.quote_id}`)}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all group hover:bg-[#22D3EE]/95"
-                            >
-                                <span className="material-symbols-outlined text-[12px] text-accent">verified</span>
-                                <div>
-                                    <p className="text-[11px] font-black uppercase tracking-wider text-text">Open Quote</p>
-                                    <p className="text-[10px] text-text/50">
-                                        Open Quote(offers) proposed for request
-                                    </p>
-                                </div>
-
-
-
-                            </button>
-                        )}
-
-
-
-
-                    </div>
-                </>
-            )}
+            {menu}
         </div>
     );
 };
+
 
 export const STATUS_STYLES: Record<string, string> = {
     pending: "bg-blue-100 text-blue-700 border-blue-200",
@@ -153,8 +161,8 @@ const QuoteRequestTable = ({
     const isElevated = role === 'admin' || role === 'staff';
 
     return (
-        <div className="overflow-x-auto overflow-y-visible scrollbar-hide">
-            <table className="w-full text-left min-w-[900px]">
+        <div className="relative overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left min-w-[900px] relative">
                 <thead>
                     <tr className="bg-gray-300 ">
                         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">ID</th>
@@ -226,12 +234,12 @@ const QuoteRequestTable = ({
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-5 text-right">
+                                    <td className="px-6 py-5 text-right relative overflow-visible">
                                         <QRActionMenu
                                             qr={qr}
                                             navigate={navigate}
                                             isElevated={isElevated}
-                                            openUpward={index >= qrs.length - 3}
+                                            openUpward={index >= qrs.length - 3} // open upward if its one of the last 3 items and there are more than 5 items
                                             onAddQuote={onAddQuote}
                                         />
                                     </td>

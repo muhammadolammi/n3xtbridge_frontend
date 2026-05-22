@@ -27,8 +27,9 @@ const InvoiceActionMenu = ({
 
     return (
         <div className="relative inline-block">
+            {/* Trigger */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => setIsOpen(prev => !prev)}
                 className={`
                     w-10 h-10
                     flex items-center justify-center
@@ -48,34 +49,29 @@ const InvoiceActionMenu = ({
 
             {isOpen && (
                 <>
+                    {/* backdrop */}
                     <div
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
 
+                    {/* dropdown */}
                     <div
                         className={`
-        absolute
-        right-0
-        w-60
-        z-50
-        overflow-hidden
-        rounded-2xl
-        border border-accent/10
-        bg-secondary
-        backdrop-blur-xl
-        shadow-[0_20px_60px_rgba(0,0,0,0.45)]
-        animate-in fade-in zoom-in-95 duration-200
-        ${openUpward ? 'bottom-full mb-3' : 'top-full mt-3'}
-    `}
+                            absolute
+                            right-0
+                            w-60
+                            z-[9999]
+                            overflow-hidden
+                            rounded-2xl
+                            border border-accent/10
+                            bg-secondary
+                            backdrop-blur-xl
+                            shadow-[0_20px_60px_rgba(0,0,0,0.45)]
+                            animate-in fade-in zoom-in-95 duration-200
+                            ${openUpward ? 'bottom-full mb-3' : 'top-full mt-3'}
+                        `}
                     >
-                        {/* Header */}
-                        {/* <div className="px-4 py-3 border-b border-white/5">
-                            <p className="text-[9px] uppercase tracking-[0.25em] text-accent font-black">
-                                Invoice Actions
-                            </p>
-                        </div> */}
-
                         {/* View */}
                         <button
                             onClick={() => {
@@ -107,15 +103,7 @@ const InvoiceActionMenu = ({
                                     onSendReminder(inv.id);
                                     setIsOpen(false);
                                 }}
-                                className="
-                                    w-full
-                                    flex items-center gap-3
-                                    px-4 py-3
-                                    text-left
-                                    transition-all
-                                    group
-                                    hover:bg-[#22D3EE]/95
-                                "
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all group hover:bg-[#22D3EE]/95"
                             >
                                 <span className="material-symbols-outlined text-[18px] text-text">
                                     outgoing_mail
@@ -136,14 +124,8 @@ const InvoiceActionMenu = ({
                         {isadmin && (
                             <div className="border-t border-white/5 mt-1">
                                 <button
-                                    className="
-                                        w-full
-                                        flex items-center gap-3
-                                        px-4 py-3
-                                        text-left
-                                        transition-all
-                                        hover:bg-red-500/10
-                                    "
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-red-500/10"
                                 >
                                     <span className="material-symbols-outlined text-[18px] text-red-400">
                                         archive
