@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Promotion, QuoteRequest } from '../models/model';
-import { ENV } from '../constants/const';
+// import { ENV } from '../constants/const';
 import { fetchSignedUrl } from '../api/presign';
 import { STATUS_STYLES } from '../components/QuoteRequestTable';
 
@@ -250,8 +250,8 @@ export default function QuoteRequestViewer() {
                                         key={i}
                                         onClick={() => setCurrentIndex(i)}
                                         className={`transition-all duration-300 rounded-full ${i === currentIndex
-                                                ? "w-8 h-2 bg-primary"
-                                                : "w-2 h-2 bg-gray-300"
+                                            ? "w-8 h-2 bg-primary"
+                                            : "w-2 h-2 bg-gray-300"
                                             }`}
                                     />
                                 ))}
