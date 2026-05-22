@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../api/axios";
 import type { ServiceCategory } from "../models/model";
 
-export const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
+const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
     // State for managing dynamic categories from backend
     const [categories, setCategories] = useState<ServiceCategory[]>([]);
     const [fetchingCategories, setFetchingCategories] = useState(true);
@@ -33,7 +33,7 @@ export const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
 
                 // Set the default initial select option to the first category found
                 if (fetchedCats.length > 0) {
-                    setFormData(prev => ({ ...prev, category_id: fetchedCats[0] }));
+                    setFormData(prev => ({ ...prev, category_id: fetchedCats[0].id }));
                 }
             } catch (err) {
                 console.error("Failed to load categories:", err);
@@ -57,7 +57,6 @@ export const CreateServiceModal = ({ onClose }: { onClose: () => void }) => {
                 ...formData,
                 tags: formData.tags.split(',').map(t => t.trim()).filter(t => t !== "")
             };
-            // console.log("Submitting new service with payload:", payload);
             await api.post('/admin/services', payload);
             onClose();
         } catch (err) {
