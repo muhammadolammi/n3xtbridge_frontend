@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
     const location = useLocation();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const isDashboard = location.pathname.startsWith('/dashboard');
+    // const isDashboard = location.pathname.startsWith('/dashboard');
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
