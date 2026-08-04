@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Tag, Calendar, ShieldCheck, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import api from '../api/axios';
 import { QuoteRequestModal } from '../components/QuoteRequestModal';
+import { BrandLoader } from '../components/resusable';
 import type { Promotion, Service } from '../models/model';
 import { getFileUrl } from '../helpers/helpers';
 
@@ -15,10 +17,8 @@ export default function PromotionPage() {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 🔥 carousel state
+    // Carousel state
     const [currentIndex, setCurrentIndex] = useState(0);
-
-
 
     useEffect(() => {
         const fetchPromoData = async () => {
@@ -36,7 +36,7 @@ export default function PromotionPage() {
                 setService(sRes.data.service || sRes.data);
 
             } catch {
-                setError("This offer is no longer available");
+                setError("This offer is no longer available or may have expired.");
             } finally {
                 setLoading(false);
             }
@@ -45,156 +45,169 @@ export default function PromotionPage() {
         if (promo_code) fetchPromoData();
     }, [promo_code]);
 
-    if (loading) return (
-        <div className="min-h-screen bg-[#0C0C0C] flex items-center justify-center">
-            <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-    );
+    if (loading) {
+        return <BrandLoader />;
+    }
 
-    if (error || !promo || !service) return (
-        <div className="min-h-screen bg-[#0C0C0C] flex flex-col items-center justify-center text-center px-6">
-            <h2 className="text-white text-2xl font-semibold">Offer not available</h2>
-            <p className="text-gray-500 mt-2">This link may have expired.</p>
-            <button onClick={() => navigate('/services')} className="mt-6 text-primary">
-                Browse services
-            </button>
-        </div>
-    );
+    if (error || !promo || !service) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-6 pt-24 pb-20">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4">
+                    <Tag className="w-8 h-8" />
+                </div>
+                <h2 className="text-secondary text-2xl font-bold">Offer Not Available</h2>
+                <p className="text-[#64748B] mt-2 max-w-md">{error || "This promotion link is invalid or has ended."}</p>
+                <button
+                    onClick={() => navigate('/services')}
+                    className="mt-6 bg-primary text-white font-medium px-6 py-3 rounded-full hover:opacity-90 transition-opacity"
+                >
+                    Browse Services
+                </button>
+            </div>
+        );
+    }
 
     return (
-        <main className="min-h-screen bg-[#0C0C0C] text-white pt-24 pb-20">
+        <main className="min-h-screen bg-background text-text font-['Inter'] pt-28 pb-20 px-6 md:px-12 lg:px-20 selection:bg-[#0046FB]/30">
+            <div className="max-w-6xl mx-auto">
 
-            <div className="max-w-6xl mx-auto px-6">
-
-                {/* BACK */}
+                {/* BACK BUTTON */}
                 <button
                     onClick={() => navigate(-1)}
-                    className="text-sm text-gray-400 mb-8 hover:text-white"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#64748B] hover:text-primary transition-colors mb-8"
                 >
-                    ← Back
+                    <ArrowLeft className="w-4 h-4" /> Back
                 </button>
 
-                <div className="grid lg:grid-cols-12 gap-12">
+                <div className="grid lg:grid-cols-12 gap-12 items-start">
 
-                    {/* LEFT */}
+                    {/* LEFT CONTENT */}
                     <div className="lg:col-span-7 space-y-8">
 
-                        {/* 🔥 IMAGE CAROUSEL */}
-                        {promo.attachments?.length > 0 && (
-                            <div className="relative">
-
-                                <div className="w-full h-[260px] md:h-[420px] rounded-2xl overflow-hidden bg-[#111] relative">
+                        {/* IMAGE CAROUSEL */}
+                        {promo.attachments && promo.attachments.length > 0 && (
+                            <div className="space-y-4">
+                                <div className="w-full h-[280px] md:h-[420px] rounded-3xl overflow-hidden bg-slate-100 border border-slate-200 relative group shadow-sm">
                                     <img
                                         src={getFileUrl(promo.attachments[currentIndex], "public")}
-                                        className="w-full h-full object-cover transition duration-500 hover:scale-105"
+                                        alt={promo.name}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-                                    {/* gradient overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                                    {/* Navigation Arrows */}
+                                    {promo.attachments.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={() =>
+                                                    setCurrentIndex((prev) =>
+                                                        prev === 0 ? promo.attachments.length - 1 : prev - 1
+                                                    )
+                                                }
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-secondary p-2.5 rounded-full shadow-md transition-all"
+                                                aria-label="Previous image"
+                                            >
+                                                <ChevronLeft className="w-5 h-5" />
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    setCurrentIndex((prev) =>
+                                                        prev === promo.attachments.length - 1 ? 0 : prev + 1
+                                                    )
+                                                }
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-secondary p-2.5 rounded-full shadow-md transition-all"
+                                                aria-label="Next image"
+                                            >
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
 
-                                {/* arrows */}
+                                {/* Thumbnails */}
                                 {promo.attachments.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={() =>
-                                                setCurrentIndex((prev) =>
-                                                    prev === 0 ? promo.attachments.length - 1 : prev - 1
-                                                )
-                                            }
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 px-3 py-2 rounded-full"
-                                        >
-                                            ‹
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                setCurrentIndex((prev) =>
-                                                    prev === promo.attachments.length - 1 ? 0 : prev + 1
-                                                )
-                                            }
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 px-3 py-2 rounded-full"
-                                        >
-                                            ›
-                                        </button>
-                                    </>
+                                    <div className="flex gap-3 overflow-x-auto pb-2">
+                                        {promo.attachments.map((img, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentIndex(i)}
+                                                className={`relative rounded-xl overflow-hidden shrink-0 border-2 transition-all ${i === currentIndex ? "border-primary shadow-sm scale-105" : "border-transparent opacity-70 hover:opacity-100"
+                                                    }`}
+                                            >
+                                                <img
+                                                    src={getFileUrl(img, "public")}
+                                                    alt=""
+                                                    className="w-20 h-16 object-cover"
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
                                 )}
+                            </div>
+                        )}
 
-                                {/* dots */}
-                                <div className="flex justify-center gap-2 mt-4">
-                                    {promo.attachments.map((_, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => setCurrentIndex(i)}
-                                            className={`h-2 rounded-full transition-all ${i === currentIndex ? "bg-primary w-5" : "bg-gray-600 w-2"
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
+                        {/* TITLE & DESCRIPTION */}
+                        <div>
+                            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wide mb-4">
+                                <Tag className="w-3.5 h-3.5" /> Special Promotion
+                            </div>
 
-                                {/* thumbnails */}
-                                <div className="flex gap-2 mt-4 overflow-x-auto">
-                                    {promo.attachments.map((img, i) => (
-                                        <img
-                                            key={i}
-                                            src={getFileUrl(img, "public")}
-                                            onClick={() => setCurrentIndex(i)}
-                                            className={`w-20 h-16 object-cover rounded cursor-pointer border ${i === currentIndex
-                                                ? "border-primary"
-                                                : "border-transparent"
-                                                }`}
-                                        />
+                            <h1 className="text-3xl md:text-5xl font-bold text-secondary leading-tight mb-4">
+                                {promo.name}
+                            </h1>
+
+                            <p className="text-[#64748B] text-base md:text-lg leading-relaxed">
+                                {promo.description?.String ||
+                                    "We've put together an exclusive offer package tailored to deliver maximum value for your business."}
+                            </p>
+                        </div>
+
+                        {/* BREAKDOWN / BENEFITS */}
+                        {promo.breakdown && promo.breakdown.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="text-xl font-semibold text-secondary">Offer Breakdown</h3>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    {promo.breakdown.map((item, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:border-primary/20 transition-all flex flex-col justify-between"
+                                        >
+                                            <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xl">
+                                                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                                                <span>
+                                                    {item.type === 'percentage'
+                                                        ? `${item.amount}% off`
+                                                        : item.type === 'fixed'
+                                                            ? item.amount === "0"
+                                                                ? 'FREE'
+                                                                : `₦${Number(item.amount).toLocaleString()} off`
+                                                            : 'Included'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-[#64748B] leading-relaxed">
+                                                {item.description}
+                                            </p>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         )}
-
-                        {/* TITLE */}
-                        <div>
-                            <p className="text-sm text-primary mb-2">
-                                Limited Offer
-                            </p>
-
-                            <h1 className="text-4xl md:text-6xl font-semibold leading-tight mb-4">
-                                {promo.name}
-                            </h1>
-
-                            <p className="text-gray-400 text-lg leading-relaxed">
-                                {promo.description?.String ||
-                                    "We’ve put together a simple offer to help you get started."}
-                            </p>
-                        </div>
-
-                        {/* BENEFITS */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {promo.breakdown.map((item, idx) => (
-                                <div key={idx} className="bg-[#141414] p-5 rounded-xl border border-[#1A1A1A]">
-                                    <p className="text-lg font-semibold">
-                                        {item.type === 'percentage'
-                                            ? `${item.amount}% off`
-                                            : item.type === 'fixed'
-                                                ? item.amount === "0"
-                                                    ? 'FREE'
-                                                    : `₦${item.amount.toLocaleString()} off`
-                                                : 'Included'}
-                                    </p>
-                                    <p className="text-sm text-gray-400 mt-1">
-                                        {item.description}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
                     </div>
 
-                    {/* RIGHT */}
+                    {/* RIGHT CARD / ACTION */}
                     <div className="lg:col-span-5">
+                        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl sticky top-28 space-y-6">
 
-                        <div className="bg-[#111] rounded-2xl p-8 border border-[#1A1A1A] sticky top-28">
-
-                            <div className="mb-6">
-                                <h3 className="text-lg font-semibold">{service.name}</h3>
-                                <p className="text-sm text-gray-400">{service.category}</p>
+                            <div>
+                                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Service</span>
+                                <h3 className="text-2xl font-bold text-secondary mt-1">{service.name}</h3>
+                                {service.category && (
+                                    <p className="text-sm text-[#64748B] mt-1">{service.category}</p>
+                                )}
                             </div>
+
+                            <div className="h-px bg-slate-100" />
 
                             <p className="text-sm text-gray-400 mb-6">
                                 Tell us what you need and we’ll send you a price.
@@ -203,27 +216,30 @@ export default function PromotionPage() {
 
                             <button
                                 onClick={() => setIsModalOpen(true)}
-                                className="w-full bg-primary py-4 rounded-xl font-semibold hover:opacity-90"
+                                className="w-full bg-primary text-white py-4 rounded-full font-semibold hover:opacity-90 transition-opacity shadow-md shadow-primary/20 text-center"
                             >
-                                Get a Quote
+                                Claim Offer & Get Quote
                             </button>
 
                             {promo.expires_at && (
-                                <p className="text-xs text-gray-500 mt-4 text-center">
-                                    Ends {new Date(promo.expires_at).toLocaleDateString()}
-                                </p>
+                                <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 py-2.5 rounded-xl border border-amber-100">
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span>Ends {new Date(promo.expires_at).toLocaleDateString()}</span>
+                                </div>
                             )}
 
-                            {/* trust line */}
-                            <p className="text-xs text-gray-500 mt-3 text-center">
-                                No payment required • Fast response
-                            </p>
+                            {/* Trust Line */}
+                            <div className="flex items-center justify-center gap-2 text-xs text-[#64748B] pt-2">
+                                <ShieldCheck className="w-4 h-4 text-primary" />
+                                <span>No upfront payment required • Fast Reply</span>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            {/* MODAL */}
+            {/* QUOTE MODAL */}
             {isModalOpen && (
                 <QuoteRequestModal
                     serviceId={service.id}
