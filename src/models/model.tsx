@@ -1,152 +1,148 @@
-
-
 export interface Discount {
-    name: string;
-    amount: string;
-    type: 'fixed' | 'percentage' | 'item_match';
-    description: string;
-    item_name: string;
+  name: string;
+  amount: string;
+  type: "fixed" | "percentage" | "item_match";
+  description: string;
+  item_name: string;
 }
 export interface Item {
-    name: string;
-    price: string;
-    description?: string;
-    quantity: number;
+  name: string;
+  price: string;
+  description?: string;
+  quantity: number;
 }
 
 export interface Invoice {
-    id: string;
-    quote_id?: string;
-    deleted_at?: any;
-    invoice_number: string;
-    customer_name: string;
-    customer_email: string;
-    customer_phone: string;
-    items: Item[];
-    discounts: Discount[];
-    total: number;
-    notes: string;
-    status: string;
-    created_at: string;
-    reminder_sent_at: string;
+  id: string;
+  quote_id?: string;
+  deleted_at?: { Valid: boolean; Time: string };
+  invoice_number: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  items: Item[];
+  discounts: Discount[];
+  total: number;
+  notes: string;
+  status: string;
+  created_at: { Valid: boolean; Time: string };
+  reminder_sent_at: string;
 }
 export interface Service {
-    id: string;
-    name: string;
-    description: string;
-    category_id: string;
-    category: string;
+  id: string;
+  name: string;
+  description: string;
+  category_id: string;
+  category: string;
 
-    icon: string;
-    image: string;
-    is_featured: boolean;
-    is_active: boolean;
-    tags?: string[];
-    promo_ids: string[];
-    active_promotions?: Promotion[];
-    min_price: string
+  icon: string;
+  image: string;
+  is_featured: boolean;
+  is_active: boolean;
+  tags?: string[];
+  promo_ids: string[];
+  active_promotions?: Promotion[];
+  min_price: string;
 }
 
 export interface User {
-    id: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    phone_number: { String: string; Valid: boolean } | null;
-    address: { String: string; Valid: boolean } | null;
-    role: string;
-    created_at?: { Time: string; Valid: boolean } | null;
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number: { String: string; Valid: boolean } | null;
+  address: { String: string; Valid: boolean } | null;
+  role: string;
+  created_at?: { Time: string; Valid: boolean } | null;
 }
 export interface QuoteRequest {
-    id: string;
-    user_id?: string;
-    quote_id?: string;
-    service_id: string;
-    description: string;
-    attachments: string[];
-    promo_ids: string[];
-    status: 'pending' | 'reviewing' | 'quoted' | 'rejected';
-    created_at: string; // Dates come as ISO strings from the Go JSON encoder
-    updated_at: string;
-    user_email?: string;
-    user_first_name?: string;
-    user_last_name?: string;
-    vn_key: string;
-    video_key: string;
+  id: string;
+  user_id?: string;
+  quote_id?: string;
+  service_id: string;
+  description: string;
+  attachments: string[];
+  promo_ids: string[];
+  status: "pending" | "reviewing" | "quoted" | "rejected";
+  created_at: string; // Dates come as ISO strings from the Go JSON encoder
+  updated_at: string;
+  user_email?: string;
+  user_first_name?: string;
+  user_last_name?: string;
+  vn_key: string;
+  video_key: string;
 
-    service_name?: string;
+  service_name?: string;
 }
-
-
-
-
 
 export interface QuoteBreakdown {
-
-    name: string;
-    price: string;
-    quantity: number;
-    description: string
+  name: string;
+  price: string;
+  quantity: number;
+  description: string;
 }
 export interface Quote {
-    id: string;
-    service_name?: string;
-    quote_request_id: string;
-    service_id?: string;
-    user_id?: string;
-    amount: string;
-    breakdown: QuoteBreakdown[];
-    discounts: Discount[]
-    notes: string;
-    promo_ids: string[];
+  id: string;
+  service_name?: string;
+  quote_request_id: string;
+  service_id?: string;
+  user_id?: string;
+  amount: string;
+  breakdown: QuoteBreakdown[];
+  discounts: Discount[];
+  notes: string;
+  promo_ids: string[];
 
-    status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | "in-review" | "paid";
-    created_at: string;
-    expires_at: string;
-    updated_at: string;
-
+  status:
+    | "draft"
+    | "sent"
+    | "accepted"
+    | "declined"
+    | "expired"
+    | "in-review"
+    | "paid";
+  created_at: string;
+  expires_at: string;
+  updated_at: string;
 }
 
-
 export interface Promotion {
-    id: string;
-    code: string;
-    service_id: string;
-    name: string;
-    description: { String: string; Valid: boolean };
-    breakdown: Discount[];
-    attachments: string[];
+  id: string;
+  code: string;
+  service_id: string;
+  name: string;
+  description: { String: string; Valid: boolean };
+  breakdown: Discount[];
+  attachments: string[];
+  terms_and_conditions?: string[];
 
-    is_active: boolean;
-    starts_at: string;
-    expires_at: string;
-    created_at: string;
+  is_active: boolean;
+  starts_at: string;
+  expires_at: string;
+  created_at: string;
 }
 
 export interface ServiceCategory {
-    id: string;
-    slug: string;
-    name: string;
-    icon: string;
-    description: string;
-    service_count: number;
-
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  description: string;
+  service_count: number;
 }
-
-
 
 export interface AdminAnalytics {
-    totalRevenue: number;
-    pendingRequests: number;
-    activeQuotes: number;
-    totalServices: number;
-    activePromos: number;
+  totalRevenue: number;
+  pendingRequests: number;
+  activeQuotes: number;
+  totalServices: number;
+  activePromos: number;
 }
 export interface CustomerAnalytics {
-    unpaidBalance: number;
-    pendingRequests: number;
-    paidOffers: number;
-    activeOffers: number;
-    declinedOffers: number;
-    expiredOffers: number;
+  unpaidBalance: number;
+  pendingRequests: number;
+  paidOffers: number;
+  activeOffers: number;
+  declinedOffers: number;
+  expiredOffers: number;
 }
