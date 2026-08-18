@@ -233,13 +233,14 @@ export default function PromotionPage() {
                       <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xl">
                         <CheckCircle2 className="w-5 h-5 shrink-0" />
                         <span>
-                          {item.type === "percentage"
+                          {item.name}
+                          {/* {item.type === "percentage"
                             ? `${item.amount}% off`
                             : item.type === "fixed"
                               ? item.amount === "0"
                                 ? "FREE"
                                 : `₦${Number(item.amount).toLocaleString()} off`
-                              : "Included"}
+                              : "Included"} */}
                         </span>
                       </div>
                       <p className="text-sm text-[#64748B] leading-relaxed">
